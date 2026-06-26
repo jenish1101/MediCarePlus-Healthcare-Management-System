@@ -1,0 +1,161 @@
+'use client';
+
+import React from 'react';
+import { motion } from 'framer-motion';
+import { Users, Calendar, DollarSign, Activity } from 'lucide-react';
+import {
+  BarChart,
+  Bar,
+  XAxis,
+  YAxis,
+  CartesianGrid,
+  Tooltip,
+  ResponsiveContainer,
+  AreaChart,
+  Area,
+  PieChart,
+  Pie,
+  Cell,
+  Legend
+} from 'recharts';
+import DashboardLayout from '@/components/DashboardLayout';
+import ProtectedRoute from '@/components/ProtectedRoute';
+
+const patientGrowth = [
+  { month: 'Jan', patients: 1850 },
+  { month: 'Feb', patients: 2020 },
+  { month: 'Mar', patients: 2180 },
+  { month: 'Apr', patients: 2310 },
+  { month: 'May', patients: 2420 },
+  { month: 'Jun', patients: 2543 }
+];
+
+const departmentLoad = [
+  { dept: 'Cardiology', visits: 320 },
+  { dept: 'Neurology', visits: 210 },
+  { dept: 'Pediatrics', visits: 280 },
+  { dept: 'Orthopedics', visits: 190 },
+  { dept: 'Dermatology', visits: 150 }
+];
+
+const appointmentTypes = [
+  { name: 'In-person', value: 620 },
+  { name: 'Video', value: 380 },
+  { name: 'Follow-up', value: 240 }
+];
+
+const PIE_COLORS = ['#3b82f6', '#8b5cf6', '#22c55e'];
+
+const AdminAnalytics: React.FC = () => {
+  const stats = [
+    { icon: Users, label: 'Total Patients', value: '2,543', change: '+12%', color: 'blue' },
+    { icon: Calendar, label: 'Appointments (mo)', value: '1,240', change: '+8%', color: 'green' },
+    { icon: DollarSign, label: 'Revenue (mo)', value: '$124.5k', change: '+15%', color: 'purple' },
+    { icon: Activity, label: 'Bed Occupancy', value: '78%', change: '+3%', color: 'orange' }
+  ];
+
+  return (
+    <ProtectedRoute allowedRoles={['admin']}>
+      <DashboardLayout role="admin">
+        <div className="space-y-6">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
+            <h1 className="text-3xl font-bold text-gray-900 mb-1">Analytics</h1>
+            <p className="text-gray-600">Hospital performance and insights</p>
+          </motion.div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+            {stats.map((s, i) => (
+              <motion.div
+                key={s.label}
+                initial={{ opacity: 0, y: 20 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-white rounded-xl p-6 shadow-lg"
+              >
+                <div className="flex items-center justify-between mb-4">
+                  <div className={`p-3 rounded-lg bg-${s.color}-100`}>
+                    <s.icon className={`w-6 h-6 text-${s.color}-600`} />
+                  </div>
+                  <span className="text-sm text-green-600 font-medium">{s.change}</span>
+                </div>
+                <p className="text-gray-600 text-sm mb-1">{s.label}</p>
+                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+              </motion.div>
+            ))}
+          </div>
+
+          <div className="grid lg:grid-cols-2 gap-6">
+            <motion.div
+              initial={{ opacity: 0, x: -20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
+              <h3 className="text-xl font-semibold mb-4">Patient Growth</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <AreaChart data={patientGrowth}>
+                  <defs>
+                    <linearGradient id="pg" x1="0" y1="0" x2="0" y2="1">
+                      <stop offset="5%" stopColor="#3b82f6" stopOpacity={0.4} />
+                      <stop offset="95%" stopColor="#3b82f6" stopOpacity={0} />
+                    </linearGradient>
+                  </defs>
+                  <CartesianGrid strokeDasharray="3 3" vertical={false} />
+                  <XAxis dataKey="month" axisLine={false} tickLine={false} />
+                  <YAxis axisLine={false} tickLine={false} />
+                  <Tooltip />
+                  <Area type="monotone" dataKey="patients" stroke="#3b82f6" strokeWidth={2} fill="url(#pg)" />
+                </AreaChart>
+              </ResponsiveContainer>
+            </motion.div>
+
+            <motion.div
+              initial={{ opacity: 0, x: 20 }}
+              animate={{ opacity: 1, x: 0 }}
+              className="bg-white rounded-xl shadow-lg p-6"
+            >
+              <h3 className="text-xl font-semibold mb-4">Department Load</h3>
+              <ResponsiveContainer width="100%" height={300}>
+                <BarChart data={departmentLoad} layout="vertical">
+                  <CartesianGrid strokeDasharray="3 3" horizontal={false} />
+                  <XAxis type="number" axisLine={false} tickLine={false} />
+                  <YAxis type="category" dataKey="dept" axisLine={false} tickLine={false} width={90} />
+                  <Tooltip />
+                  <Bar dataKey="visits" fill="#8b5cf6" radius={[0, 8, 8, 0]} />
+                </BarChart>
+              </ResponsiveContainer>
+            </motion.div>
+          </div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="bg-white rounded-xl shadow-lg p-6"
+          >
+            <h3 className="text-xl font-semibold mb-4">Appointment Distribution</h3>
+            <ResponsiveContainer width="100%" height={300}>
+              <PieChart>
+                <Pie
+                  data={appointmentTypes}
+                  dataKey="value"
+                  nameKey="name"
+                  cx="50%"
+                  cy="50%"
+                  outerRadius={100}
+                  label
+                >
+                  {appointmentTypes.map((entry, i) => (
+                    <Cell key={entry.name} fill={PIE_COLORS[i % PIE_COLORS.length]} />
+                  ))}
+                </Pie>
+                <Tooltip />
+                <Legend />
+              </PieChart>
+            </ResponsiveContainer>
+          </motion.div>
+        </div>
+      </DashboardLayout>
+    </ProtectedRoute>
+  );
+};
+
+export default AdminAnalytics;

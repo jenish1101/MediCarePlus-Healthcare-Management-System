@@ -1,0 +1,40 @@
+@import "tailwindcss";
+
+/*
+ * The dashboards build color utility classes dynamically (e.g. `bg-${color}-100`,
+ * `text-${color}-600`). Tailwind cannot statically detect interpolated class names,
+ * so we explicitly generate the ones used by the app.
+ */
+@source inline("{bg,text}-{blue,green,purple,orange,yellow,red,indigo}-{100,600}");
+
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 5rem;
+}
+
+html,
+body {
+  background: #ffffff;
+  color: #171717;
+}
+
+/*
+ * Tailwind v4 no longer applies `cursor: pointer` to buttons by default.
+ * Restore the pointer cursor for all interactive elements so clickable
+ * controls behave as expected (disabled buttons keep the default cursor).
+ */
+@layer base {
+  button:not(:disabled),
+  [role="button"]:not(:disabled),
+  a[href],
+  label[for],
+  select,
+  summary {
+    cursor: pointer;
+  }
+
+  button:disabled,
+  [role="button"][aria-disabled="true"] {
+    cursor: not-allowed;
+  }
+}
