@@ -2,7 +2,7 @@
 
 import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Bell, Lock, Globe, Moon, Mail, Smartphone, Shield, Trash2 } from 'lucide-react';
+import { Bell, Lock, Globe, Mail, Smartphone, Shield, Trash2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
@@ -10,7 +10,6 @@ type ToggleKey =
   | 'emailNotif'
   | 'smsNotif'
   | 'appointmentReminders'
-  | 'darkMode'
   | 'profileVisible';
 
 const Toggle: React.FC<{ on: boolean; onClick: () => void }> = ({ on, onClick }) => (
@@ -34,7 +33,6 @@ const PatientSettings: React.FC = () => {
     emailNotif: true,
     smsNotif: false,
     appointmentReminders: true,
-    darkMode: false,
     profileVisible: true
   });
 
@@ -49,8 +47,7 @@ const PatientSettings: React.FC = () => {
     { key: 'emailNotif', label: 'Email Notifications', desc: 'Receive updates and alerts via email', icon: Mail },
     { key: 'smsNotif', label: 'SMS Notifications', desc: 'Receive text messages for important updates', icon: Smartphone },
     { key: 'appointmentReminders', label: 'Appointment Reminders', desc: 'Get reminded before your appointments', icon: Bell },
-    { key: 'profileVisible', label: 'Profile Visibility', desc: 'Allow doctors to view your profile', icon: Shield },
-    { key: 'darkMode', label: 'Dark Mode', desc: 'Use a darker theme (coming soon)', icon: Moon }
+    { key: 'profileVisible', label: 'Profile Visibility', desc: 'Allow doctors to view your profile', icon: Shield }
   ];
 
   return (
@@ -58,7 +55,7 @@ const PatientSettings: React.FC = () => {
       <DashboardLayout role="patient">
         <div className="space-y-6 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Settings</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
             <p className="text-gray-600">Manage your preferences and account security</p>
           </motion.div>
 
@@ -103,7 +100,7 @@ const PatientSettings: React.FC = () => {
               <h3 className="text-xl font-semibold">Change Password</h3>
             </div>
             <form
-              className="grid sm:grid-cols-2 gap-4"
+              className="grid sm:grid-cols-2 gap-6"
               onSubmit={(e) => e.preventDefault()}
             >
               <div className="sm:col-span-2">
@@ -134,7 +131,7 @@ const PatientSettings: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white rounded-xl shadow-lg p-6 border border-red-100"
+            className="bg-white rounded-xl shadow-lg p-4 border border-red-100"
           >
             <div className="flex items-center gap-2 mb-2">
               <Trash2 className="w-5 h-5 text-red-600" />

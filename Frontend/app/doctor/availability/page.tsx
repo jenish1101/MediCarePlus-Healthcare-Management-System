@@ -56,10 +56,10 @@ const DoctorAvailability: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Availability</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
               <p className="text-gray-600">Set your working days and consultation hours</p>
             </div>
             <button

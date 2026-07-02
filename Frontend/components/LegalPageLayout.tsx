@@ -37,15 +37,15 @@ const LegalPageLayout: React.FC<LegalPageLayoutProps> = ({ title, lastUpdated, c
         animate={{ opacity: 1, y: 0 }}
         className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 py-12 sm:py-16"
       >
-        <div className="bg-white rounded-2xl shadow-lg p-8 sm:p-12">
-          <h1 className="text-3xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h1>
+        <div className="bg-white rounded-xl shadow-lg p-5 sm:p-8">
+          <h1 className="text-xl sm:text-4xl font-bold text-gray-900 mb-2">{title}</h1>
           <p className="text-sm text-gray-500 mb-10">Last updated: {lastUpdated}</p>
-          <div className="prose prose-gray max-w-none space-y-8 text-gray-700 leading-relaxed">
+          <div className="prose prose-gray max-w-none space-y-6 text-gray-700 leading-relaxed">
             {children}
           </div>
         </div>
 
-        <div className="mt-8 flex flex-wrap gap-4 justify-center text-sm">
+        <div className="mt-8 flex flex-wrap gap-6 justify-center text-sm">
           <Link href="/privacy-policy" className="text-blue-600 hover:underline">
             Privacy Policy
           </Link>

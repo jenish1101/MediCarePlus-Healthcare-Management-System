@@ -1,14 +1,17 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, Calendar, DollarSign, Bed, TrendingUp } from 'lucide-react';
+import { Users, Calendar, DollarSign, Bed, TrendingUp, Stethoscope, Megaphone, Package, ScrollText } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { mockAppointments, mockBeds, mockInventory } from '@/data/mockData';
 
 const AdminDashboard: React.FC = () => {
+  const router = useRouter();
+
   const stats = [
     { icon: Users, label: 'Total Patients', value: '2,543', change: '+12%', color: 'blue' },
     { icon: Calendar, label: 'Appointments Today', value: '48', change: '+8%', color: 'green' },
@@ -43,8 +46,36 @@ const AdminDashboard: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-3xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-2">Admin Dashboard</h1>
             <p className="text-gray-600">Manage your hospital operations</p>
+          </motion.div>
+
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ delay: 0.15 }}
+            className="bg-white rounded-xl shadow-lg p-6"
+          >
+            <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
+            <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-3">
+              {[
+                { label: 'Doctor Onboarding', icon: Stethoscope, path: '/admin/doctor-onboarding', color: 'blue' },
+                { label: 'Hospital Inventory', icon: Package, path: '/admin/inventory', color: 'green' },
+                { label: 'Announcements', icon: Megaphone, path: '/admin/announcements', color: 'purple' },
+                { label: 'Audit Log', icon: ScrollText, path: '/admin/audit-log', color: 'orange' }
+              ].map((action) => (
+                <button
+                  key={action.path}
+                  onClick={() => router.push(action.path)}
+                  className="flex items-center gap-3 p-4 rounded-xl border border-gray-200 hover:border-blue-300 hover:bg-blue-50 transition-colors text-left"
+                >
+                  <div className={`p-2 rounded-lg bg-${action.color}-100`}>
+                    <action.icon className={`w-5 h-5 text-${action.color}-600`} />
+                  </div>
+                  <span className="font-medium text-gray-900 text-sm">{action.label}</span>
+                </button>
+              ))}
+            </div>
           </motion.div>
 
           {/* Stats */}
@@ -183,7 +214,12 @@ const AdminDashboard: React.FC = () => {
               animate={{ opacity: 1, y: 0 }}
               className="bg-white rounded-xl shadow-lg p-6"
             >
-              <h3 className="text-xl font-semibold mb-4">Low Stock Alerts</h3>
+              <h3 className="text-xl font-semibold mb-4 flex items-center justify-between">
+                Low Stock Alerts
+                <button onClick={() => router.push('/admin/inventory')} className="text-sm text-blue-600 hover:text-blue-700 font-medium">
+                  View all
+                </button>
+              </h3>
               <div className="space-y-3">
                 {mockInventory.filter(item => item.quantity < 500).map((item) => (
                   <div key={item.id} className="flex items-center justify-between p-3 bg-yellow-50 rounded-lg border border-yellow-200">
@@ -193,7 +229,10 @@ const AdminDashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-sm font-semibold text-yellow-900">{item.quantity} left</p>
-                      <button className="text-xs text-yellow-700 hover:text-yellow-900 font-medium">
+                      <button
+                        onClick={() => router.push('/admin/inventory')}
+                        className="text-xs text-yellow-700 hover:text-yellow-900 font-medium"
+                      >
                         Reorder
                       </button>
                     </div>

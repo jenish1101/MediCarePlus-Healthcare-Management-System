@@ -1,21 +1,23 @@
 'use client';
 
 import React, { useState } from 'react';
-import { motion } from 'framer-motion';
-import { Search, UserPlus, Users, Trash2, Pencil, Shield } from 'lucide-react';
+import { motion, AnimatePresence } from 'framer-motion';
+import { Search, UserPlus, Users, Trash2, Pencil, Shield, X } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+
+type UserRole = 'patient' | 'doctor' | 'pharmacist' | 'lab_tech' | 'admin';
 
 interface SystemUser {
   id: string;
   name: string;
   email: string;
-  role: 'patient' | 'doctor' | 'pharmacist' | 'lab_tech' | 'admin';
+  role: UserRole;
   status: 'active' | 'inactive';
   joined: string;
 }
 
-const users: SystemUser[] = [
+const initialUsers: SystemUser[] = [
   { id: 'u1', name: 'John Patient', email: 'john@demo.com', role: 'patient', status: 'active', joined: '2023-11-02' },
   { id: 'u2', name: 'Dr. Sarah Wilson', email: 'sarah.wilson@hospital.com', role: 'doctor', status: 'active', joined: '2022-06-15' },
   { id: 'u3', name: 'Dr. Michael Chen', email: 'michael.chen@hospital.com', role: 'doctor', status: 'active', joined: '2022-09-20' },
@@ -36,9 +38,16 @@ const roleColor = (role: string) => {
   return colors[role] || 'bg-gray-100 text-gray-700';
 };
 
+const emptyForm = { name: '', email: '', role: 'patient' as UserRole, status: 'active' as 'active' | 'inactive' };
+
 const AdminUsers: React.FC = () => {
+  const [users, setUsers] = useState<SystemUser[]>(initialUsers);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
+  const [showModal, setShowModal] = useState(false);
+  const [editingId, setEditingId] = useState<string | null>(null);
+  const [form, setForm] = useState(emptyForm);
+  const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
 
   const filtered = users.filter(
     (u) =>
@@ -47,7 +56,59 @@ const AdminUsers: React.FC = () => {
         u.email.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const roles = ['all', 'patient', 'doctor', 'pharmacist', 'lab_tech', 'admin'];
+  const roles: UserRole[] = ['patient', 'doctor', 'pharmacist', 'lab_tech', 'admin'];
+  const roleFilters = ['all', ...roles];
+
+  const openCreate = () => {
+    setEditingId(null);
+    setForm(emptyForm);
+    setShowModal(true);
+  };
+
+  const openEdit = (user: SystemUser) => {
+    setEditingId(user.id);
+    setForm({ name: user.name, email: user.email, role: user.role, status: user.status });
+    setShowModal(true);
+  };
+
+  const handleSubmit = (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!form.name || !form.email) return;
+
+    if (editingId) {
+      setUsers((prev) =>
+        prev.map((u) =>
+          u.id === editingId ? { ...u, name: form.name, email: form.email, role: form.role, status: form.status } : u
+        )
+      );
+    } else {
+      setUsers((prev) => [
+        {
+          id: `u${Date.now()}`,
+          name: form.name,
+          email: form.email,
+          role: form.role,
+          status: form.status,
+          joined: new Date().toISOString().split('T')[0]
+        },
+        ...prev
+      ]);
+    }
+    setShowModal(false);
+  };
+
+  const toggleStatus = (id: string) => {
+    setUsers((prev) =>
+      prev.map((u) =>
+        u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
+      )
+    );
+  };
+
+  const removeUser = (id: string) => {
+    setUsers((prev) => prev.filter((u) => u.id !== id));
+    setDeleteConfirm(null);
+  };
 
   return (
     <ProtectedRoute allowedRoles={['admin']}>
@@ -56,20 +117,23 @@ const AdminUsers: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">User Management</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">User Management</h1>
               <p className="text-gray-600">{users.length} users in the system</p>
             </div>
-            <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all">
+            <button
+              onClick={openCreate}
+              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all"
+            >
               <UserPlus className="w-5 h-5" /> Add User
             </button>
           </motion.div>
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
-              {roles.map((r) => (
+              {roleFilters.map((r) => (
                 <button
                   key={r}
                   onClick={() => setRoleFilter(r)}
@@ -131,21 +195,24 @@ const AdminUsers: React.FC = () => {
                         </span>
                       </td>
                       <td className="py-3 px-4">
-                        <span className={`inline-flex items-center gap-1.5 text-xs font-medium ${u.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}>
+                        <button
+                          onClick={() => toggleStatus(u.id)}
+                          className={`inline-flex items-center gap-1.5 text-xs font-medium ${u.status === 'active' ? 'text-green-600' : 'text-gray-400'}`}
+                        >
                           <span className={`w-2 h-2 rounded-full ${u.status === 'active' ? 'bg-green-500' : 'bg-gray-300'}`} />
                           {u.status}
-                        </span>
+                        </button>
                       </td>
                       <td className="py-3 px-4 text-gray-600">{u.joined}</td>
                       <td className="py-3 px-4">
                         <div className="flex items-center justify-end gap-2">
-                          <button className="p-2 rounded-lg hover:bg-blue-50 text-blue-600" title="Edit">
+                          <button onClick={() => openEdit(u)} className="p-2 rounded-lg hover:bg-blue-50 text-blue-600" title="Edit">
                             <Pencil className="w-4 h-4" />
                           </button>
-                          <button className="p-2 rounded-lg hover:bg-purple-50 text-purple-600" title="Permissions">
+                          <button onClick={() => toggleStatus(u.id)} className="p-2 rounded-lg hover:bg-purple-50 text-purple-600" title="Toggle status">
                             <Shield className="w-4 h-4" />
                           </button>
-                          <button className="p-2 rounded-lg hover:bg-red-50 text-red-600" title="Delete">
+                          <button onClick={() => setDeleteConfirm(u.id)} className="p-2 rounded-lg hover:bg-red-50 text-red-600" title="Delete">
                             <Trash2 className="w-4 h-4" />
                           </button>
                         </div>
@@ -157,14 +224,124 @@ const AdminUsers: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="p-12 text-center">
-                <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No users found</h3>
                 <p className="text-gray-600">Try a different search or filter.</p>
               </div>
             )}
           </motion.div>
         </div>
+
+        <AnimatePresence>
+          {showModal && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setShowModal(false)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-md bg-white rounded-xl shadow-2xl p-6"
+              >
+                <div className="flex items-center justify-between mb-5">
+                  <h3 className="text-xl font-semibold">{editingId ? 'Edit User' : 'Add User'}</h3>
+                  <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <form onSubmit={handleSubmit} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Full Name</label>
+                    <input
+                      required
+                      value={form.name}
+                      onChange={(e) => setForm({ ...form, name: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Email</label>
+                    <input
+                      type="email"
+                      required
+                      value={form.email}
+                      onChange={(e) => setForm({ ...form, email: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Role</label>
+                    <select
+                      value={form.role}
+                      onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      {roles.map((r) => (
+                        <option key={r} value={r}>{r.replace('_', ' ')}</option>
+                      ))}
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
+                    <select
+                      value={form.status}
+                      onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'inactive' })}
+                      className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    >
+                      <option value="active">Active</option>
+                      <option value="inactive">Inactive</option>
+                    </select>
+                  </div>
+                  <div className="flex gap-3 pt-2">
+                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                      Cancel
+                    </button>
+                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
+                      {editingId ? 'Save Changes' : 'Create User'}
+                    </button>
+                  </div>
+                </form>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        <AnimatePresence>
+          {deleteConfirm && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+              onClick={() => setDeleteConfirm(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-sm bg-white rounded-xl shadow-2xl p-4 text-center"
+              >
+                <h3 className="text-xl font-semibold text-gray-900 mb-2">Delete user?</h3>
+                <p className="text-sm text-gray-600 mb-6">This action cannot be undone in the demo.</p>
+                <div className="flex gap-3">
+                  <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 rounded-lg border border-gray-300 font-medium hover:bg-gray-50">
+                    Cancel
+                  </button>
+                  <button onClick={() => removeUser(deleteConfirm)} className="flex-1 py-2.5 rounded-lg bg-red-600 text-white font-medium hover:bg-red-700">
+                    Delete
+                  </button>
+                </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </DashboardLayout>
     </ProtectedRoute>
   );

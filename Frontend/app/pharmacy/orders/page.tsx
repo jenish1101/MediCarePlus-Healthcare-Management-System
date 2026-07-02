@@ -90,25 +90,25 @@ const PharmacyOrders: React.FC = () => {
       <DashboardLayout role="pharmacist">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Orders</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Orders</h1>
             <p className="text-gray-600">Process and fulfill medicine orders</p>
           </motion.div>
 
           {/* Summary stats */}
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-xl p-5 shadow-lg flex items-center gap-4"
+                className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6"
               >
                 <div className={`w-11 h-11 rounded-lg bg-${s.color}-100 flex items-center justify-center shrink-0`}>
                   <s.icon className={`w-5 h-5 text-${s.color}-600`} />
                 </div>
                 <div>
-                  <p className="text-2xl font-bold text-gray-900 leading-none">{s.value}</p>
+                  <p className="text-lg font-bold text-gray-900 leading-none">{s.value}</p>
                   <p className="text-gray-500 text-sm mt-1">{s.label}</p>
                 </div>
               </motion.div>
@@ -183,7 +183,7 @@ const PharmacyOrders: React.FC = () => {
                   </div>
 
                   {/* Items */}
-                  <div className="p-5 space-y-2 flex-1">
+                  <div className="p-6 space-y-2 flex-1">
                     {order.medicines.map((med, j) => (
                       <div key={j} className="flex items-center justify-between py-2 border-b border-gray-50 last:border-0">
                         <div className="flex items-center gap-2.5">
@@ -226,8 +226,8 @@ const PharmacyOrders: React.FC = () => {
           </div>
 
           {filtered.length === 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-              <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No orders found</h3>
               <p className="text-gray-600">Try a different search or filter.</p>
             </div>

@@ -13,7 +13,7 @@ const PatientPrescriptions: React.FC = () => {
       <DashboardLayout role="patient">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">My Prescriptions</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">My Prescriptions</h1>
             <p className="text-gray-600">View and download your prescriptions</p>
           </motion.div>
 
@@ -23,9 +23,9 @@ const PatientPrescriptions: React.FC = () => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: idx * 0.1 }}
-              className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+              className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
             >
-              <div className="flex flex-col sm:flex-row items-start justify-between gap-4 mb-4">
+              <div className="flex flex-col sm:flex-row items-start justify-between gap-6 mb-4">
                 <div className="flex items-start space-x-4">
                   <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
                     <FileText className="w-6 h-6 text-purple-600" />
@@ -81,8 +81,8 @@ const PatientPrescriptions: React.FC = () => {
           ))}
 
           {mockPrescriptions.length === 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-              <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No prescriptions yet</h3>
               <p className="text-gray-600">Your prescriptions will appear here after consultations.</p>
             </div>

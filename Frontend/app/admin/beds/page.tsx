@@ -42,20 +42,20 @@ const AdminBeds: React.FC = () => {
       <DashboardLayout role="admin">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Bed Management</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Bed Management</h1>
             <p className="text-gray-600">Monitor and update bed availability. Click a bed to change its status.</p>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {summary.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-5 shadow-lg text-center"
+                className="bg-white rounded-xl p-6 shadow-lg text-center"
               >
-                <p className={`text-3xl font-bold text-${s.color}-600`}>{s.value}</p>
+                <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
                 <p className="text-gray-600 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
@@ -75,7 +75,7 @@ const AdminBeds: React.FC = () => {
             ))}
           </div>
 
-          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-4">
+          <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-6">
             {filtered.map((bed, i) => {
               const style = statusStyle[bed.status];
               return (

@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -19,10 +20,12 @@ import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const PatientDashboard: React.FC = () => {
+  const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
 
   const upcomingAppointments = mockAppointments.filter(apt => apt.status === 'scheduled');
   const completedAppointments = mockAppointments.filter(apt => apt.status === 'completed');
+  const videoAppointment = mockAppointments.find(apt => apt.type === 'video' && apt.status === 'scheduled');
 
   const stats = [
     { icon: Calendar, label: 'Upcoming Appointments', value: upcomingAppointments.length, color: 'blue' },
@@ -124,15 +127,28 @@ const PatientDashboard: React.FC = () => {
                     <div className="bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl p-6">
                       <h4 className="font-semibold mb-4">Quick Actions</h4>
                       <div className="space-y-3">
-                        <button className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => router.push('/patient/book-appointment')}
+                          className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2"
+                        >
                           <Calendar className="w-5 h-5 text-blue-600" />
                           <span>Book Appointment</span>
                         </button>
-                        <button className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() =>
+                            videoAppointment
+                              ? router.push(`/patient/consultation/${videoAppointment.id}`)
+                              : router.push('/patient/appointments')
+                          }
+                          className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2"
+                        >
                           <Video className="w-5 h-5 text-purple-600" />
                           <span>Start Video Call</span>
                         </button>
-                        <button className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2">
+                        <button
+                          onClick={() => router.push('/patient/pharmacy')}
+                          className="w-full py-3 bg-white rounded-lg shadow hover:shadow-md transition-shadow flex items-center justify-center space-x-2"
+                        >
                           <Pill className="w-5 h-5 text-green-600" />
                           <span>Order Medicines</span>
                         </button>
@@ -168,20 +184,23 @@ const PatientDashboard: React.FC = () => {
                 <div className="space-y-6">
                   <div className="flex items-center justify-between">
                     <h3 className="text-xl font-semibold">My Appointments</h3>
-                    <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                    <button
+                      onClick={() => router.push('/patient/book-appointment')}
+                      className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                    >
                       Book New Appointment
                     </button>
                   </div>
 
                   <div>
                     <h4 className="font-semibold mb-4 text-green-600">Upcoming Appointments</h4>
-                    <div className="space-y-4">
+                    <div className="space-y-6">
                       {upcomingAppointments.map((apt) => (
                         <motion.div
                           key={apt.id}
                           initial={{ opacity: 0, x: -20 }}
                           animate={{ opacity: 1, x: 0 }}
-                          className="bg-white border border-gray-200 rounded-xl p-6 hover:shadow-lg transition-shadow"
+                          className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-shadow"
                         >
                           <div className="flex items-start justify-between mb-4">
                             <div className="flex items-start space-x-4">
@@ -218,7 +237,10 @@ const PatientDashboard: React.FC = () => {
                               Cancel
                             </button>
                             {apt.type === 'video' && (
-                              <button className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center">
+                              <button
+                                onClick={() => router.push(`/patient/consultation/${apt.id}`)}
+                                className="flex-1 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors flex items-center justify-center"
+                              >
                                 <Video className="w-4 h-4 mr-2" />
                                 Join Call
                               </button>

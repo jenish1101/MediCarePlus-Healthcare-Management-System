@@ -69,13 +69,13 @@ const SignupPage: React.FC = () => {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Left: Branded visual panel */}
-      <div className="relative hidden lg:flex lg:w-1/2 xl:w-[55%] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-12 text-white">
+      <div className="relative hidden lg:flex lg:w-1/2 xl:w-[55%] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white">
         <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-purple-400/20 blur-3xl" />
 
         <div className="relative z-10 flex items-center gap-2">
           <Heart className="w-8 h-8 text-white" />
-          <span className="text-2xl font-bold">MediCare Plus</span>
+          <span className="text-lg font-bold">MediCare Plus</span>
         </div>
 
         <div className="relative z-10 flex-1 flex flex-col justify-center">
@@ -87,7 +87,7 @@ const SignupPage: React.FC = () => {
           >
             <div className="rounded-3xl bg-white/10 backdrop-blur-sm p-3 shadow-2xl ring-1 ring-white/20">
               {/* eslint-disable-next-line @next/next/no-img-element */}
-              <img src="/login-hero.png" alt="Healthcare illustration" className="w-full rounded-2xl" />
+              <img src="/login-hero.png" alt="Healthcare illustration" className="w-full rounded-xl" />
             </div>
           </motion.div>
 
@@ -97,7 +97,7 @@ const SignupPage: React.FC = () => {
             transition={{ delay: 0.2 }}
             className="mt-10"
           >
-            <h2 className="text-3xl font-bold leading-tight">Your health, all in one place</h2>
+            <h2 className="text-xl font-bold leading-tight">Your health, all in one place</h2>
             <ul className="mt-6 space-y-3">
               {benefits.map((b, i) => (
                 <motion.li
@@ -121,7 +121,7 @@ const SignupPage: React.FC = () => {
       </div>
 
       {/* Right: Form */}
-      <div className="flex w-full lg:w-1/2 xl:w-[45%] items-center justify-center p-6 sm:p-10">
+      <div className="flex w-full lg:w-1/2 xl:w-[45%] items-center justify-center p-4 sm:p-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -142,7 +142,7 @@ const SignupPage: React.FC = () => {
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900">Create your account</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
           <p className="text-gray-500 mt-1 mb-8">Sign up as a patient to get started</p>
 
           <form onSubmit={handleSignup} className="space-y-5">
@@ -189,7 +189,7 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
 
-            <div className="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
                 <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
                 <div className="relative">

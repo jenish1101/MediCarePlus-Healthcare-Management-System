@@ -25,7 +25,10 @@ import {
   Globe,
   MessageCircle,
   Send,
-  AtSign
+  AtSign,
+  ClipboardList,
+  HeartPulse,
+  Truck
 } from 'lucide-react';
 
 /* Animated count-up that runs once when scrolled into view. */
@@ -86,7 +89,10 @@ const Landing: React.FC = () => {
     { role: 'doctor', title: 'Doctor Dashboard', desc: 'Manage patients, prescriptions, and appointments', icon: Stethoscope, color: 'from-purple-500 to-pink-500' },
     { role: 'admin', title: 'Admin Panel', desc: 'Complete hospital management and analytics', icon: Shield, color: 'from-orange-500 to-red-500' },
     { role: 'pharmacist', title: 'Pharmacy Module', desc: 'Manage inventory, orders, and sales', icon: Pill, color: 'from-green-500 to-emerald-500' },
-    { role: 'lab_tech', title: 'Laboratory', desc: 'Manage tests, reports, and appointments', icon: TestTube, color: 'from-indigo-500 to-purple-500' }
+    { role: 'lab_tech', title: 'Laboratory', desc: 'Manage tests, reports, and appointments', icon: TestTube, color: 'from-indigo-500 to-purple-500' },
+    { role: 'receptionist', title: 'Reception Desk', desc: 'Schedule appointments, patients, and rooms', icon: ClipboardList, color: 'from-teal-500 to-cyan-600' },
+    { role: 'nurse', title: 'Nursing Station', desc: 'Patient care, vitals, and daily task lists', icon: HeartPulse, color: 'from-rose-500 to-pink-600' },
+    { role: 'supplier', title: 'Supplier Portal', desc: 'Manage products, orders, and deliveries', icon: Truck, color: 'from-amber-500 to-orange-600' }
   ];
 
   const navLinks = [
@@ -113,7 +119,7 @@ const Landing: React.FC = () => {
           <div className="flex justify-between items-center h-16">
             <a href="#top" className="flex items-center space-x-2">
               <Heart className="w-8 h-8 text-red-500" />
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                 MediCare Plus
               </span>
             </a>
@@ -155,7 +161,7 @@ const Landing: React.FC = () => {
         <div className="pointer-events-none absolute top-20 right-0 w-96 h-96 rounded-full bg-purple-300/30 blur-3xl" />
 
         <div className="relative max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-16 lg:py-24">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
+          <div className="grid lg:grid-cols-2 gap-8 items-center">
             <motion.div
               initial={{ opacity: 0, x: -40 }}
               animate={{ opacity: 1, x: 0 }}
@@ -174,7 +180,7 @@ const Landing: React.FC = () => {
               <p className="text-lg sm:text-xl text-gray-600 mb-8 max-w-xl">
                 Complete hospital management system with appointments, telemedicine, pharmacy, lab tests, and more — all in one place.
               </p>
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-6">
                 <button
                   onClick={() => router.push('/signup')}
                   className="px-7 py-3.5 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-xl hover:shadow-xl hover:shadow-blue-500/30 transform hover:-translate-y-1 transition-all text-base font-semibold flex items-center gap-2"
@@ -215,7 +221,7 @@ const Landing: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.8, y: 10 }}
                 animate={{ opacity: 1, scale: 1, y: [0, -8, 0] }}
                 transition={{ opacity: { delay: 0.5 }, scale: { delay: 0.5 }, y: { repeat: Infinity, duration: 3, ease: 'easeInOut' } }}
-                className="absolute -top-5 -left-5 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3"
+                className="absolute -top-5 -left-5 bg-white rounded-xl shadow-xl px-4 py-3 flex items-center gap-3"
               >
                 <div className="w-10 h-10 rounded-full bg-green-100 flex items-center justify-center">
                   <Award className="w-5 h-5 text-green-600" />
@@ -230,7 +236,7 @@ const Landing: React.FC = () => {
                 initial={{ opacity: 0, scale: 0.8 }}
                 animate={{ opacity: 1, scale: 1, y: [0, 8, 0] }}
                 transition={{ opacity: { delay: 0.7 }, scale: { delay: 0.7 }, y: { repeat: Infinity, duration: 3.5, ease: 'easeInOut' } }}
-                className="absolute -bottom-5 -right-3 bg-white rounded-2xl shadow-xl px-4 py-3 flex items-center gap-3"
+                className="absolute -bottom-5 -right-3 bg-white rounded-xl shadow-xl px-4 py-3 flex items-center gap-3"
               >
                 <div className="w-10 h-10 rounded-full bg-blue-100 flex items-center justify-center">
                   <Clock className="w-5 h-5 text-blue-600" />
@@ -258,12 +264,12 @@ const Landing: React.FC = () => {
             <motion.div
               key={stat.label}
               variants={fadeUp}
-              className="bg-white rounded-2xl shadow-lg p-6 text-center hover:shadow-xl transition-shadow"
+              className="bg-white rounded-xl shadow-lg p-4 text-center hover:shadow-xl transition-shadow"
             >
               <div className="w-12 h-12 mx-auto mb-3 rounded-xl bg-gradient-to-br from-blue-100 to-purple-100 flex items-center justify-center">
                 <stat.icon className="w-6 h-6 text-blue-600" />
               </div>
-              <div className="text-3xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
+              <div className="text-xl sm:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent mb-1">
                 <CountUp value={stat.value} />
               </div>
               <div className="text-gray-500 text-sm">{stat.label}</div>
@@ -282,7 +288,7 @@ const Landing: React.FC = () => {
           className="text-center mb-14"
         >
           <span className="text-blue-600 font-semibold text-sm uppercase tracking-wider">What we offer</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
+          <h2 className="text-xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">
             Comprehensive Healthcare Services
           </h2>
           <p className="text-lg text-gray-600 max-w-2xl mx-auto">
@@ -302,9 +308,9 @@ const Landing: React.FC = () => {
               key={feature.title}
               variants={fadeUp}
               whileHover={{ y: -6 }}
-              className="group bg-white rounded-2xl p-7 shadow-lg hover:shadow-xl transition-all"
+              className="group bg-white rounded-xl p-7 shadow-lg hover:shadow-xl transition-all"
             >
-              <div className={`w-14 h-14 rounded-2xl bg-${feature.color}-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
+              <div className={`w-14 h-14 rounded-xl bg-${feature.color}-100 flex items-center justify-center mb-5 group-hover:scale-110 transition-transform`}>
                 <feature.icon className={`w-7 h-7 text-${feature.color}-600`} />
               </div>
               <h3 className="text-xl font-semibold text-gray-900 mb-2">{feature.title}</h3>
@@ -324,7 +330,7 @@ const Landing: React.FC = () => {
           className="text-center mb-14"
         >
           <span className="text-purple-600 font-semibold text-sm uppercase tracking-wider">Tailored experiences</span>
-          <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">Access Your Portal</h2>
+          <h2 className="text-xl sm:text-4xl font-bold text-gray-900 mt-2 mb-4">Access Your Portal</h2>
           <p className="text-lg text-gray-600">Different roles, purpose-built dashboards</p>
         </motion.div>
 
@@ -333,7 +339,7 @@ const Landing: React.FC = () => {
           whileInView="show"
           viewport={{ once: true }}
           transition={{ staggerChildren: 0.08 }}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
+          className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
         >
           {roleCards.map((card) => (
             <motion.button
@@ -342,12 +348,12 @@ const Landing: React.FC = () => {
               whileHover={{ scale: 1.03 }}
               whileTap={{ scale: 0.98 }}
               onClick={() => router.push(`/login?role=${card.role}`)}
-              className="text-left rounded-2xl overflow-hidden shadow-xl hover:shadow-2xl transition-all"
+              className="text-left rounded-xl overflow-hidden shadow-xl hover:shadow-2xl transition-all"
             >
               <div className={`relative bg-gradient-to-br ${card.color} p-7 text-white h-full`}>
                 <div className="absolute -top-8 -right-8 w-28 h-28 rounded-full bg-white/10" />
                 <card.icon className="w-14 h-14 mb-4 relative z-10" />
-                <h3 className="text-2xl font-bold mb-2 relative z-10">{card.title}</h3>
+                <h3 className="text-lg font-bold mb-2 relative z-10">{card.title}</h3>
                 <p className="text-white/90 relative z-10">{card.desc}</p>
                 <span className="mt-5 inline-flex items-center gap-1 text-sm font-semibold relative z-10">
                   Open portal <ArrowRight className="w-4 h-4" />
@@ -360,7 +366,7 @@ const Landing: React.FC = () => {
 
       {/* About / Why us */}
       <section id="about" className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-20">
-        <div className="grid lg:grid-cols-2 gap-12 items-center">
+        <div className="grid lg:grid-cols-2 gap-8 items-center">
           <motion.div
             variants={fadeUp}
             initial="hidden"
@@ -379,7 +385,7 @@ const Landing: React.FC = () => {
             viewport={{ once: true }}
           >
             <span className="text-blue-600 font-semibold text-sm uppercase tracking-wider">Why MediCare Plus</span>
-            <h2 className="text-3xl sm:text-4xl font-bold text-gray-900 mt-2 mb-6">
+            <h2 className="text-xl sm:text-4xl font-bold text-gray-900 mt-2 mb-6">
               Healthcare designed around you
             </h2>
             <div className="space-y-5">
@@ -388,7 +394,7 @@ const Landing: React.FC = () => {
                 { title: 'Secure & compliant', desc: 'Bank-grade encryption keeps your medical data private and safe.' },
                 { title: 'Care that fits your life', desc: 'Consult from home, get reminders, and reorder medicines in a tap.' }
               ].map((item) => (
-                <div key={item.title} className="flex items-start gap-4">
+                <div key={item.title} className="flex items-start gap-6">
                   <div className="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center shrink-0">
                     <CheckCircle className="w-5 h-5 text-blue-600" />
                   </div>
@@ -421,13 +427,13 @@ const Landing: React.FC = () => {
           <div className="pointer-events-none absolute -top-16 -left-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
           <div className="pointer-events-none absolute -bottom-16 -right-16 w-64 h-64 rounded-full bg-white/10 blur-2xl" />
           <div className="relative z-10">
-            <h2 className="text-3xl sm:text-4xl font-bold mb-4">Ready to Get Started?</h2>
+            <h2 className="text-xl sm:text-4xl font-bold mb-4">Ready to Get Started?</h2>
             <p className="text-lg sm:text-xl mb-8 text-white/90 max-w-2xl mx-auto">
               Join thousands of patients managing their health digitally with MediCare Plus.
             </p>
             <button
               onClick={() => router.push('/signup')}
-              className="px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-gray-100 transition-all text-lg font-semibold inline-flex items-center gap-2 hover:-translate-y-0.5 transform"
+              className="px-8 py-4 bg-white text-blue-600 rounded-xl hover:bg-gray-100 transition-all text-xl font-semibold inline-flex items-center gap-2 hover:-translate-y-0.5 transform"
             >
               <span>Get Started Now</span>
               <ArrowRight className="w-5 h-5" />
@@ -455,7 +461,6 @@ const Landing: React.FC = () => {
                     key={i}
                     href="#"
                     className="w-9 h-9 rounded-lg bg-white/10 flex items-center justify-center hover:bg-blue-600 transition-colors"
-                    aria-label="Social link"
                   >
                     <Icon className="w-4 h-4" />
                   </a>
@@ -463,60 +468,59 @@ const Landing: React.FC = () => {
               </div>
             </div>
 
-            {/* Services */}
+            {/* Quick links */}
             <div>
-              <h4 className="font-semibold mb-4">Services</h4>
-              <ul className="space-y-2.5 text-gray-400">
-                <li><a href="#services" className="hover:text-blue-400 transition-colors">Appointments</a></li>
-                <li><a href="#services" className="hover:text-blue-400 transition-colors">Telemedicine</a></li>
-                <li><a href="#services" className="hover:text-blue-400 transition-colors">Pharmacy</a></li>
-                <li><a href="#services" className="hover:text-blue-400 transition-colors">Lab Tests</a></li>
+              <h4 className="font-semibold mb-4">Portals</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                {roleCards.map((card) => (
+                  <li key={card.role}>
+                    <button
+                      onClick={() => router.push(`/login?role=${card.role}`)}
+                      className="hover:text-white transition-colors text-left"
+                    >
+                      {card.title}
+                    </button>
+                  </li>
+                ))}
               </ul>
             </div>
 
-            {/* For Professionals */}
+            {/* Services */}
             <div>
-              <h4 className="font-semibold mb-4">For Professionals</h4>
-              <ul className="space-y-2.5 text-gray-400">
-                <li><Link href="/login?role=doctor" className="hover:text-blue-400 transition-colors">Doctor Portal</Link></li>
-                <li><Link href="/login?role=admin" className="hover:text-blue-400 transition-colors">Admin Panel</Link></li>
-                <li><Link href="/login?role=pharmacist" className="hover:text-blue-400 transition-colors">Pharmacy Module</Link></li>
-                <li><Link href="/login?role=lab_tech" className="hover:text-blue-400 transition-colors">Lab Module</Link></li>
+              <h4 className="font-semibold mb-4">Services</h4>
+              <ul className="space-y-2 text-gray-400 text-sm">
+                <li><a href="#services" className="hover:text-white transition-colors">Appointments</a></li>
+                <li><a href="#services" className="hover:text-white transition-colors">Telemedicine</a></li>
+                <li><a href="#services" className="hover:text-white transition-colors">Pharmacy</a></li>
+                <li><a href="#services" className="hover:text-white transition-colors">Lab Tests</a></li>
               </ul>
             </div>
 
             {/* Contact */}
             <div>
               <h4 className="font-semibold mb-4">Contact</h4>
-              <ul className="space-y-2.5 text-gray-400">
-                <li>
-                  <a href="tel:911" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
-                    <Phone className="w-4 h-4" /> Emergency: 911
-                  </a>
-                </li>
-                <li>
-                  <a href="tel:1-800-633-4227" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
-                    <Phone className="w-4 h-4" /> 1-800-MEDICARE
-                  </a>
-                </li>
-                <li>
-                  <a href="mailto:support@medicareplus.com" className="flex items-center gap-2 hover:text-blue-400 transition-colors">
-                    <Mail className="w-4 h-4" /> support@medicareplus.com
-                  </a>
+              <ul className="space-y-3 text-gray-400 text-sm">
+                <li className="flex items-center gap-2">
+                  <Mail className="w-4 h-4 shrink-0" />
+                  <span>support@medicareplus.com</span>
                 </li>
                 <li className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4" /> 500 Health Ave, NY
+                  <Phone className="w-4 h-4 shrink-0" />
+                  <span>+1 (800) 123-4567</span>
+                </li>
+                <li className="flex items-center gap-2">
+                  <MapPin className="w-4 h-4 shrink-0" />
+                  <span>123 Health Ave, Medical City</span>
                 </li>
               </ul>
             </div>
           </div>
 
-          <div className="border-t border-gray-800 mt-10 pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-gray-400 text-sm">
+          <div className="border-t border-gray-800 mt-12 pt-8 flex flex-col sm:flex-row justify-between items-center gap-4 text-gray-500 text-sm">
             <p>&copy; {new Date().getFullYear()} MediCare Plus. All rights reserved.</p>
-            <div className="flex items-center gap-6">
-              <Link href="/privacy-policy" className="hover:text-blue-400 transition-colors">Privacy Policy</Link>
-              <Link href="/terms-of-service" className="hover:text-blue-400 transition-colors">Terms of Service</Link>
-              <Link href="/login" className="hover:text-blue-400 transition-colors">Login</Link>
+            <div className="flex gap-6">
+              <Link href="/terms-of-service" className="hover:text-white transition-colors">Terms</Link>
+              <Link href="/privacy-policy" className="hover:text-white transition-colors">Privacy</Link>
             </div>
           </div>
         </div>

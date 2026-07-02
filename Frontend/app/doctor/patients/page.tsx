@@ -1,6 +1,7 @@
 'use client';
 
 import React, { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import { Search, Phone, Mail, Calendar, FileText, Users } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
@@ -37,6 +38,7 @@ const statusColor = (status: string) => {
 };
 
 const DoctorPatients: React.FC = () => {
+  const router = useRouter();
   const [search, setSearch] = useState('');
 
   const filtered = patients.filter(
@@ -52,10 +54,10 @@ const DoctorPatients: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">My Patients</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">My Patients</h1>
               <p className="text-gray-600">{patients.length} patients under your care</p>
             </div>
             <div className="relative sm:w-72">
@@ -104,10 +106,16 @@ const DoctorPatients: React.FC = () => {
                 </div>
 
                 <div className="flex gap-2">
-                  <button className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm">
+                  <button
+                    onClick={() => router.push(`/doctor/patients/${p.id}`)}
+                    className="flex-1 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                  >
                     View Records
                   </button>
-                  <button className="flex-1 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm">
+                  <button
+                    onClick={() => router.push('/doctor/prescriptions')}
+                    className="flex-1 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm"
+                  >
                     New Rx
                   </button>
                 </div>
@@ -116,8 +124,8 @@ const DoctorPatients: React.FC = () => {
           </div>
 
           {filtered.length === 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-              <Users className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No patients found</h3>
               <p className="text-gray-600">Try a different search term.</p>
             </div>

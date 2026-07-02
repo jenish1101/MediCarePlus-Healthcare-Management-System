@@ -18,10 +18,10 @@ const PatientLabReports: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Lab Reports</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Lab Reports</h1>
               <p className="text-gray-600">Access your test results and reports</p>
             </div>
             <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-purple-600 text-white rounded-lg font-semibold hover:bg-purple-700 transition-colors">
@@ -30,35 +30,35 @@ const PatientLabReports: React.FC = () => {
             </button>
           </motion.div>
 
-          <div className="grid grid-cols-2 gap-4 sm:gap-6 max-w-md">
-            <div className="bg-white rounded-xl p-5 shadow-lg flex items-center gap-4">
+          <div className="grid grid-cols-2 gap-6 sm:gap-6 max-w-md">
+            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6">
               <div className="w-12 h-12 rounded-lg bg-green-100 flex items-center justify-center">
                 <CheckCircle className="w-6 h-6 text-green-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{completed}</p>
+                <p className="text-lg font-bold text-gray-900">{completed}</p>
                 <p className="text-gray-600 text-sm">Completed</p>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-5 shadow-lg flex items-center gap-4">
+            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6">
               <div className="w-12 h-12 rounded-lg bg-yellow-100 flex items-center justify-center">
                 <Clock className="w-6 h-6 text-yellow-600" />
               </div>
               <div>
-                <p className="text-2xl font-bold text-gray-900">{pending}</p>
+                <p className="text-lg font-bold text-gray-900">{pending}</p>
                 <p className="text-gray-600 text-sm">Pending</p>
               </div>
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {mockLabReports.map((report, i) => (
               <motion.div
                 key={report.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start space-x-4">

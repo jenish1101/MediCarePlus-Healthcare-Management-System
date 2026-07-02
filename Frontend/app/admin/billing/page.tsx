@@ -5,6 +5,7 @@ import { motion } from 'framer-motion';
 import { DollarSign, Search, Download, FileText, TrendingUp, Clock } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { exportCsv, exportPdfReport } from '@/lib/exportReport';
 
 interface Invoice {
   id: string;
@@ -36,6 +37,7 @@ const statusColor = (status: string) => {
 const AdminBilling: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
+  const [exportMsg, setExportMsg] = useState('');
 
   const filtered = invoices.filter(
     (inv) =>
@@ -55,6 +57,32 @@ const AdminBilling: React.FC = () => {
     { icon: FileText, label: 'Invoices', value: invoices.length, color: 'blue' }
   ];
 
+  const handleExportCsv = () => {
+    exportCsv(
+      'billing-invoices.csv',
+      ['Invoice ID', 'Patient', 'Service', 'Date', 'Amount', 'Status'],
+      invoices.map((inv) => [inv.id, inv.patient, inv.service, inv.date, inv.amount, inv.status])
+    );
+    setExportMsg('CSV export downloaded.');
+    setTimeout(() => setExportMsg(''), 3000);
+  };
+
+  const handleExportPdf = () => {
+    exportPdfReport(
+      'billing-report.pdf',
+      'Billing & Invoices Report',
+      [
+        `Collected: $${totalRevenue.toLocaleString()}`,
+        `Pending: $${pending.toLocaleString()}`,
+        `Overdue: $${overdue.toLocaleString()}`,
+        `Total Invoices: ${invoices.length}`,
+        ...invoices.slice(0, 5).map((i) => `${i.id} — ${i.patient} — $${i.amount} (${i.status})`)
+      ]
+    );
+    setExportMsg('PDF export downloaded.');
+    setTimeout(() => setExportMsg(''), 3000);
+  };
+
   return (
     <ProtectedRoute allowedRoles={['admin']}>
       <DashboardLayout role="admin">
@@ -62,16 +90,33 @@ const AdminBilling: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Billing</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Billing</h1>
               <p className="text-gray-600">Manage invoices and payments</p>
             </div>
-            <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
-              <Download className="w-5 h-5" /> Export
-            </button>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportCsv}
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4" /> Export CSV
+              </button>
+              <button
+                onClick={handleExportPdf}
+                className="inline-flex items-center justify-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                <Download className="w-5 h-5" /> Export PDF
+              </button>
+            </div>
           </motion.div>
+
+          {exportMsg && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 font-medium">
+              {exportMsg}
+            </motion.p>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((s, i) => (
@@ -86,7 +131,7 @@ const AdminBilling: React.FC = () => {
                   <s.icon className={`w-6 h-6 text-${s.color}-600`} />
                 </div>
                 <p className="text-gray-600 text-sm mb-1">{s.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-lg font-bold text-gray-900">{s.value}</p>
               </motion.div>
             ))}
           </div>
@@ -153,8 +198,8 @@ const AdminBilling: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="p-12 text-center">
-                <FileText className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No invoices found</h3>
                 <p className="text-gray-600">Try a different search or filter.</p>
               </div>

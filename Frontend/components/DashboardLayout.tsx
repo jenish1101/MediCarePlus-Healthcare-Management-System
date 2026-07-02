@@ -20,9 +20,30 @@ import {
   BarChart3,
   Bed,
   DollarSign,
-  User
+  User,
+  Shield,
+  Activity,
+  HelpCircle,
+  UserPlus,
+  CalendarPlus,
+  MessageSquare,
+  CalendarClock,
+  ClipboardList,
+  Share2,
+  Stethoscope,
+  ScrollText,
+  Megaphone,
+  Building2,
+  AlertTriangle,
+  ShoppingCart,
+  RotateCcw,
+  BookOpen,
+  ScanBarcode,
+  Wrench
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import { useNotifications } from '@/contexts/NotificationContext';
+import { notificationIconMap } from '@/lib/notificationIcons';
 import { UserRole } from '@/types';
 
 interface DashboardLayoutProps {
@@ -37,47 +58,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [showLogoutConfirm, setShowLogoutConfirm] = useState(false);
   const [showNotifications, setShowNotifications] = useState(false);
-
-  const notifications = [
-    {
-      id: 1,
-      icon: Calendar,
-      color: 'blue',
-      title: 'Appointment Confirmed',
-      message: 'Your appointment with Dr. Sarah Smith is confirmed for tomorrow at 10:00 AM.',
-      time: '5 min ago',
-      unread: true
-    },
-    {
-      id: 2,
-      icon: FileText,
-      color: 'purple',
-      title: 'New Prescription',
-      message: 'A new prescription has been added to your records.',
-      time: '1 hour ago',
-      unread: true
-    },
-    {
-      id: 3,
-      icon: TestTube,
-      color: 'green',
-      title: 'Lab Report Ready',
-      message: 'Your Complete Blood Count (CBC) report is now available.',
-      time: '3 hours ago',
-      unread: true
-    },
-    {
-      id: 4,
-      icon: Pill,
-      color: 'orange',
-      title: 'Order Shipped',
-      message: 'Your medicine order #ORD-1024 has been shipped.',
-      time: 'Yesterday',
-      unread: false
-    }
-  ];
-
-  const unreadCount = notifications.filter((n) => n.unread).length;
+  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
 
   const roleBasePath: Record<UserRole, string> = {
     patient: '/patient',
@@ -93,41 +74,67 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   const navigationItems: Record<UserRole, Array<{ icon: React.ElementType; label: string; path: string }>> = {
     patient: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/patient/dashboard' },
+      { icon: CalendarPlus, label: 'Book Appointment', path: '/patient/book-appointment' },
       { icon: Calendar, label: 'Appointments', path: '/patient/appointments' },
       { icon: Users, label: 'Find Doctors', path: '/patient/doctors' },
       { icon: FileText, label: 'Prescriptions', path: '/patient/prescriptions' },
       { icon: TestTube, label: 'Lab Reports', path: '/patient/lab-reports' },
       { icon: Pill, label: 'Pharmacy', path: '/patient/pharmacy' },
+      { icon: Activity, label: 'Health Timeline', path: '/patient/timeline' },
+      { icon: DollarSign, label: 'Billing', path: '/patient/billing' },
+      { icon: UserPlus, label: 'Family Members', path: '/patient/family' },
+      { icon: Shield, label: 'Insurance', path: '/patient/insurance' },
+      { icon: Bell, label: 'Notifications', path: '/patient/notifications' },
+      { icon: HelpCircle, label: 'Help & FAQ', path: '/patient/help' },
       { icon: User, label: 'Profile', path: '/patient/profile' }
     ],
     doctor: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/doctor/dashboard' },
       { icon: Calendar, label: 'Appointments', path: '/doctor/appointments' },
       { icon: Users, label: 'Patients', path: '/doctor/patients' },
+      { icon: ClipboardList, label: 'Medical Notes', path: '/doctor/notes' },
       { icon: FileText, label: 'Prescriptions', path: '/doctor/prescriptions' },
+      { icon: Share2, label: 'Referrals', path: '/doctor/referrals' },
+      { icon: MessageSquare, label: 'Messages', path: '/doctor/messages' },
       { icon: DollarSign, label: 'Earnings', path: '/doctor/earnings' },
-      { icon: Settings, label: 'Availability', path: '/doctor/availability' }
+      { icon: CalendarClock, label: 'Availability', path: '/doctor/availability' },
+      { icon: User, label: 'Profile', path: '/doctor/profile' }
     ],
     admin: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/admin/dashboard' },
       { icon: Users, label: 'Users', path: '/admin/users' },
+      { icon: Stethoscope, label: 'Doctor Onboarding', path: '/admin/doctor-onboarding' },
       { icon: Calendar, label: 'Appointments', path: '/admin/appointments' },
       { icon: Bed, label: 'Beds', path: '/admin/beds' },
+      { icon: Package, label: 'Inventory', path: '/admin/inventory' },
+      { icon: Building2, label: 'Departments', path: '/admin/departments' },
       { icon: BarChart3, label: 'Analytics', path: '/admin/analytics' },
-      { icon: DollarSign, label: 'Billing', path: '/admin/billing' }
+      { icon: DollarSign, label: 'Billing', path: '/admin/billing' },
+      { icon: ScrollText, label: 'Audit Log', path: '/admin/audit-log' },
+      { icon: Megaphone, label: 'Announcements', path: '/admin/announcements' },
+      { icon: User, label: 'Profile', path: '/admin/profile' }
     ],
     pharmacist: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/pharmacy/dashboard' },
+      { icon: FileText, label: 'Prescriptions', path: '/pharmacy/prescriptions' },
       { icon: Pill, label: 'Inventory', path: '/pharmacy/inventory' },
       { icon: Package, label: 'Orders', path: '/pharmacy/orders' },
+      { icon: AlertTriangle, label: 'Expiry Alerts', path: '/pharmacy/expiry-alerts' },
+      { icon: ShoppingCart, label: 'Purchase Orders', path: '/pharmacy/purchase-orders' },
+      { icon: RotateCcw, label: 'Returns', path: '/pharmacy/returns' },
       { icon: Users, label: 'Suppliers', path: '/pharmacy/suppliers' },
-      { icon: BarChart3, label: 'Sales', path: '/pharmacy/sales' }
+      { icon: BarChart3, label: 'Sales', path: '/pharmacy/sales' },
+      { icon: User, label: 'Profile', path: '/pharmacy/profile' }
     ],
     lab_tech: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/lab/dashboard' },
       { icon: TestTube, label: 'Tests', path: '/lab/tests' },
+      { icon: BookOpen, label: 'Test Catalog', path: '/lab/catalog' },
+      { icon: ScanBarcode, label: 'Sample Tracking', path: '/lab/samples' },
       { icon: FileText, label: 'Reports', path: '/lab/reports' },
-      { icon: Calendar, label: 'Appointments', path: '/lab/appointments' }
+      { icon: Wrench, label: 'Equipment / QC', path: '/lab/equipment' },
+      { icon: Calendar, label: 'Appointments', path: '/lab/appointments' },
+      { icon: User, label: 'Profile', path: '/lab/profile' }
     ],
     receptionist: [
       { icon: LayoutDashboard, label: 'Dashboard', path: '/reception/dashboard' },
@@ -171,13 +178,9 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
       {/* Top Navbar */}
-      <motion.nav
-        initial={{ y: -100 }}
-        animate={{ y: 0 }}
-        className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50"
-      >
+      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
@@ -185,17 +188,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 onClick={() => setSidebarOpen(!sidebarOpen)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors hidden lg:block"
               >
-                {sidebarOpen ? <X className="w-6 h-6" /> : <Menu className="w-6 h-6" />}
+                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
               </button>
               <button
                 onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
                 className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
               >
-                <Menu className="w-6 h-6" />
+                <Menu className="w-5 h-5" />
               </button>
               <div className="flex items-center space-x-2">
-                <Heart className="w-8 h-8 text-red-500" />
-                <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                <Heart className="w-7 h-7 text-red-500" />
+                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
                   MediCare Plus
                 </span>
               </div>
@@ -208,7 +211,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
                   aria-label="Notifications"
                 >
-                  <Bell className="w-6 h-6 text-gray-600" />
+                  <Bell className="w-5 h-5 text-gray-600" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
                       {unreadCount}
@@ -240,15 +243,18 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                           )}
                         </div>
                         <div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
-                          {notifications.map((n) => (
+                          {notifications.map((n) => {
+                            const NIcon = notificationIconMap[n.icon];
+                            return (
                             <div
                               key={n.id}
+                              onClick={() => n.unread && markAsRead(n.id)}
                               className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${
                                 n.unread ? 'bg-blue-50/40' : ''
                               }`}
                             >
                               <div className={`w-9 h-9 rounded-full bg-${n.color}-100 flex items-center justify-center shrink-0`}>
-                                <n.icon className={`w-5 h-5 text-${n.color}-600`} />
+                                <NIcon className={`w-5 h-5 text-${n.color}-600`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
@@ -259,10 +265,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                                 <p className="text-[11px] text-gray-400 mt-1">{n.time}</p>
                               </div>
                             </div>
-                          ))}
+                            );
+                          })}
                         </div>
-                        <button className="w-full py-2.5 text-sm font-medium text-blue-600 hover:bg-gray-50 transition-colors border-t">
-                          Mark all as read
+                        <button
+                          onClick={() => {
+                            setShowNotifications(false);
+                            if (role === 'patient') {
+                              router.push('/patient/notifications');
+                            } else {
+                              markAllAsRead();
+                            }
+                          }}
+                          className="w-full py-2.5 text-sm font-medium text-blue-600 hover:bg-gray-50 transition-colors border-t"
+                        >
+                          {role === 'patient' ? 'View all notifications' : 'Mark all as read'}
                         </button>
                       </motion.div>
                     </>
@@ -279,7 +296,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 <img
                   src={user?.avatar || 'https://api.dicebear.com/7.x/avataaars/svg?seed=default'}
                   alt={user?.name}
-                  className="w-10 h-10 rounded-full border-2 border-blue-500"
+                  className="w-9 h-9 rounded-full border-2 border-blue-500"
                 />
                 <div className="hidden sm:block text-left">
                   <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
@@ -289,48 +306,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             </div>
           </div>
         </div>
-      </motion.nav>
+      </nav>
 
       {/* Sidebar - Desktop */}
       <AnimatePresence>
         {sidebarOpen && (
           <motion.aside
-            initial={{ x: -280 }}
+            initial={false}
             animate={{ x: 0 }}
-            exit={{ x: -280 }}
+            exit={{ x: -256 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg z-40"
+            className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg z-40 overflow-hidden"
           >
-            <nav className="p-4 h-full flex flex-col">
-              <div className="flex-1 space-y-2">
-                {navItems.map((item, i) => (
-                  <motion.button
-                    key={i}
-                    initial={{ opacity: 0, x: -20 }}
-                    animate={{ opacity: 1, x: 0 }}
-                    transition={{ delay: i * 0.05 }}
+            <nav className="p-3 h-full flex flex-col min-w-0">
+              <div className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden min-w-0">
+                {navItems.map((item) => (
+                  <button
+                    key={item.path}
                     onClick={() => router.push(item.path)}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left text-sm min-w-0"
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
-                  </motion.button>
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    <span className="font-medium truncate">{item.label}</span>
+                  </button>
                 ))}
               </div>
 
-              <div className="border-t pt-4 space-y-2">
+              <div className="border-t pt-3 space-y-1">
                 <button
                   onClick={goToSettings}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left text-sm"
                 >
-                  <Settings className="w-5 h-5 text-gray-600" />
+                  <Settings className="w-5 h-5 text-gray-600 shrink-0" />
                   <span className="font-medium text-gray-700">Settings</span>
                 </button>
                 <button
                   onClick={requestLogout}
-                  className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm"
                 >
-                  <LogOut className="w-5 h-5" />
+                  <LogOut className="w-5 h-5 shrink-0" />
                   <span className="font-medium">Logout</span>
                 </button>
               </div>
@@ -350,45 +364,45 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             onClick={() => setMobileMenuOpen(false)}
           >
             <motion.div
-              initial={{ x: -280 }}
+              initial={{ x: -256 }}
               animate={{ x: 0 }}
-              exit={{ x: -280 }}
+              exit={{ x: -256 }}
               onClick={(e) => e.stopPropagation()}
-              className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg"
+              className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg overflow-hidden"
             >
               <div className="p-4 border-b flex items-center justify-between">
                 <span className="font-semibold">Menu</span>
                 <button onClick={() => setMobileMenuOpen(false)}>
-                  <X className="w-6 h-6" />
+                  <X className="w-5 h-5" />
                 </button>
               </div>
-              <nav className="p-4">
-                {navItems.map((item, i) => (
+              <nav className="p-3 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-4rem)]">
+                {navItems.map((item) => (
                   <button
-                    key={i}
+                    key={item.path}
                     onClick={() => {
                       router.push(item.path);
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left text-sm min-w-0"
                   >
-                    <item.icon className="w-5 h-5" />
-                    <span className="font-medium">{item.label}</span>
+                    <item.icon className="w-5 h-5 shrink-0" />
+                    <span className="font-medium truncate">{item.label}</span>
                   </button>
                 ))}
-                <div className="border-t mt-4 pt-4 space-y-2">
+                <div className="border-t mt-3 pt-3 space-y-1">
                   <button
                     onClick={goToSettings}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-gray-50 transition-colors text-left"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left text-sm"
                   >
-                    <Settings className="w-5 h-5 text-gray-600" />
+                    <Settings className="w-5 h-5 text-gray-600 shrink-0" />
                     <span className="font-medium text-gray-700">Settings</span>
                   </button>
                   <button
                     onClick={requestLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-3 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm"
                   >
-                    <LogOut className="w-5 h-5" />
+                    <LogOut className="w-5 h-5 shrink-0" />
                     <span className="font-medium">Logout</span>
                   </button>
                 </div>
@@ -400,11 +414,11 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
       {/* Main Content */}
       <main
-        className={`pt-16 transition-all duration-300 ${
+        className={`pt-16 transition-[padding] duration-300 overflow-x-hidden ${
           sidebarOpen ? 'lg:pl-64' : 'lg:pl-0'
         }`}
       >
-        <div className="p-4 sm:p-6 lg:p-8">
+        <div className="p-4 sm:p-6 lg:p-8 max-w-[1600px] min-w-0">
           {children}
         </div>
       </main>
@@ -425,13 +439,13 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 22, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white rounded-2xl shadow-2xl p-6"
+              className="w-full max-w-sm bg-white rounded-xl shadow-2xl p-4"
             >
               <div className="flex flex-col items-center text-center">
-                <div className="w-14 h-14 rounded-full bg-red-100 flex items-center justify-center mb-4">
-                  <LogOut className="w-7 h-7 text-red-600" />
+                <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center mb-3">
+                  <LogOut className="w-5 h-5 text-red-600" />
                 </div>
-                <h3 className="text-lg font-semibold text-gray-900">Log out?</h3>
+                <h3 className="text-base font-semibold text-gray-900">Log out?</h3>
                 <p className="text-sm text-gray-500 mt-1">
                   Are you sure you want to log out of your account?
                 </p>

@@ -17,7 +17,10 @@ import {
   Shield,
   Pill,
   TestTube,
-  CheckCircle
+  CheckCircle,
+  ClipboardList,
+  HeartPulse,
+  Truck
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
 import { UserRole } from '@/types';
@@ -38,7 +41,10 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
     { value: 'doctor', label: 'Doctor', demo: 'doctor@demo.com', icon: Stethoscope },
     { value: 'admin', label: 'Admin', demo: 'admin@demo.com', icon: Shield },
     { value: 'pharmacist', label: 'Pharmacist', demo: 'pharmacist@demo.com', icon: Pill },
-    { value: 'lab_tech', label: 'Lab Tech', demo: 'lab@demo.com', icon: TestTube }
+    { value: 'lab_tech', label: 'Lab Tech', demo: 'lab@demo.com', icon: TestTube },
+    { value: 'receptionist', label: 'Reception', demo: 'receptionist@demo.com', icon: ClipboardList },
+    { value: 'nurse', label: 'Nurse', demo: 'nurse@demo.com', icon: HeartPulse },
+    { value: 'supplier', label: 'Supplier', demo: 'supplier@demo.com', icon: Truck }
   ];
 
   const activeRole = roles.find((r) => r.value === selectedRole) ?? roles[0];
@@ -80,14 +86,14 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
   return (
     <div className="min-h-screen flex bg-gray-50">
       {/* Left: Branded visual panel */}
-      <div className="relative hidden lg:flex lg:w-1/2 xl:w-[55%] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-12 text-white">
+      <div className="relative hidden lg:flex lg:w-1/2 xl:w-[55%] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white">
         {/* Decorative blobs */}
         <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
         <div className="pointer-events-none absolute bottom-0 right-0 w-96 h-96 rounded-full bg-purple-400/20 blur-3xl" />
 
         <div className="relative z-10 flex items-center gap-2">
           <Heart className="w-8 h-8 text-white" />
-          <span className="text-2xl font-bold">MediCare Plus</span>
+          <span className="text-lg font-bold">MediCare Plus</span>
         </div>
 
         <div className="relative z-10 flex-1 flex flex-col justify-center">
@@ -102,7 +108,7 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
               <img
                 src="/login-hero.png"
                 alt="Healthcare illustration"
-                className="w-full rounded-2xl"
+                className="w-full rounded-xl"
               />
             </div>
           </motion.div>
@@ -113,7 +119,7 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
             transition={{ delay: 0.2 }}
             className="mt-10"
           >
-            <h2 className="text-3xl font-bold leading-tight">
+            <h2 className="text-xl font-bold leading-tight">
               Your complete hospital management system
             </h2>
             <ul className="mt-6 space-y-3">
@@ -139,7 +145,7 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
       </div>
 
       {/* Right: Form */}
-      <div className="flex w-full lg:w-1/2 xl:w-[45%] items-center justify-center p-6 sm:p-10">
+      <div className="flex w-full lg:w-1/2 xl:w-[45%] items-center justify-center p-4 sm:p-10">
         <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
@@ -161,12 +167,12 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
             </span>
           </div>
 
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back</h1>
+          <h1 className="text-2xl font-bold text-gray-900">Welcome back</h1>
           <p className="text-gray-500 mt-1 mb-8">Sign in to access your {activeRole.label.toLowerCase()} portal</p>
 
           {/* Role selector */}
           <label className="block text-sm font-medium text-gray-700 mb-3">Select your role</label>
-          <div className="grid grid-cols-3 gap-2.5 mb-7">
+          <div className="grid grid-cols-2 sm:grid-cols-4 gap-2.5 mb-7">
             {roles.map((role) => {
               const active = selectedRole === role.value;
               return (

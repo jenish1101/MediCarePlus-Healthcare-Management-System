@@ -14,6 +14,7 @@ interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
+  updateProfile: (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => void;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
@@ -61,6 +62,30 @@ const mockUsers: Record<string, User> = {
     role: 'lab_tech',
     phone: '+1234567894',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lab'
+  },
+  'receptionist@demo.com': {
+    id: 'r1',
+    name: 'Emma Reception',
+    email: 'receptionist@demo.com',
+    role: 'receptionist',
+    phone: '+1234567895',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma'
+  },
+  'nurse@demo.com': {
+    id: 'n1',
+    name: 'Lisa Nurse',
+    email: 'nurse@demo.com',
+    role: 'nurse',
+    phone: '+1234567896',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa'
+  },
+  'supplier@demo.com': {
+    id: 's1',
+    name: 'Supply Co.',
+    email: 'supplier@demo.com',
+    role: 'supplier',
+    phone: '+1234567897',
+    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Supply'
   }
 };
 
@@ -118,8 +143,17 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
     localStorage.removeItem('user');
   };
 
+  const updateProfile = (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => {
+    setUser((current) => {
+      if (!current) return current;
+      const updated = { ...current, ...updates };
+      localStorage.setItem('user', JSON.stringify(updated));
+      return updated;
+    });
+  };
+
   return (
-    <AuthContext.Provider value={{ user, login, signup, logout, isAuthenticated: !!user, isLoading }}>
+    <AuthContext.Provider value={{ user, login, signup, logout, updateProfile, isAuthenticated: !!user, isLoading }}>
       {children}
     </AuthContext.Provider>
   );

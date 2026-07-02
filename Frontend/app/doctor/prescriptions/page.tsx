@@ -72,10 +72,10 @@ const DoctorPrescriptions: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Prescriptions</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Prescriptions</h1>
               <p className="text-gray-600">Prescriptions you&apos;ve issued to patients</p>
             </div>
             <button
@@ -86,14 +86,14 @@ const DoctorPrescriptions: React.FC = () => {
             </button>
           </motion.div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {prescriptions.map((rx, idx) => (
               <motion.div
                 key={rx.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: idx * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start gap-3">
@@ -143,7 +143,7 @@ const DoctorPrescriptions: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-4 max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-xl font-semibold">New Prescription</h3>
@@ -151,7 +151,7 @@ const DoctorPrescriptions: React.FC = () => {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <form onSubmit={handleCreate} className="space-y-4">
+                <form onSubmit={handleCreate} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">Patient Name</label>
                     <input
@@ -181,7 +181,7 @@ const DoctorPrescriptions: React.FC = () => {
                       className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                     />
                   </div>
-                  <div className="grid grid-cols-2 gap-4">
+                  <div className="grid grid-cols-2 gap-6">
                     <div>
                       <label className="block text-sm font-medium text-gray-600 mb-1">Dosage</label>
                       <input

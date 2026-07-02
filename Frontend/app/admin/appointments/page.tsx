@@ -59,20 +59,20 @@ const AdminAppointments: React.FC = () => {
       <DashboardLayout role="admin">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Appointments</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Appointments</h1>
             <p className="text-gray-600">All appointments across the hospital</p>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-5 shadow-lg text-center"
+                className="bg-white rounded-xl p-6 shadow-lg text-center"
               >
-                <p className={`text-3xl font-bold text-${s.color}-600`}>{s.value}</p>
+                <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
                 <p className="text-gray-600 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
@@ -151,8 +151,8 @@ const AdminAppointments: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="p-12 text-center">
-                <Calendar className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center">
+                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No appointments found</h3>
                 <p className="text-gray-600">Try a different search or filter.</p>
               </div>

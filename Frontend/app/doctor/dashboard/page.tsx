@@ -1,6 +1,7 @@
 'use client';
 
 import React from 'react';
+import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
   Calendar,
@@ -17,7 +18,10 @@ import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 
 const DoctorDashboard: React.FC = () => {
+  const router = useRouter();
   const todayAppointments = mockAppointments.filter(apt => apt.status === 'scheduled').slice(0, 3);
+  const videoAppointment = todayAppointments.find(apt => apt.type === 'video') ||
+    mockAppointments.find(apt => apt.type === 'video' && apt.status === 'scheduled');
 
   const stats = [
     { icon: Calendar, label: "Today's Appointments", value: '12', change: '+3', color: 'blue' },
@@ -34,9 +38,9 @@ const DoctorDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-2xl p-8 text-white"
+            className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-5 text-white"
           >
-            <h1 className="text-3xl font-bold mb-2">Good Morning, Dr. Wilson! 👋</h1>
+            <h1 className="text-xl font-bold mb-2">Good Morning, Dr. Wilson! 👋</h1>
             <p className="text-white/90">You have 12 appointments today. 3 are video consultations.</p>
           </motion.div>
 
@@ -75,10 +79,15 @@ const DoctorDashboard: React.FC = () => {
               >
                 <div className="flex items-center justify-between mb-6">
                   <h3 className="text-xl font-semibold">Today&apos;s Appointments</h3>
-                  <button className="text-blue-600 hover:text-blue-700 font-medium">View All</button>
+                  <button
+                    onClick={() => router.push('/doctor/appointments')}
+                    className="text-blue-600 hover:text-blue-700 font-medium"
+                  >
+                    View All
+                  </button>
                 </div>
 
-                <div className="space-y-4">
+                <div className="space-y-6">
                   {todayAppointments.map((apt, i) => (
                     <motion.div
                       key={apt.id}
@@ -105,11 +114,18 @@ const DoctorDashboard: React.FC = () => {
                       </div>
                       <div className="flex items-center space-x-2">
                         {apt.type === 'video' && (
-                          <button className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors">
+                          <button
+                            onClick={() => router.push(`/doctor/consultation/${apt.id}`)}
+                            className="p-2 bg-green-100 text-green-600 rounded-lg hover:bg-green-200 transition-colors"
+                            aria-label="Start video consultation"
+                          >
                             <Video className="w-5 h-5" />
                           </button>
                         )}
-                        <button className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors">
+                        <button
+                          onClick={() => router.push(`/doctor/patients/${apt.patientId}`)}
+                          className="px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
+                        >
                           View
                         </button>
                       </div>
@@ -136,15 +152,28 @@ const DoctorDashboard: React.FC = () => {
               >
                 <h3 className="text-xl font-semibold mb-4">Quick Actions</h3>
                 <div className="space-y-3">
-                  <button className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => router.push('/doctor/prescriptions')}
+                    className="w-full py-3 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors flex items-center justify-center space-x-2"
+                  >
                     <FileText className="w-5 h-5" />
                     <span>New Prescription</span>
                   </button>
-                  <button className="w-full py-3 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() => router.push('/doctor/availability')}
+                    className="w-full py-3 border-2 border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors flex items-center justify-center space-x-2"
+                  >
                     <Calendar className="w-5 h-5" />
                     <span>Set Availability</span>
                   </button>
-                  <button className="w-full py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center space-x-2">
+                  <button
+                    onClick={() =>
+                      videoAppointment
+                        ? router.push(`/doctor/consultation/${videoAppointment.id}`)
+                        : router.push('/doctor/appointments')
+                    }
+                    className="w-full py-3 border-2 border-green-600 text-green-600 rounded-lg hover:bg-green-50 transition-colors flex items-center justify-center space-x-2"
+                  >
                     <Video className="w-5 h-5" />
                     <span>Start Consultation</span>
                   </button>
@@ -162,7 +191,7 @@ const DoctorDashboard: React.FC = () => {
                   <h3 className="font-semibold">Performance</h3>
                   <Activity className="w-5 h-5 text-purple-600" />
                 </div>
-                <div className="space-y-4">
+                <div className="space-y-6">
                   <div>
                     <div className="flex justify-between text-sm mb-2">
                       <span className="text-gray-600">Patient Satisfaction</span>

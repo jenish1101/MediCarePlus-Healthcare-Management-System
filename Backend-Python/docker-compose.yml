@@ -1,0 +1,33 @@
+services:
+  mongo:
+    profiles: ["local"]
+    image: mongo:7
+    restart: unless-stopped
+    ports:
+      - "27018:27017"
+    volumes:
+      - mongo_data:/data/db
+    command: ["mongod", "--bind_ip_all", "--quiet"]
+    healthcheck:
+      test: ["CMD", "mongosh", "--quiet", "--eval", "db.adminCommand('ping').ok"]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+      start_period: 10s
+
+  api:
+    build: .
+    restart: unless-stopped
+    ports:
+      - "8001:8000"
+    env_file:
+      - .env
+    environment:
+      API_PUBLIC_URL: http://localhost:8001
+    depends_on:
+      mongo:
+        condition: service_healthy
+        required: false
+
+volumes:
+  mongo_data:

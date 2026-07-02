@@ -1,8 +1,9 @@
 'use client';
 
 import React from 'react';
+import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Package, DollarSign, AlertTriangle, Pill } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Pill, FileText, ShoppingCart, RotateCcw } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { mockInventory, mockOrders } from '@/data/mockData';
@@ -26,9 +27,9 @@ const PharmacyDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-2xl p-8 text-white"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-5 text-white"
           >
-            <h1 className="text-3xl font-bold mb-2">Pharmacy Dashboard</h1>
+            <h1 className="text-xl font-bold mb-2">Pharmacy Dashboard</h1>
             <p className="text-white/90">Manage inventory, orders, and sales</p>
           </motion.div>
 
@@ -59,7 +60,9 @@ const PharmacyDashboard: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold">Low Stock Alerts</h3>
-                <AlertTriangle className="w-6 h-6 text-orange-600" />
+                <Link href="/pharmacy/expiry-alerts" className="text-sm text-orange-700 hover:text-orange-900 font-medium">
+                  View all
+                </Link>
               </div>
               <div className="space-y-3">
                 {lowStock.map((item) => (
@@ -70,9 +73,9 @@ const PharmacyDashboard: React.FC = () => {
                     </div>
                     <div className="text-right">
                       <p className="text-lg font-bold text-orange-900">{item.quantity}</p>
-                      <button className="text-sm text-orange-700 hover:text-orange-900 font-medium">
+                      <Link href="/pharmacy/purchase-orders" className="text-sm text-orange-700 hover:text-orange-900 font-medium">
                         Reorder
-                      </button>
+                      </Link>
                     </div>
                   </div>
                 ))}
@@ -87,7 +90,9 @@ const PharmacyDashboard: React.FC = () => {
             >
               <div className="flex items-center justify-between mb-4">
                 <h3 className="text-xl font-semibold">Expiring Soon (6 months)</h3>
-                <Package className="w-6 h-6 text-red-600" />
+                <Link href="/pharmacy/expiry-alerts" className="text-sm text-red-700 hover:text-red-900 font-medium">
+                  View all
+                </Link>
               </div>
               <div className="space-y-3">
                 {expiringSoon.map((item) => (
@@ -105,13 +110,42 @@ const PharmacyDashboard: React.FC = () => {
             </motion.div>
           </div>
 
+          {/* Quick Actions */}
+          <motion.div
+            initial={{ opacity: 0, y: 20 }}
+            animate={{ opacity: 1, y: 0 }}
+            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+          >
+            {[
+              { href: '/pharmacy/prescriptions', icon: FileText, label: 'Prescriptions', desc: 'Fulfill doctor orders' },
+              { href: '/pharmacy/expiry-alerts', icon: AlertTriangle, label: 'Expiry Alerts', desc: 'Low stock & expiry' },
+              { href: '/pharmacy/purchase-orders', icon: ShoppingCart, label: 'Purchase Orders', desc: 'Order from suppliers' },
+              { href: '/pharmacy/returns', icon: RotateCcw, label: 'Returns', desc: 'Cancelled order refunds' }
+            ].map((action) => (
+              <Link
+                key={action.href}
+                href={action.href}
+                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow border border-gray-100"
+              >
+                <action.icon className="w-8 h-8 text-green-600 mb-3" />
+                <p className="font-semibold text-gray-900">{action.label}</p>
+                <p className="text-sm text-gray-500">{action.desc}</p>
+              </Link>
+            ))}
+          </motion.div>
+
           {/* Recent Orders */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="bg-white rounded-xl shadow-lg p-6"
           >
-            <h3 className="text-xl font-semibold mb-4">Recent Orders</h3>
+            <div className="flex items-center justify-between mb-4">
+              <h3 className="text-xl font-semibold">Recent Orders</h3>
+              <Link href="/pharmacy/orders" className="text-sm text-green-700 hover:text-green-900 font-medium">
+                View all
+              </Link>
+            </div>
             <div className="space-y-3">
               {mockOrders.map((order) => (
                 <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">

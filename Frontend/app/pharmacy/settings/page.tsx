@@ -43,7 +43,7 @@ const PharmacySettings: React.FC = () => {
       <DashboardLayout role="pharmacist">
         <div className="space-y-6 max-w-3xl">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Settings</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Settings</h1>
             <p className="text-gray-600">Manage pharmacy preferences and alerts</p>
           </motion.div>
 
@@ -101,7 +101,7 @@ const PharmacySettings: React.FC = () => {
               <Lock className="w-5 h-5 text-purple-600" />
               <h3 className="text-xl font-semibold">Change Password</h3>
             </div>
-            <form className="grid sm:grid-cols-2 gap-4" onSubmit={(e) => e.preventDefault()}>
+            <form className="grid sm:grid-cols-2 gap-6" onSubmit={(e) => e.preventDefault()}>
               <div className="sm:col-span-2">
                 <label className="block text-sm font-medium text-gray-600 mb-1">Current Password</label>
                 <input type="password" placeholder="••••••••" className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
@@ -126,7 +126,7 @@ const PharmacySettings: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.15 }}
-            className="bg-white rounded-xl shadow-lg p-6 border border-red-100"
+            className="bg-white rounded-xl shadow-lg p-4 border border-red-100"
           >
             <div className="flex items-center gap-2 mb-2">
               <Trash2 className="w-5 h-5 text-red-600" />

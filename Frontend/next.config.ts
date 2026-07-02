@@ -12,6 +12,7 @@ const projectRoot = path.resolve(
 );
 
 const nextConfig: NextConfig = {
+  devIndicators: false,
   turbopack: {
     root: projectRoot,
   },

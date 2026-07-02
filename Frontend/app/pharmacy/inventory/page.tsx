@@ -53,10 +53,10 @@ const PharmacyInventory: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Inventory</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Inventory</h1>
               <p className="text-gray-600">Manage your medicine stock</p>
             </div>
             <button
@@ -67,16 +67,16 @@ const PharmacyInventory: React.FC = () => {
             </button>
           </motion.div>
 
-          <div className="grid grid-cols-3 gap-4 sm:gap-6">
+          <div className="grid grid-cols-3 gap-6 sm:gap-6">
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-5 shadow-lg text-center"
+                className="bg-white rounded-xl p-6 shadow-lg text-center"
               >
-                <p className={`text-3xl font-bold text-${s.color}-600`}>{s.value}</p>
+                <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
                 <p className="text-gray-600 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
@@ -140,8 +140,8 @@ const PharmacyInventory: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="p-12 text-center">
-                <Package className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <div className="p-8 text-center">
+                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No medicines found</h3>
                 <p className="text-gray-600">Try a different search term.</p>
               </div>
@@ -164,7 +164,7 @@ const PharmacyInventory: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6 max-h-[90vh] overflow-y-auto"
+                className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-4 max-h-[90vh] overflow-y-auto"
               >
                 <div className="flex items-center justify-between mb-5">
                   <h3 className="text-xl font-semibold">Add Medicine</h3>
@@ -172,7 +172,7 @@ const PharmacyInventory: React.FC = () => {
                     <X className="w-5 h-5" />
                   </button>
                 </div>
-                <form onSubmit={handleAdd} className="grid sm:grid-cols-2 gap-4">
+                <form onSubmit={handleAdd} className="grid sm:grid-cols-2 gap-6">
                   <div className="sm:col-span-2">
                     <label className="block text-sm font-medium text-gray-600 mb-1">Medicine Name</label>
                     <input value={form.medicineName} onChange={(e) => setForm({ ...form, medicineName: e.target.value })} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />

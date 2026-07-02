@@ -41,10 +41,10 @@ const PharmacySuppliers: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Suppliers</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Suppliers</h1>
               <p className="text-gray-600">{suppliers.length} registered suppliers</p>
             </div>
             <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors">
@@ -106,8 +106,8 @@ const PharmacySuppliers: React.FC = () => {
           </div>
 
           {filtered.length === 0 && (
-            <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-              <Building2 className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+            <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+              <Building2 className="w-12 h-12 mx-auto mb-4 text-gray-300" />
               <h3 className="text-xl font-semibold text-gray-900 mb-2">No suppliers found</h3>
               <p className="text-gray-600">Try a different search term.</p>
             </div>

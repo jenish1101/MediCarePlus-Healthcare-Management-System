@@ -79,20 +79,20 @@ const LabTests: React.FC = () => {
       <DashboardLayout role="lab_tech">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Lab Tests</h1>
+            <h1 className="text-2xl font-bold text-gray-900 mb-1">Lab Tests</h1>
             <p className="text-gray-600">Manage test requests and upload results</p>
           </motion.div>
 
-          <div className="grid grid-cols-2 lg:grid-cols-4 gap-4 sm:gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-xl p-5 shadow-lg text-center"
+                className="bg-white rounded-xl p-6 shadow-lg text-center"
               >
-                <p className={`text-3xl font-bold text-${s.color}-600`}>{s.value}</p>
+                <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
                 <p className="text-gray-600 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
@@ -123,17 +123,17 @@ const LabTests: React.FC = () => {
             </div>
           </div>
 
-          <div className="space-y-4">
+          <div className="space-y-6">
             {filtered.map((test, i) => (
               <motion.div
                 key={test.id}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-6 shadow-sm"
+                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
               >
-                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-                  <div className="flex items-start gap-4">
+                <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+                  <div className="flex items-start gap-6">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${test.status === 'completed' ? 'bg-green-100' : test.status === 'in-progress' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
                       <TestTube className={`w-6 h-6 ${test.status === 'completed' ? 'text-green-600' : test.status === 'in-progress' ? 'text-blue-600' : 'text-yellow-600'}`} />
                     </div>
@@ -182,8 +182,8 @@ const LabTests: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-12 text-center">
-                <FlaskConical className="w-16 h-16 mx-auto mb-4 text-gray-300" />
+              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
+                <FlaskConical className="w-12 h-12 mx-auto mb-4 text-gray-300" />
                 <h3 className="text-xl font-semibold text-gray-900 mb-2">No tests found</h3>
                 <p className="text-gray-600">Try a different search or filter.</p>
               </div>
@@ -206,7 +206,7 @@ const LabTests: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-lg bg-white rounded-2xl shadow-2xl p-6"
+                className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-6"
               >
                 <div className="flex items-center justify-between mb-2">
                   <h3 className="text-xl font-semibold">Upload Results</h3>
@@ -215,7 +215,7 @@ const LabTests: React.FC = () => {
                   </button>
                 </div>
                 <p className="text-sm text-gray-500 mb-4">{active.testName} · {active.patientName}</p>
-                <form onSubmit={submitResults} className="space-y-4">
+                <form onSubmit={submitResults} className="space-y-6">
                   <div>
                     <label className="block text-sm font-medium text-gray-600 mb-1">Test Results</label>
                     <textarea

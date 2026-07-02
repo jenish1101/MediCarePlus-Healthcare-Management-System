@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Calendar, DollarSign, Activity } from 'lucide-react';
+import { Users, Calendar, DollarSign, Activity, Download, FileText } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -20,6 +20,7 @@ import {
 } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { exportCsv, exportPdfReport } from '@/lib/exportReport';
 
 const patientGrowth = [
   { month: 'Jan', patients: 1850 },
@@ -47,6 +48,34 @@ const appointmentTypes = [
 const PIE_COLORS = ['#3b82f6', '#8b5cf6', '#22c55e'];
 
 const AdminAnalytics: React.FC = () => {
+  const [exportMsg, setExportMsg] = useState('');
+
+  const handleExportCsv = () => {
+    exportCsv('analytics-report.csv', ['Category', 'Metric', 'Value'], [
+      ...patientGrowth.map((r) => ['Patient Growth', r.month, r.patients]),
+      ...departmentLoad.map((r) => ['Department Load', r.dept, r.visits]),
+      ...appointmentTypes.map((r) => ['Appointment Type', r.name, r.value])
+    ]);
+    setExportMsg('CSV report downloaded.');
+    setTimeout(() => setExportMsg(''), 3000);
+  };
+
+  const handleExportPdf = () => {
+    exportPdfReport(
+      'analytics-report.pdf',
+      'Hospital Analytics Report',
+      [
+        `Total Patients: 2,543`,
+        `Monthly Appointments: 1,240`,
+        `Revenue: $124.5k`,
+        `Bed Occupancy: 78%`,
+        ...departmentLoad.map((d) => `${d.dept}: ${d.visits} visits`)
+      ]
+    );
+    setExportMsg('PDF report downloaded.');
+    setTimeout(() => setExportMsg(''), 3000);
+  };
+
   const stats = [
     { icon: Users, label: 'Total Patients', value: '2,543', change: '+12%', color: 'blue' },
     { icon: Calendar, label: 'Appointments (mo)', value: '1,240', change: '+8%', color: 'green' },
@@ -58,10 +87,32 @@ const AdminAnalytics: React.FC = () => {
     <ProtectedRoute allowedRoles={['admin']}>
       <DashboardLayout role="admin">
         <div className="space-y-6">
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-3xl font-bold text-gray-900 mb-1">Analytics</h1>
-            <p className="text-gray-600">Hospital performance and insights</p>
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
+            <div>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Analytics</h1>
+              <p className="text-gray-600">Hospital performance and insights</p>
+            </div>
+            <div className="flex flex-wrap gap-2">
+              <button
+                onClick={handleExportCsv}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+              >
+                <Download className="w-4 h-4" /> Export CSV
+              </button>
+              <button
+                onClick={handleExportPdf}
+                className="inline-flex items-center gap-2 px-4 py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+              >
+                <FileText className="w-4 h-4" /> Export PDF
+              </button>
+            </div>
           </motion.div>
+
+          {exportMsg && (
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 font-medium">
+              {exportMsg}
+            </motion.p>
+          )}
 
           <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
             {stats.map((s, i) => (
@@ -79,7 +130,7 @@ const AdminAnalytics: React.FC = () => {
                   <span className="text-sm text-green-600 font-medium">{s.change}</span>
                 </div>
                 <p className="text-gray-600 text-sm mb-1">{s.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-lg font-bold text-gray-900">{s.value}</p>
               </motion.div>
             ))}
           </div>

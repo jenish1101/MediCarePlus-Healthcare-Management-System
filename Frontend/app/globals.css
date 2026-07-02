@@ -9,13 +9,19 @@
 
 html {
   scroll-behavior: smooth;
-  scroll-padding-top: 5rem;
+  scroll-padding-top: 4rem;
+  color-scheme: light;
+  font-size: 16px;
 }
+
+/* Light mode only — dark: variants require a .dark class, never applied */
+@custom-variant dark (&:where(.dark, .dark *));
 
 html,
 body {
   background: #ffffff;
   color: #171717;
+  overflow-x: hidden;
 }
 
 /*

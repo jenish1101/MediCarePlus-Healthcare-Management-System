@@ -18,7 +18,7 @@ Many UI buttons are **visual only** (e.g. Book Appointment, Join Call, Download,
 
 ---
 
-## 1. Entirely New Roles (Biggest Gap)
+<!-- ## 1. Entirely New Roles (Biggest Gap)
 
 These roles exist in `UserRole` and `DashboardLayout` navigation, but have **no routes or pages** yet.
 
@@ -51,11 +51,11 @@ These roles exist in `UserRole` and `DashboardLayout` navigation, but have **no 
 | Products | Catalog / stock offered to hospital |
 | Orders | Fulfill pharmacy purchase orders |
 
-**Also needed:** Demo login (e.g. `supplier@demo.com`).
+**Also needed:** Demo login (e.g. `supplier@demo.com`). -->
 
 ---
 
-## 2. New Pages & Features by Existing Role
+<!-- ## 2. New Pages & Features by Existing Role
 
 ### Patient
 
@@ -110,7 +110,7 @@ These roles exist in `UserRole` and `DashboardLayout` navigation, but have **no 
 | **Test catalog** | Available tests + pricing |
 | **Sample tracking** | Barcode / sample ID workflow |
 | **Report PDF viewer** | Real view/download for lab reports |
-| **Equipment / QC** | Lab equipment status (optional) |
+| **Equipment / QC** | Lab equipment status | -->
 
 ---
 

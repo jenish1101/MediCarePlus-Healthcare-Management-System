@@ -47,10 +47,10 @@ const DoctorEarnings: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-3xl font-bold text-gray-900 mb-1">Earnings</h1>
+              <h1 className="text-2xl font-bold text-gray-900 mb-1">Earnings</h1>
               <p className="text-gray-600">Track your income and payouts</p>
             </div>
             <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
@@ -71,7 +71,7 @@ const DoctorEarnings: React.FC = () => {
                   <s.icon className={`w-6 h-6 text-${s.color}-600`} />
                 </div>
                 <p className="text-gray-600 text-sm mb-1">{s.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{s.value}</p>
+                <p className="text-lg font-bold text-gray-900">{s.value}</p>
               </motion.div>
             ))}
           </div>
