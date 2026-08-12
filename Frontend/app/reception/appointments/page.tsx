@@ -25,11 +25,11 @@ const extra: AptRow[] = [
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    scheduled: 'bg-blue-100 text-blue-700',
-    completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700'
+    scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const ReceptionAppointments: React.FC = () => {
@@ -88,8 +88,8 @@ const ReceptionAppointments: React.FC = () => {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Appointments</h1>
-              <p className="text-gray-600">Book and reschedule patient appointments</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Appointments</h1>
+              <p className="text-gray-600 dark:text-gray-400">Book and reschedule patient appointments</p>
             </motion.div>
             <button
               onClick={() => setShowBook(true)}
@@ -106,7 +106,7 @@ const ReceptionAppointments: React.FC = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-teal-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    filter === f ? 'bg-teal-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                   }`}
                 >
                   {f}
@@ -114,20 +114,20 @@ const ReceptionAppointments: React.FC = () => {
               ))}
             </div>
             <div className="relative sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search patient or doctor..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
 
-          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white rounded-xl shadow-lg overflow-hidden">
+          <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 text-sm text-gray-500">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-500 dark:text-gray-400">
                   <tr>
                     <th className="py-3 px-4 font-medium">Patient</th>
                     <th className="py-3 px-4 font-medium">Doctor</th>
@@ -137,25 +137,25 @@ const ReceptionAppointments: React.FC = () => {
                     <th className="py-3 px-4 font-medium text-right">Actions</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filtered.map((apt) => (
-                    <tr key={apt.id} className="hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-900">{apt.patientName}</td>
+                    <tr key={apt.id} className="hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100">{apt.patientName}</td>
                       <td className="py-3 px-4">
-                        <p className="text-gray-900">{apt.doctorName}</p>
-                        <p className="text-sm text-gray-500">{apt.doctorSpecialization}</p>
+                        <p className="text-gray-900 dark:text-gray-100">{apt.doctorName}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{apt.doctorSpecialization}</p>
                       </td>
                       <td className="py-3 px-4">
-                        <p className="flex items-center gap-1 text-gray-900">
-                          <Calendar className="w-4 h-4 text-gray-400" /> {apt.date}
+                        <p className="flex items-center gap-1 text-gray-900 dark:text-gray-100">
+                          <Calendar className="w-4 h-4 text-gray-400 dark:text-gray-500" /> {apt.date}
                         </p>
-                        <p className="flex items-center gap-1 text-sm text-gray-500">
+                        <p className="flex items-center gap-1 text-sm text-gray-500 dark:text-gray-400">
                           <Clock className="w-4 h-4" /> {apt.time}
                         </p>
                       </td>
                       <td className="py-3 px-4">
-                        <span className="inline-flex items-center gap-1 text-sm text-gray-700">
-                          {apt.type === 'video' ? <Video className="w-4 h-4 text-blue-500" /> : <MapPin className="w-4 h-4 text-green-500" />}
+                        <span className="inline-flex items-center gap-1 text-sm text-gray-700 dark:text-gray-300">
+                          {apt.type === 'video' ? <Video className="w-4 h-4 text-blue-500 dark:text-blue-400" /> : <MapPin className="w-4 h-4 text-green-500 dark:text-green-400" />}
                           {apt.type}
                         </span>
                       </td>
@@ -166,7 +166,7 @@ const ReceptionAppointments: React.FC = () => {
                       </td>
                       <td className="py-3 px-4 text-right">
                         {apt.status === 'scheduled' && (
-                          <button onClick={() => openReschedule(apt)} className="text-sm font-medium text-teal-600 hover:text-teal-800">
+                          <button onClick={() => openReschedule(apt)} className="text-sm font-medium text-teal-600 dark:text-teal-400 hover:text-teal-800 dark:hover:text-teal-300">
                             Reschedule
                           </button>
                         )}
@@ -181,10 +181,10 @@ const ReceptionAppointments: React.FC = () => {
 
         {(showBook || rescheduleId) && (
           <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/50 p-4">
-            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white rounded-xl shadow-xl w-full max-w-md p-6">
+            <motion.div initial={{ opacity: 0, scale: 0.95 }} animate={{ opacity: 1, scale: 1 }} className="bg-white dark:bg-gray-800 rounded-xl shadow-xl w-full max-w-md p-6">
               <div className="flex items-center justify-between mb-5">
-                <h3 className="text-2xl font-bold text-gray-900">{rescheduleId ? 'Reschedule' : 'Book Appointment'}</h3>
-                <button onClick={() => { setShowBook(false); setRescheduleId(null); }} className="text-gray-400 hover:text-gray-600">
+                <h3 className="text-2xl font-bold text-gray-900 dark:text-gray-100">{rescheduleId ? 'Reschedule' : 'Book Appointment'}</h3>
+                <button onClick={() => { setShowBook(false); setRescheduleId(null); }} className="text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -192,12 +192,12 @@ const ReceptionAppointments: React.FC = () => {
                 {!rescheduleId && (
                   <>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Patient Name</label>
-                      <input required value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500" />
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Patient Name</label>
+                      <input required value={form.patientName} onChange={(e) => setForm({ ...form, patientName: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Doctor</label>
-                      <select value={form.doctorId} onChange={(e) => setForm({ ...form, doctorId: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Doctor</label>
+                      <select value={form.doctorId} onChange={(e) => setForm({ ...form, doctorId: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-900 dark:text-gray-100">
                         {mockDoctors.map((d) => (
                           <option key={d.id} value={d.id}>{d.name} — {d.specialization}</option>
                         ))}
@@ -206,20 +206,20 @@ const ReceptionAppointments: React.FC = () => {
                   </>
                 )}
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Date</label>
-                  <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500" />
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date</label>
+                  <input type="date" required value={form.date} onChange={(e) => setForm({ ...form, date: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Time</label>
-                  <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Time</label>
+                  <select value={form.time} onChange={(e) => setForm({ ...form, time: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-900 dark:text-gray-100">
                     {['09:00 AM', '10:00 AM', '11:00 AM', '02:00 PM', '03:00 PM', '04:00 PM'].map((t) => (
                       <option key={t} value={t}>{t}</option>
                     ))}
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-700 mb-1">Type</label>
-                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as 'in-person' | 'video' })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-teal-500">
+                  <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Type</label>
+                  <select value={form.type} onChange={(e) => setForm({ ...form, type: e.target.value as 'in-person' | 'video' })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-teal-500 dark:bg-gray-900 dark:text-gray-100">
                     <option value="in-person">In-person</option>
                     <option value="video">Video</option>
                   </select>

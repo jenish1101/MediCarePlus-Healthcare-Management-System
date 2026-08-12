@@ -1,3 +1,4 @@
+import logging
 from contextlib import asynccontextmanager
 
 from fastapi import FastAPI, HTTPException
@@ -6,7 +7,11 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import close_db, connect_db, get_motor_client
+from app.core.exceptions import register_exception_handlers
+from app.core.middleware import register_middleware
 from app.seed.seed_data import seed_database
+
+logging.basicConfig(level=logging.INFO, format="%(asctime)s %(levelname)s %(name)s %(message)s")
 
 
 def _startup_banner(public_url: str) -> None:
@@ -53,6 +58,8 @@ def create_app() -> FastAPI:
         redoc_url="/redoc",
         lifespan=lifespan,
     )
+
+    register_middleware(app)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=settings.cors_origin_list,
@@ -60,6 +67,9 @@ def create_app() -> FastAPI:
         allow_methods=["*"],
         allow_headers=["*"],
     )
+
+    register_exception_handlers(app, debug=settings.debug)
+
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 
     @app.get("/", tags=["Health"])

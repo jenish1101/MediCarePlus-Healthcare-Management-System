@@ -14,7 +14,7 @@ html {
   font-size: 16px;
 }
 
-/* Light mode only — dark: variants require a .dark class, never applied */
+/* Toggled by ThemeContext, which adds/removes `.dark` on <html> */
 @custom-variant dark (&:where(.dark, .dark *));
 
 html,
@@ -22,6 +22,12 @@ body {
   background: #ffffff;
   color: #171717;
   overflow-x: hidden;
+}
+
+html.dark,
+html.dark body {
+  background: #0a0a0a;
+  color: #ededed;
 }
 
 /*
@@ -42,5 +48,14 @@ body {
   button:disabled,
   [role="button"][aria-disabled="true"] {
     cursor: not-allowed;
+  }
+}
+
+@utility scrollbar-hide {
+  -ms-overflow-style: none;
+  scrollbar-width: none;
+
+  &::-webkit-scrollbar {
+    display: none;
   }
 }

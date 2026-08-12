@@ -89,36 +89,36 @@ const LabReports: React.FC = () => {
       <DashboardLayout role="lab_tech">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Reports</h1>
-            <p className="text-gray-600">View and download generated lab reports</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Reports</h1>
+            <p className="text-gray-600 dark:text-gray-400">View and download generated lab reports</p>
           </motion.div>
 
-          <div className="grid grid-cols-3 gap-6 sm:gap-6 max-w-2xl">
-            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 max-w-2xl">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-3 sm:gap-6">
               <div className="w-11 h-11 rounded-lg bg-blue-100 flex items-center justify-center">
                 <FileText className="w-5 h-5 text-blue-600" />
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{reports.length}</p>
-                <p className="text-gray-500 text-sm">Total</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{reports.length}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Total</p>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-3 sm:gap-6">
               <div className="w-11 h-11 rounded-lg bg-green-100 flex items-center justify-center">
                 <CheckCircle className="w-5 h-5 text-green-600" />
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{ready}</p>
-                <p className="text-gray-500 text-sm">Ready</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{ready}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Ready</p>
               </div>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg flex items-center gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-3 sm:gap-6">
               <div className="w-11 h-11 rounded-lg bg-yellow-100 flex items-center justify-center">
                 <Clock className="w-5 h-5 text-yellow-600" />
               </div>
               <div>
-                <p className="text-lg font-bold text-gray-900">{processing}</p>
-                <p className="text-gray-500 text-sm">Processing</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{processing}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-sm">Processing</p>
               </div>
             </div>
           </div>
@@ -130,7 +130,7 @@ const LabReports: React.FC = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    filter === f ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                   }`}
                 >
                   {f}
@@ -138,12 +138,12 @@ const LabReports: React.FC = () => {
               ))}
             </div>
             <div className="relative sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search report or patient..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
@@ -155,31 +155,31 @@ const LabReports: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                   <div className="flex items-start gap-6">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${report.status === 'ready' ? 'bg-green-100' : 'bg-yellow-100'}`}>
-                      <FileText className={`w-6 h-6 ${report.status === 'ready' ? 'text-green-600' : 'text-yellow-600'}`} />
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${report.status === 'ready' ? 'bg-green-100 dark:bg-green-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                      <FileText className={`w-6 h-6 ${report.status === 'ready' ? 'text-green-600 dark:text-green-400' : 'text-yellow-600 dark:text-yellow-400'}`} />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-lg">{report.testName}</h4>
-                      <p className="text-sm text-gray-600">Patient: {report.patientName}</p>
-                      <p className="text-xs text-gray-500 mt-1">Date: {report.date}</p>
+                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{report.testName}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Patient: {report.patientName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Date: {report.date}</p>
                       {report.summary && (
-                        <p className="text-sm text-gray-700 mt-2 bg-gray-50 rounded-lg px-3 py-2">{report.summary}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg px-3 py-2">{report.summary}</p>
                       )}
                     </div>
                   </div>
                   <div className="flex flex-col items-start sm:items-end gap-3">
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${report.status === 'ready' ? 'bg-green-100 text-green-700' : 'bg-yellow-100 text-yellow-700'}`}>
+                    <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${report.status === 'ready' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
                       {report.status}
                     </span>
                     {report.status === 'ready' ? (
                       <div className="flex gap-2">
                         <button
                           onClick={() => setViewReport(report)}
-                          className="px-4 py-2 border border-purple-600 text-purple-600 rounded-lg hover:bg-purple-50 transition-colors text-sm flex items-center gap-2"
+                          className="px-4 py-2 border border-purple-600 text-purple-600 dark:text-purple-400 rounded-lg hover:bg-purple-50 dark:hover:bg-purple-900/20 transition-colors text-sm flex items-center gap-2"
                         >
                           <Eye className="w-4 h-4" /> View
                         </button>
@@ -191,7 +191,7 @@ const LabReports: React.FC = () => {
                         </button>
                       </div>
                     ) : (
-                      <span className="flex items-center text-yellow-600 text-sm font-medium">
+                      <span className="flex items-center text-yellow-600 dark:text-yellow-400 text-sm font-medium">
                         <Clock className="w-4 h-4 mr-1" /> Processing
                       </span>
                     )}
@@ -201,10 +201,10 @@ const LabReports: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No reports found</h3>
-                <p className="text-gray-600">Try a different search or filter.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No reports found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search or filter.</p>
               </div>
             )}
           </div>
@@ -224,63 +224,63 @@ const LabReports: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 exit={{ scale: 0.95, opacity: 0 }}
                 onClick={(e) => e.stopPropagation()}
-                className="bg-white rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-2xl max-w-2xl w-full max-h-[90vh] overflow-hidden flex flex-col"
               >
-                <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 bg-purple-50">
+                <div className="flex items-center justify-between px-4 py-4 border-b border-gray-200 dark:border-gray-700 bg-purple-50 dark:bg-purple-900/20">
                   <div>
-                    <h2 className="text-2xl font-bold text-gray-900">Lab Report</h2>
-                    <p className="text-sm text-gray-600">{viewReport.testName}</p>
+                    <h2 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Lab Report</h2>
+                    <p className="text-sm text-gray-600 dark:text-gray-400">{viewReport.testName}</p>
                   </div>
-                  <button onClick={() => setViewReport(null)} className="p-2 rounded-lg hover:bg-purple-100 text-gray-600">
+                  <button onClick={() => setViewReport(null)} className="p-2 rounded-lg hover:bg-purple-100 dark:hover:bg-purple-800/40 text-gray-600 dark:text-gray-400">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <div className="p-6 overflow-y-auto flex-1">
-                  <div className="border border-gray-200 rounded-xl p-4 bg-gray-50 font-mono text-sm space-y-6">
-                    <div className="text-center border-b border-gray-300 pb-4">
-                      <p className="font-bold text-lg text-gray-900">MediCare Plus Laboratory</p>
-                      <p className="text-gray-600">Official Test Report</p>
+                  <div className="border border-gray-200 dark:border-gray-700 rounded-xl p-4 bg-gray-50 dark:bg-gray-900/40 font-mono text-sm space-y-6">
+                    <div className="text-center border-b border-gray-300 dark:border-gray-700 pb-4">
+                      <p className="font-bold text-lg text-gray-900 dark:text-gray-100">MediCare Plus Laboratory</p>
+                      <p className="text-gray-600 dark:text-gray-400">Official Test Report</p>
                     </div>
-                    <div className="grid grid-cols-2 gap-2 text-gray-700">
-                      <p><span className="text-gray-500">Patient:</span> {viewReport.patientName}</p>
-                      <p><span className="text-gray-500">Report ID:</span> {viewReport.id.toUpperCase()}</p>
-                      <p><span className="text-gray-500">Test:</span> {viewReport.testName}</p>
-                      <p><span className="text-gray-500">Date:</span> {viewReport.date}</p>
+                    <div className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300">
+                      <p><span className="text-gray-500 dark:text-gray-400">Patient:</span> {viewReport.patientName}</p>
+                      <p><span className="text-gray-500 dark:text-gray-400">Report ID:</span> {viewReport.id.toUpperCase()}</p>
+                      <p><span className="text-gray-500 dark:text-gray-400">Test:</span> {viewReport.testName}</p>
+                      <p><span className="text-gray-500 dark:text-gray-400">Date:</span> {viewReport.date}</p>
                     </div>
                     {viewReport.summary && (
-                      <p className="text-gray-800 bg-white rounded-lg p-3 border border-gray-200">{viewReport.summary}</p>
+                      <p className="text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">{viewReport.summary}</p>
                     )}
                     {viewReport.results && (
                       <table className="w-full text-left border-collapse">
                         <thead>
-                          <tr className="border-b border-gray-300">
-                            <th className="py-2 text-gray-600">Parameter</th>
-                            <th className="py-2 text-gray-600">Value</th>
-                            <th className="py-2 text-gray-600">Reference</th>
+                          <tr className="border-b border-gray-300 dark:border-gray-700">
+                            <th className="py-2 text-gray-600 dark:text-gray-400">Parameter</th>
+                            <th className="py-2 text-gray-600 dark:text-gray-400">Value</th>
+                            <th className="py-2 text-gray-600 dark:text-gray-400">Reference</th>
                           </tr>
                         </thead>
                         <tbody>
                           {viewReport.results.map((row) => (
-                            <tr key={row.parameter} className="border-b border-gray-200">
-                              <td className="py-2">{row.parameter}</td>
-                              <td className={`py-2 font-semibold ${row.flag ? 'text-red-600' : ''}`}>
+                            <tr key={row.parameter} className="border-b border-gray-200 dark:border-gray-700">
+                              <td className="py-2 text-gray-900 dark:text-gray-100">{row.parameter}</td>
+                              <td className={`py-2 font-semibold ${row.flag ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
                                 {row.value} {row.flag && `(${row.flag})`}
                               </td>
-                              <td className="py-2 text-gray-500">{row.range}</td>
+                              <td className="py-2 text-gray-500 dark:text-gray-400">{row.range}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     )}
-                    <p className="text-xs text-gray-400 pt-4 border-t border-gray-300">
+                    <p className="text-xs text-gray-400 dark:text-gray-500 pt-4 border-t border-gray-300 dark:border-gray-700">
                       This is a demo report for presentation purposes. Verified by Lab Technician.
                     </p>
                   </div>
                 </div>
-                <div className="px-6 py-4 border-t border-gray-200 flex gap-3 justify-end">
+                <div className="px-6 py-4 border-t border-gray-200 dark:border-gray-700 flex gap-3 justify-end">
                   <button
                     onClick={() => setViewReport(null)}
-                    className="px-4 py-2 border border-gray-300 rounded-lg text-gray-700 hover:bg-gray-50"
+                    className="px-4 py-2 border border-gray-300 dark:border-gray-600 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     Close
                   </button>

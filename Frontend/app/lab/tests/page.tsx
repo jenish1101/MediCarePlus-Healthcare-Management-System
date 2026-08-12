@@ -27,11 +27,11 @@ const initialTests: LabTest[] = [
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
-    completed: 'bg-green-100 text-green-700',
-    'in-progress': 'bg-blue-100 text-blue-700',
-    pending: 'bg-yellow-100 text-yellow-700'
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    'in-progress': 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const LabTests: React.FC = () => {
@@ -79,8 +79,8 @@ const LabTests: React.FC = () => {
       <DashboardLayout role="lab_tech">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Lab Tests</h1>
-            <p className="text-gray-600">Manage test requests and upload results</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Lab Tests</h1>
+            <p className="text-gray-600 dark:text-gray-400">Manage test requests and upload results</p>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
@@ -90,10 +90,10 @@ const LabTests: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center"
               >
                 <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -105,7 +105,7 @@ const LabTests: React.FC = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    filter === f ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                   }`}
                 >
                   {f.replace('-', ' ')}
@@ -113,12 +113,12 @@ const LabTests: React.FC = () => {
               ))}
             </div>
             <div className="relative sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search test or patient..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
@@ -130,24 +130,24 @@ const LabTests: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm dark:shadow-none"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                   <div className="flex items-start gap-6">
-                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${test.status === 'completed' ? 'bg-green-100' : test.status === 'in-progress' ? 'bg-blue-100' : 'bg-yellow-100'}`}>
-                      <TestTube className={`w-6 h-6 ${test.status === 'completed' ? 'text-green-600' : test.status === 'in-progress' ? 'text-blue-600' : 'text-yellow-600'}`} />
+                    <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${test.status === 'completed' ? 'bg-green-100 dark:bg-green-900/30' : test.status === 'in-progress' ? 'bg-blue-100 dark:bg-blue-900/30' : 'bg-yellow-100 dark:bg-yellow-900/30'}`}>
+                      <TestTube className={`w-6 h-6 ${test.status === 'completed' ? 'text-green-600 dark:text-green-400' : test.status === 'in-progress' ? 'text-blue-600 dark:text-blue-400' : 'text-yellow-600 dark:text-yellow-400'}`} />
                     </div>
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h4 className="font-semibold text-lg">{test.testName}</h4>
+                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{test.testName}</h4>
                         {test.priority === 'urgent' && (
-                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 text-red-700">Urgent</span>
+                          <span className="px-2 py-0.5 rounded text-[10px] font-bold uppercase bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400">Urgent</span>
                         )}
                       </div>
-                      <p className="text-sm text-gray-600">Patient: {test.patientName}</p>
-                      <p className="text-xs text-gray-500 mt-1">Requested by {test.requestedBy} · {test.date}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Patient: {test.patientName}</p>
+                      <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Requested by {test.requestedBy} · {test.date}</p>
                       {test.results && (
-                        <p className="text-sm text-gray-700 mt-2 bg-gray-50 rounded-lg px-3 py-2">{test.results}</p>
+                        <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg px-3 py-2">{test.results}</p>
                       )}
                     </div>
                   </div>
@@ -158,7 +158,7 @@ const LabTests: React.FC = () => {
                     {test.status === 'pending' && (
                       <button
                         onClick={() => startTest(test.id)}
-                        className="px-4 py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors text-sm flex items-center gap-2"
+                        className="px-4 py-2 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors text-sm flex items-center gap-2"
                       >
                         <Clock className="w-4 h-4" /> Start Test
                       </button>
@@ -172,7 +172,7 @@ const LabTests: React.FC = () => {
                       </button>
                     )}
                     {test.status === 'completed' && (
-                      <span className="flex items-center text-green-600 text-sm font-medium">
+                      <span className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4 mr-1" /> Completed
                       </span>
                     )}
@@ -182,10 +182,10 @@ const LabTests: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <FlaskConical className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No tests found</h3>
-                <p className="text-gray-600">Try a different search or filter.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <FlaskConical className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No tests found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search or filter.</p>
               </div>
             )}
           </div>

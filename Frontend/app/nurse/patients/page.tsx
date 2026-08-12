@@ -55,8 +55,8 @@ const NursePatients: React.FC = () => {
       <DashboardLayout role="nurse">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Ward Patients</h1>
-            <p className="text-gray-600">Ward list and vitals history</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Ward Patients</h1>
+            <p className="text-gray-600 dark:text-gray-400">Ward list and vitals history</p>
           </motion.div>
 
           <div className="flex flex-wrap gap-2">
@@ -65,7 +65,7 @@ const NursePatients: React.FC = () => {
                 key={w}
                 onClick={() => setWardFilter(w)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                  wardFilter === w ? 'bg-rose-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                  wardFilter === w ? 'bg-rose-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                 }`}
               >
                 {w === 'all' ? 'All Wards' : w}
@@ -80,36 +80,36 @@ const NursePatients: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl shadow-lg overflow-hidden"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
               >
                 <button
                   onClick={() => setExpanded(expanded === patient.id ? null : patient.id)}
-                  className="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 transition-colors"
+                  className="w-full p-5 flex items-center justify-between text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                 >
                   <div className="flex items-center gap-6">
-                    <div className="w-12 h-12 rounded-full bg-rose-100 flex items-center justify-center">
-                      <Users className="w-6 h-6 text-rose-600" />
+                    <div className="w-12 h-12 rounded-full bg-rose-100 dark:bg-rose-900/30 flex items-center justify-center">
+                      <Users className="w-6 h-6 text-rose-600 dark:text-rose-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-gray-900">{patient.name}</p>
-                      <p className="text-sm text-gray-600">Room {patient.room} · {patient.ward}</p>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{patient.name}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Room {patient.room} · {patient.ward}</p>
                     </div>
                   </div>
                   <div className="flex items-center gap-3">
-                    <span className="text-sm text-gray-500">{patient.vitals.length} readings</span>
-                    {expanded === patient.id ? <ChevronUp className="w-5 h-5 text-gray-400" /> : <ChevronDown className="w-5 h-5 text-gray-400" />}
+                    <span className="text-sm text-gray-500 dark:text-gray-400">{patient.vitals.length} readings</span>
+                    {expanded === patient.id ? <ChevronUp className="w-5 h-5 text-gray-400 dark:text-gray-500" /> : <ChevronDown className="w-5 h-5 text-gray-400 dark:text-gray-500" />}
                   </div>
                 </button>
 
                 {expanded === patient.id && (
-                  <div className="px-5 pb-5 border-t border-gray-100">
+                  <div className="px-5 pb-5 border-t border-gray-100 dark:border-gray-700">
                     <div className="flex items-center gap-2 mt-4 mb-3">
-                      <HeartPulse className="w-5 h-5 text-rose-600" />
-                      <h4 className="font-medium text-gray-900">Vitals History</h4>
+                      <HeartPulse className="w-5 h-5 text-rose-600 dark:text-rose-400" />
+                      <h4 className="font-medium text-gray-900 dark:text-gray-100">Vitals History</h4>
                     </div>
                     <div className="overflow-x-auto">
                       <table className="w-full text-sm text-left">
-                        <thead className="text-gray-500">
+                        <thead className="text-gray-500 dark:text-gray-400">
                           <tr>
                             <th className="py-2 pr-4 font-medium">Time</th>
                             <th className="py-2 pr-4 font-medium">Blood Pressure</th>
@@ -117,19 +117,19 @@ const NursePatients: React.FC = () => {
                             <th className="py-2 font-medium">Temperature</th>
                           </tr>
                         </thead>
-                        <tbody className="divide-y divide-gray-100">
+                        <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                           {patient.vitals.map((v, j) => (
-                            <tr key={j}>
-                              <td className="py-2 pr-4 text-gray-900">{v.time}</td>
-                              <td className="py-2 pr-4">{v.bp}</td>
-                              <td className="py-2 pr-4">{v.pulse} bpm</td>
-                              <td className="py-2">{v.temp}</td>
+                            <tr key={j} className="dark:hover:bg-gray-700/50">
+                              <td className="py-2 pr-4 text-gray-900 dark:text-gray-100">{v.time}</td>
+                              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">{v.bp}</td>
+                              <td className="py-2 pr-4 text-gray-700 dark:text-gray-300">{v.pulse} bpm</td>
+                              <td className="py-2 text-gray-700 dark:text-gray-300">{v.temp}</td>
                             </tr>
                           ))}
                         </tbody>
                       </table>
                     </div>
-                    <button className="mt-4 text-sm font-medium text-rose-600 hover:text-rose-800">+ Add new vitals reading</button>
+                    <button className="mt-4 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300">+ Add new vitals reading</button>
                   </div>
                 )}
               </motion.div>

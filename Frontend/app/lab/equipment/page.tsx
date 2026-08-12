@@ -27,10 +27,10 @@ const initialEquipment: Equipment[] = [
 ];
 
 const statusConfig = {
-  operational: { icon: CheckCircle, color: 'bg-green-100 text-green-700', label: 'Operational' },
-  maintenance: { icon: Wrench, color: 'bg-yellow-100 text-yellow-700', label: 'Maintenance' },
-  'qc-pending': { icon: AlertTriangle, color: 'bg-orange-100 text-orange-700', label: 'QC Pending' },
-  offline: { icon: XCircle, color: 'bg-red-100 text-red-700', label: 'Offline' }
+  operational: { icon: CheckCircle, color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', label: 'Operational' },
+  maintenance: { icon: Wrench, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', label: 'Maintenance' },
+  'qc-pending': { icon: AlertTriangle, color: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400', label: 'QC Pending' },
+  offline: { icon: XCircle, color: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400', label: 'Offline' }
 };
 
 const LabEquipment: React.FC = () => {
@@ -54,8 +54,8 @@ const LabEquipment: React.FC = () => {
       <DashboardLayout role="lab_tech">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Equipment & QC</h1>
-            <p className="text-gray-600">Lab equipment status and quality control</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Equipment & QC</h1>
+            <p className="text-gray-600 dark:text-gray-400">Lab equipment status and quality control</p>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -65,9 +65,9 @@ const LabEquipment: React.FC = () => {
               { label: 'Maintenance', value: equipment.filter((e) => e.status === 'maintenance').length, color: 'yellow' },
               { label: 'Offline', value: equipment.filter((e) => e.status === 'offline').length, color: 'red' }
             ].map((s) => (
-              <div key={s.label} className="bg-white rounded-xl p-6 shadow-lg text-center">
+              <div key={s.label} className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
                 <p className={`text-lg font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm">{s.label}</p>
               </div>
             ))}
           </div>
@@ -78,7 +78,7 @@ const LabEquipment: React.FC = () => {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  filter === f ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                  filter === f ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                 }`}
               >
                 {f === 'all' ? 'All' : f.replace('-', ' ')}
@@ -96,7 +96,7 @@ const LabEquipment: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.04 }}
-                  className="bg-white border border-gray-200 rounded-xl p-5 shadow-sm"
+                  className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-5 shadow-sm dark:shadow-none"
                 >
                   <div className="flex items-start justify-between mb-3">
                     <div className="flex items-start gap-3">
@@ -104,9 +104,9 @@ const LabEquipment: React.FC = () => {
                         <Wrench className="w-5 h-5 text-purple-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold text-gray-900">{item.name}</h4>
-                        <p className="text-sm text-gray-500">{item.model}</p>
-                        <p className="text-xs text-gray-400">{item.location}</p>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">{item.name}</h4>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{item.model}</p>
+                        <p className="text-xs text-gray-400 dark:text-gray-500">{item.location}</p>
                       </div>
                     </div>
                     <span className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${cfg.color}`}>
@@ -114,17 +114,17 @@ const LabEquipment: React.FC = () => {
                       {cfg.label}
                     </span>
                   </div>
-                  <div className="flex flex-wrap gap-3 text-xs text-gray-500 mb-3">
+                  <div className="flex flex-wrap gap-3 text-xs text-gray-500 dark:text-gray-400 mb-3">
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Last QC: {item.lastCalibration}</span>
                     <span className="flex items-center gap-1"><Calendar className="w-3.5 h-3.5" /> Next: {item.nextCalibration}</span>
                   </div>
                   {item.qcScore !== undefined && (
                     <div className="mb-3">
                       <div className="flex justify-between text-sm mb-1">
-                        <span className="text-gray-600 flex items-center gap-1"><Activity className="w-4 h-4" /> QC Score</span>
-                        <span className="font-semibold">{item.qcScore}%</span>
+                        <span className="text-gray-600 dark:text-gray-400 flex items-center gap-1"><Activity className="w-4 h-4" /> QC Score</span>
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">{item.qcScore}%</span>
                       </div>
-                      <div className="w-full bg-gray-200 rounded-full h-2">
+                      <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-2">
                         <div className={`h-2 rounded-full ${item.qcScore >= 95 ? 'bg-green-500' : 'bg-orange-500'}`} style={{ width: `${item.qcScore}%` }} />
                       </div>
                     </div>

@@ -90,10 +90,10 @@ const DoctorConsultation: React.FC = () => {
     return (
       <ProtectedRoute allowedRoles={['doctor']}>
         <DashboardLayout role="doctor">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Video className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Consultation not found</h3>
-            <p className="text-gray-600 mb-6">No video session exists for ID &quot;{consultationId}&quot;.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+            <Video className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Consultation not found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">No video session exists for ID &quot;{consultationId}&quot;.</p>
             <button
               onClick={() => router.push('/doctor/appointments')}
               className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -113,29 +113,29 @@ const DoctorConsultation: React.FC = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => router.push('/doctor/appointments')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Appointments
             </button>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Video Consultation</h1>
-            <p className="text-gray-600">{consultation.patientName} · {consultation.reason}</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Video Consultation</h1>
+            <p className="text-gray-600 dark:text-gray-400">{consultation.patientName} · {consultation.reason}</p>
           </motion.div>
 
           {!joined ? (
             <motion.div
               initial={{ opacity: 0, scale: 0.98 }}
               animate={{ opacity: 1, scale: 1 }}
-              className="bg-white rounded-xl shadow-lg p-5 max-w-lg mx-auto text-center"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-5 max-w-lg mx-auto text-center"
             >
               {/* eslint-disable-next-line @next/next/no-img-element */}
               <img
                 src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${consultation.patientName}`}
                 alt={consultation.patientName}
-                className="w-24 h-24 rounded-full bg-gray-100 mx-auto mb-4"
+                className="w-24 h-24 rounded-full bg-gray-100 dark:bg-gray-700 mx-auto mb-4"
               />
-              <h2 className="text-lg font-bold text-gray-900 mb-1">{consultation.patientName}</h2>
-              <p className="text-gray-600 mb-1">{consultation.reason}</p>
-              <div className="flex items-center justify-center gap-6 text-sm text-gray-500 mb-8">
+              <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-1">{consultation.patientName}</h2>
+              <p className="text-gray-600 dark:text-gray-400 mb-1">{consultation.reason}</p>
+              <div className="flex items-center justify-center gap-6 text-sm text-gray-500 dark:text-gray-400 mb-8">
                 <span className="flex items-center gap-1"><Clock className="w-4 h-4" />{consultation.date} · {consultation.time}</span>
                 <span className="flex items-center gap-1"><User className="w-4 h-4" />{consultation.duration}</span>
               </div>
@@ -153,13 +153,13 @@ const DoctorConsultation: React.FC = () => {
               <div className="flex items-center justify-center gap-6 mb-6">
                 <button
                   onClick={() => setMicOn(!micOn)}
-                  className={`p-3 rounded-full transition-colors ${micOn ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-600'}`}
+                  className={`p-3 rounded-full transition-colors ${micOn ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}
                 >
                   {micOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                 </button>
                 <button
                   onClick={() => setCamOn(!camOn)}
-                  className={`p-3 rounded-full transition-colors ${camOn ? 'bg-gray-100 text-gray-700' : 'bg-red-100 text-red-600'}`}
+                  className={`p-3 rounded-full transition-colors ${camOn ? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'}`}
                 >
                   {camOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                 </button>
@@ -202,22 +202,22 @@ const DoctorConsultation: React.FC = () => {
               <div className="flex items-center justify-center gap-6 mt-6">
                 <button
                   onClick={() => setMicOn(!micOn)}
-                  className={`p-4 rounded-full transition-colors ${micOn ? 'bg-gray-200 text-gray-700' : 'bg-red-500 text-white'}`}
+                  className={`p-4 rounded-full transition-colors ${micOn ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'bg-red-500 text-white'}`}
                 >
                   {micOn ? <Mic className="w-5 h-5" /> : <MicOff className="w-5 h-5" />}
                 </button>
                 <button
                   onClick={() => setCamOn(!camOn)}
-                  className={`p-4 rounded-full transition-colors ${camOn ? 'bg-gray-200 text-gray-700' : 'bg-red-500 text-white'}`}
+                  className={`p-4 rounded-full transition-colors ${camOn ? 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300' : 'bg-red-500 text-white'}`}
                 >
                   {camOn ? <Video className="w-5 h-5" /> : <VideoOff className="w-5 h-5" />}
                 </button>
-                <button className="p-6 rounded-full bg-gray-200 text-gray-700 hover:bg-gray-300 transition-colors">
+                <button className="p-6 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors">
                   <Monitor className="w-5 h-5" />
                 </button>
                 <button
                   onClick={() => setShowChat(!showChat)}
-                  className={`p-4 rounded-full transition-colors ${showChat ? 'bg-blue-500 text-white' : 'bg-gray-200 text-gray-700'}`}
+                  className={`p-4 rounded-full transition-colors ${showChat ? 'bg-blue-500 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300'}`}
                 >
                   <MessageSquare className="w-5 h-5" />
                 </button>
@@ -233,20 +233,20 @@ const DoctorConsultation: React.FC = () => {
                 <motion.div
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
-                  className="mt-4 bg-white rounded-xl shadow-lg p-4 max-w-md ml-auto"
+                  className="mt-4 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 max-w-md ml-auto"
                 >
-                  <p className="text-sm font-medium text-gray-900 mb-3">In-call chat</p>
+                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 mb-3">In-call chat</p>
                   <div className="space-y-2 mb-3 max-h-32 overflow-y-auto">
-                    <div className="text-sm bg-gray-100 rounded-lg p-2">
+                    <div className="text-sm bg-gray-100 dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded-lg p-2">
                       <span className="font-medium">{consultation.patientName}:</span> Can you see my latest test results?
                     </div>
-                    <div className="text-sm bg-blue-50 rounded-lg p-2">
+                    <div className="text-sm bg-blue-50 dark:bg-blue-900/30 text-gray-900 dark:text-gray-100 rounded-lg p-2">
                       <span className="font-medium">You:</span> Yes, everything looks good so far.
                     </div>
                   </div>
                   <input
                     placeholder="Type a message..."
-                    className="w-full px-3 py-2 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-3 py-2 border border-gray-300 dark:border-gray-600 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 rounded-lg text-sm focus:ring-2 focus:ring-blue-500 focus:border-transparent"
                   />
                 </motion.div>
               )}

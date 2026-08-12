@@ -49,8 +49,8 @@ const PatientInsurance: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Insurance Coverage</h1>
-            <p className="text-gray-600">View your health insurance plan details</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Insurance Coverage</h1>
+            <p className="text-gray-600 dark:text-gray-400">View your health insurance plan details</p>
           </motion.div>
 
           {/* Policy Card */}
@@ -118,11 +118,11 @@ const PatientInsurance: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 + i * 0.05 }}
-                className="bg-white rounded-xl p-6 shadow-lg"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700"
               >
                 <p className={`text-lg font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-900 font-medium text-sm mt-1">{s.label}</p>
-                <p className="text-gray-500 text-xs mt-0.5">{s.sub}</p>
+                <p className="text-gray-900 dark:text-gray-100 font-medium text-sm mt-1">{s.label}</p>
+                <p className="text-gray-500 dark:text-gray-400 text-xs mt-0.5">{s.sub}</p>
               </motion.div>
             ))}
           </div>
@@ -132,15 +132,15 @@ const PatientInsurance: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.3 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-6"
           >
-            <h3 className="font-semibold text-lg mb-4">Deductible Progress</h3>
+            <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-4">Deductible Progress</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600">$320 of $500 met</span>
-                <span className="font-medium text-blue-600">64%</span>
+                <span className="text-gray-600 dark:text-gray-400">$320 of $500 met</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">64%</span>
               </div>
-              <div className="w-full bg-gray-200 rounded-full h-3">
+              <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
                 <div className="bg-blue-600 h-3 rounded-full transition-all" style={{ width: '64%' }} />
               </div>
             </div>
@@ -151,15 +151,15 @@ const PatientInsurance: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.35 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
           >
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <FileText className="w-5 h-5 text-indigo-600" />
-              <h3 className="font-semibold text-lg">Coverage Details</h3>
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
+              <FileText className="w-5 h-5 text-indigo-600 dark:text-indigo-400" />
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Coverage Details</h3>
             </div>
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 text-sm text-gray-500">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-500 dark:text-gray-400">
                   <tr>
                     <th className="py-3 px-4 font-medium">Category</th>
                     <th className="py-3 px-4 font-medium">Covered</th>
@@ -168,19 +168,19 @@ const PatientInsurance: React.FC = () => {
                     <th className="py-3 px-4 font-medium">Status</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {coverageItems.map((item) => (
-                    <tr key={item.category} className="text-sm hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-gray-900">{item.category}</td>
-                      <td className="py-3 px-4 text-green-600 font-semibold">{item.covered}</td>
-                      <td className="py-3 px-4 text-gray-600">{item.copay}</td>
-                      <td className="py-3 px-4 text-gray-600">{item.limit}</td>
+                    <tr key={item.category} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-4 font-medium text-gray-900 dark:text-gray-100">{item.category}</td>
+                      <td className="py-3 px-4 text-green-600 dark:text-green-400 font-semibold">{item.covered}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.copay}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.limit}</td>
                       <td className="py-3 px-4">
                         <span
                           className={`inline-flex items-center gap-1 px-2.5 py-1 rounded-full text-xs font-medium ${
                             item.status === 'active'
-                              ? 'bg-green-100 text-green-700'
-                              : 'bg-yellow-100 text-yellow-700'
+                              ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
+                              : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                           }`}
                         >
                           {item.status === 'active' ? (

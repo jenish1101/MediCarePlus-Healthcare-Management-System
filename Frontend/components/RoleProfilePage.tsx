@@ -57,20 +57,20 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
 
   const accentBtn =
     theme.accent === 'blue'
-      ? 'border-blue-600 text-blue-600 hover:bg-blue-50'
+      ? 'border-blue-600 text-blue-600 dark:text-blue-400 hover:bg-blue-50 dark:hover:bg-blue-900/20'
       : theme.accent === 'purple'
-        ? 'border-purple-600 text-purple-600 hover:bg-purple-50'
+        ? 'border-purple-600 text-purple-600 dark:text-purple-400 hover:bg-purple-50 dark:hover:bg-purple-900/20'
         : theme.accent === 'red'
-          ? 'border-red-600 text-red-600 hover:bg-red-50'
+          ? 'border-red-600 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20'
           : theme.accent === 'green'
-            ? 'border-green-600 text-green-600 hover:bg-green-50'
+            ? 'border-green-600 text-green-600 dark:text-green-400 hover:bg-green-50 dark:hover:bg-green-900/20'
             : theme.accent === 'indigo'
-              ? 'border-indigo-600 text-indigo-600 hover:bg-indigo-50'
+              ? 'border-indigo-600 text-indigo-600 dark:text-indigo-400 hover:bg-indigo-50 dark:hover:bg-indigo-900/20'
               : theme.accent === 'teal'
-                ? 'border-teal-600 text-teal-600 hover:bg-teal-50'
+                ? 'border-teal-600 text-teal-600 dark:text-teal-400 hover:bg-teal-50 dark:hover:bg-teal-900/20'
                 : theme.accent === 'rose'
-                  ? 'border-rose-600 text-rose-600 hover:bg-rose-50'
-                  : 'border-amber-600 text-amber-600 hover:bg-amber-50';
+                  ? 'border-rose-600 text-rose-600 dark:text-rose-400 hover:bg-rose-50 dark:hover:bg-rose-900/20'
+                  : 'border-amber-600 text-amber-600 dark:text-amber-400 hover:bg-amber-50 dark:hover:bg-amber-900/20';
 
   const renderField = (field: ProfileFieldConfig) => {
     const Icon = field.icon;
@@ -80,16 +80,16 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
     if (field.type === 'textarea') {
       return (
         <div key={field.key} className={spanClass}>
-          <label className="block text-sm font-medium text-gray-600 mb-2">{field.label}</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-2">{field.label}</label>
           {editing ? (
             <textarea
               value={value}
               onChange={(e) => update(field.key, e.target.value)}
               rows={4}
-              className={`w-full px-4 py-3 border border-gray-200 rounded-xl bg-white text-gray-900 resize-none ${theme.ring}`}
+              className={`w-full px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 resize-none ${theme.ring}`}
             />
           ) : (
-            <p className="text-gray-700 leading-relaxed bg-gray-50 rounded-xl px-4 py-3 border border-gray-100">
+            <p className="text-gray-700 dark:text-gray-300 leading-relaxed bg-gray-50 dark:bg-gray-900/40 rounded-xl px-4 py-3 border border-gray-100 dark:border-gray-700">
               {value}
             </p>
           )}
@@ -100,13 +100,13 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
     if (editing && !field.readOnly) {
       return (
         <div key={field.key} className={spanClass}>
-          <label className="block text-sm font-medium text-gray-600 mb-1.5">{field.label}</label>
+          <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1.5">{field.label}</label>
           <div className="relative">
-            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400" />
+            <Icon className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 text-gray-400 dark:text-gray-500" />
             <input
               value={value}
               onChange={(e) => update(field.key, e.target.value)}
-              className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 rounded-xl bg-white text-gray-900 ${theme.ring}`}
+              className={`w-full pl-10 pr-4 py-2.5 border border-gray-200 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-900 text-gray-900 dark:text-gray-100 ${theme.ring}`}
             />
           </div>
         </div>
@@ -116,14 +116,14 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
     return (
       <div
         key={field.key}
-        className={`flex items-start gap-3 p-4 rounded-xl border border-gray-100 bg-gray-50/80 hover:bg-gray-50 transition-colors ${spanClass}`}
+        className={`flex items-start gap-3 p-4 rounded-xl border border-gray-100 dark:border-gray-700 bg-gray-50/80 dark:bg-gray-900/40 hover:bg-gray-50 dark:hover:bg-gray-900/70 transition-colors ${spanClass}`}
       >
         <div className={`w-10 h-10 rounded-xl ${theme.accentLight} flex items-center justify-center shrink-0`}>
           <Icon className={`w-5 h-5 ${theme.accentText}`} />
         </div>
         <div className="min-w-0 flex-1">
-          <p className="text-xs font-medium uppercase tracking-wide text-gray-400">{field.label}</p>
-          <p className="mt-0.5 font-medium text-gray-900 break-words">{value || '—'}</p>
+          <p className="text-xs font-medium uppercase tracking-wide text-gray-400 dark:text-gray-500">{field.label}</p>
+          <p className="mt-0.5 font-medium text-gray-900 dark:text-gray-100 break-words">{value || '—'}</p>
         </div>
       </div>
     );
@@ -136,8 +136,8 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
           {/* Page header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }} className="flex flex-col sm:flex-row sm:items-end sm:justify-between gap-4">
             <div>
-              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">My Profile</h1>
-              <p className="text-gray-500 mt-1">{subtitle}</p>
+              <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">My Profile</h1>
+              <p className="text-gray-500 dark:text-gray-400 mt-1">{subtitle}</p>
             </div>
             <AnimatePresence>
               {saved && (
@@ -145,7 +145,7 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                   initial={{ opacity: 0, scale: 0.95 }}
                   animate={{ opacity: 1, scale: 1 }}
                   exit={{ opacity: 0 }}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 text-green-700 text-sm font-medium border border-green-200"
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 text-sm font-medium border border-green-200 dark:border-green-800"
                 >
                   <Check className="w-4 h-4" /> Profile saved
                 </motion.span>
@@ -157,7 +157,7 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-none border border-gray-100 dark:border-gray-700 overflow-hidden"
           >
             <div className={`relative h-36 sm:h-40 bg-gradient-to-r ${theme.gradient}`}>
               <div className="absolute inset-0 opacity-20 bg-[radial-gradient(circle_at_30%_20%,white,transparent_50%)]" />
@@ -172,20 +172,20 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                   <img
                     src={user?.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(form.name)}`}
                     alt={form.name}
-                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white shadow-xl bg-white object-cover"
+                    className="w-28 h-28 sm:w-32 sm:h-32 rounded-2xl border-4 border-white dark:border-gray-800 shadow-xl bg-white object-cover"
                   />
-                  <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-green-500 border-2 border-white" title="Active" />
+                  <span className="absolute bottom-2 right-2 w-4 h-4 rounded-full bg-green-500 border-2 border-white dark:border-gray-800" title="Active" />
                 </div>
 
                 <div className="flex-1 min-w-0 pt-1 lg:pt-0">
-                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 truncate">{form.name}</h2>
+                  <h2 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{form.name}</h2>
                   <p className={`inline-flex items-center gap-1.5 mt-1 text-sm font-semibold ${theme.accentText}`}>
                     <RoleIcon className="w-4 h-4" />
                     {roleLabel}
                   </p>
-                  <p className="text-sm text-gray-500 mt-2 flex items-center gap-1.5 truncate">
-                    <span className="text-gray-400">ID</span>
-                    <span className="font-mono text-xs bg-gray-100 px-2 py-0.5 rounded">{user?.id ?? '—'}</span>
+                  <p className="text-sm text-gray-500 dark:text-gray-400 mt-2 flex items-center gap-1.5 truncate">
+                    <span className="text-gray-400 dark:text-gray-500">ID</span>
+                    <span className="font-mono text-xs bg-gray-100 dark:bg-gray-700 px-2 py-0.5 rounded">{user?.id ?? '—'}</span>
                   </p>
                 </div>
 
@@ -194,7 +194,7 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                     <>
                       <button
                         onClick={handleCancel}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors"
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                       >
                         <X className="w-4 h-4" /> Cancel
                       </button>
@@ -223,14 +223,14 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                   return (
                     <div
                       key={stat.label}
-                      className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 border border-gray-100"
+                      className="flex items-center gap-3 p-3 sm:p-4 rounded-xl bg-gray-50 dark:bg-gray-900/40 border border-gray-100 dark:border-gray-700"
                     >
                       <div className={`w-9 h-9 rounded-lg ${theme.accentLight} flex items-center justify-center shrink-0`}>
                         <StatIcon className={`w-4 h-4 ${theme.accentText}`} />
                       </div>
                       <div className="min-w-0">
-                        <p className="text-xs text-gray-500 truncate">{stat.label}</p>
-                        <p className="text-sm font-bold text-gray-900 truncate">{stat.value}</p>
+                        <p className="text-xs text-gray-500 dark:text-gray-400 truncate">{stat.label}</p>
+                        <p className="text-sm font-bold text-gray-900 dark:text-gray-100 truncate">{stat.value}</p>
                       </div>
                     </div>
                   );
@@ -248,13 +248,13 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.05 * (index + 1) }}
-                className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8"
+                className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-none border border-gray-100 dark:border-gray-700 p-6 sm:p-8"
               >
-                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100">
+                <div className="flex items-center gap-3 mb-6 pb-4 border-b border-gray-100 dark:border-gray-700">
                   <div className={`w-10 h-10 rounded-xl ${theme.accentLight} flex items-center justify-center`}>
                     <SectionIcon className={`w-5 h-5 ${theme.accentText}`} />
                   </div>
-                  <h3 className="text-lg font-semibold text-gray-900">{section.title}</h3>
+                  <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100">{section.title}</h3>
                 </div>
                 <div className="grid sm:grid-cols-2 gap-4">{section.fields.map(renderField)}</div>
               </motion.div>
@@ -267,9 +267,9 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
               initial={{ opacity: 0, y: 20 }}
               animate={{ opacity: 1, y: 0 }}
               transition={{ delay: 0.2 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-6 sm:p-8"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-none border border-gray-100 dark:border-gray-700 p-6 sm:p-8"
             >
-              <h3 className="text-lg font-semibold text-gray-900 mb-4">Qualifications</h3>
+              <h3 className="text-lg font-semibold text-gray-900 dark:text-gray-100 mb-4">Qualifications</h3>
               <div className="flex flex-wrap gap-2">
                 {tags.map((tag) => (
                   <span

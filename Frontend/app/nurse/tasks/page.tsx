@@ -45,8 +45,8 @@ const NurseTasks: React.FC = () => {
       <DashboardLayout role="nurse">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Care Tasks</h1>
-            <p className="text-gray-600">Medication rounds and daily care tasks · {pending} pending</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Care Tasks</h1>
+            <p className="text-gray-600 dark:text-gray-400">Medication rounds and daily care tasks · {pending} pending</p>
           </motion.div>
 
           <div className="flex flex-wrap gap-2">
@@ -55,7 +55,7 @@ const NurseTasks: React.FC = () => {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  filter === f ? 'bg-rose-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                  filter === f ? 'bg-rose-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                 }`}
               >
                 {f}
@@ -70,24 +70,24 @@ const NurseTasks: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.04 }}
-                className={`bg-white rounded-xl shadow-lg p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 ${
+                className={`bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-5 flex flex-col sm:flex-row sm:items-center justify-between gap-6 ${
                   task.status === 'completed' ? 'opacity-75' : ''
                 }`}
               >
                 <div className="flex items-start gap-6">
-                  <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${task.type === 'medication' ? 'bg-purple-100' : 'bg-blue-100'}`}>
-                    {task.type === 'medication' ? <Pill className="w-5 h-5 text-purple-600" /> : <ClipboardList className="w-5 h-5 text-blue-600" />}
+                  <div className={`w-11 h-11 rounded-lg flex items-center justify-center shrink-0 ${task.type === 'medication' ? 'bg-purple-100 dark:bg-purple-900/30' : 'bg-blue-100 dark:bg-blue-900/30'}`}>
+                    {task.type === 'medication' ? <Pill className="w-5 h-5 text-purple-600 dark:text-purple-400" /> : <ClipboardList className="w-5 h-5 text-blue-600 dark:text-blue-400" />}
                   </div>
                   <div>
                     <div className="flex items-center gap-2 flex-wrap">
-                      <p className="font-semibold text-gray-900">{task.patient}</p>
-                      <span className="text-xs text-gray-500">Room {task.room}</span>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${task.type === 'medication' ? 'bg-purple-100 text-purple-700' : 'bg-blue-100 text-blue-700'}`}>
+                      <p className="font-semibold text-gray-900 dark:text-gray-100">{task.patient}</p>
+                      <span className="text-xs text-gray-500 dark:text-gray-400">Room {task.room}</span>
+                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full capitalize ${task.type === 'medication' ? 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
                         {task.type}
                       </span>
                     </div>
-                    <p className="text-sm text-gray-600 mt-1">{task.description}</p>
-                    <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{task.description}</p>
+                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
                       <Clock className="w-3.5 h-3.5" /> Scheduled: {task.scheduled}
                     </p>
                   </div>
@@ -100,7 +100,7 @@ const NurseTasks: React.FC = () => {
                     <CheckCircle2 className="w-4 h-4" /> Mark Done
                   </button>
                 ) : (
-                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600 shrink-0">
+                  <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400 shrink-0">
                     <CheckCircle2 className="w-4 h-4" /> Completed
                   </span>
                 )}

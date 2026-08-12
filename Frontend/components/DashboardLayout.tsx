@@ -44,7 +44,9 @@ import {
 import { useAuth } from '@/contexts/AuthContext';
 import { useNotifications } from '@/contexts/NotificationContext';
 import { notificationIconMap } from '@/lib/notificationIcons';
+import { colorClasses } from '@/lib/colorClasses';
 import { UserRole } from '@/types';
+import ThemeToggle from '@/components/ThemeToggle';
 
 interface DashboardLayoutProps {
   children: React.ReactNode;
@@ -178,43 +180,51 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
   };
 
   return (
-    <div className="min-h-screen bg-gray-50 overflow-x-hidden">
+    <div className="min-h-screen bg-gray-50 dark:bg-gray-900 overflow-x-hidden">
       {/* Top Navbar */}
-      <nav className="bg-white shadow-sm fixed top-0 left-0 right-0 z-50">
+      <nav className="bg-white dark:bg-gray-800 shadow-sm dark:border-b dark:border-gray-700 fixed top-0 left-0 right-0 z-50">
         <div className="px-4 sm:px-6 lg:px-8">
           <div className="flex items-center justify-between h-16">
             <div className="flex items-center space-x-4">
               <button
                 onClick={() => setSidebarOpen(!sidebarOpen)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors hidden lg:block"
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors hidden lg:block"
               >
-                {sidebarOpen ? <X className="w-5 h-5" /> : <Menu className="w-5 h-5" />}
+                {sidebarOpen ? <X className="w-5 h-5 dark:text-gray-300" /> : <Menu className="w-5 h-5 dark:text-gray-300" />}
               </button>
               <button
-                onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-                className="p-2 rounded-lg hover:bg-gray-100 transition-colors lg:hidden"
+                onClick={() => {
+                  setShowNotifications(false);
+                  setMobileMenuOpen(!mobileMenuOpen);
+                }}
+                className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors lg:hidden"
               >
-                <Menu className="w-5 h-5" />
+                <Menu className="w-5 h-5 dark:text-gray-300" />
               </button>
-              <div className="flex items-center space-x-2">
-                <Heart className="w-7 h-7 text-red-500" />
-                <span className="text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+              <div className="flex items-center space-x-2 min-w-0">
+                <Heart className="w-6 h-6 sm:w-7 sm:h-7 text-red-500 shrink-0" />
+                <span className="text-base sm:text-lg font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent truncate">
                   MediCare Plus
                 </span>
               </div>
             </div>
 
-            <div className="flex items-center space-x-4">
+            <div className="flex items-center space-x-2 sm:space-x-4">
+              <ThemeToggle />
               <div className="relative">
                 <button
-                  onClick={() => setShowNotifications((s) => !s)}
-                  className="p-2 rounded-lg hover:bg-gray-100 transition-colors relative"
+                  onClick={() => {
+                    setMobileMenuOpen(false);
+                    setShowNotifications((s) => !s);
+                  }}
+                  className="p-2 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors relative"
                   aria-label="Notifications"
+                  aria-expanded={showNotifications}
                 >
-                  <Bell className="w-5 h-5 text-gray-600" />
+                  <Bell className="w-5 h-5 text-gray-600 dark:text-gray-300" />
                   {unreadCount > 0 && (
                     <span className="absolute top-0.5 right-0.5 min-w-[18px] h-[18px] px-1 bg-red-500 text-white text-[10px] font-semibold rounded-full flex items-center justify-center">
-                      {unreadCount}
+                      {unreadCount > 9 ? '9+' : unreadCount}
                     </span>
                   )}
                 </button>
@@ -224,45 +234,58 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                     <>
                       {/* Click-away overlay */}
                       <div
-                        className="fixed inset-0 z-40"
+                        className="fixed inset-0 z-[55] bg-black/20 sm:bg-transparent"
                         onClick={() => setShowNotifications(false)}
+                        aria-hidden="true"
                       />
                       <motion.div
                         initial={{ opacity: 0, y: -10, scale: 0.97 }}
                         animate={{ opacity: 1, y: 0, scale: 1 }}
                         exit={{ opacity: 0, y: -10, scale: 0.97 }}
                         transition={{ duration: 0.15 }}
-                        className="absolute right-0 mt-2 w-80 sm:w-96 max-w-[calc(100vw-2rem)] bg-white rounded-xl shadow-2xl border border-gray-100 z-50 overflow-hidden"
+                        role="dialog"
+                        aria-label="Notifications"
+                        className="fixed left-3 right-3 top-[4.25rem] sm:absolute sm:left-auto sm:right-0 sm:top-full sm:mt-2 sm:w-80 md:w-96 z-[60] bg-white dark:bg-gray-800 rounded-xl shadow-2xl border border-gray-100 dark:border-gray-700 overflow-hidden flex flex-col max-h-[calc(100vh-5.5rem)] sm:max-h-[min(24rem,calc(100vh-6rem))]"
                       >
-                        <div className="flex items-center justify-between px-4 py-3 border-b">
-                          <h4 className="font-semibold text-gray-900">Notifications</h4>
-                          {unreadCount > 0 && (
-                            <span className="text-xs font-medium text-blue-600 bg-blue-50 px-2 py-0.5 rounded-full">
-                              {unreadCount} new
-                            </span>
-                          )}
+                        <div className="flex items-center justify-between px-4 py-3 border-b dark:border-gray-700 shrink-0">
+                          <h4 className="font-semibold text-gray-900 dark:text-gray-100">Notifications</h4>
+                          <div className="flex items-center gap-2">
+                            {unreadCount > 0 && (
+                              <span className="text-xs font-medium text-blue-600 dark:text-blue-400 bg-blue-50 dark:bg-blue-900/30 px-2 py-0.5 rounded-full">
+                                {unreadCount} new
+                              </span>
+                            )}
+                            <button
+                              onClick={() => setShowNotifications(false)}
+                              className="p-1 rounded-lg hover:bg-gray-100 dark:hover:bg-gray-700 sm:hidden"
+                              aria-label="Close notifications"
+                            >
+                              <X className="w-4 h-4 text-gray-500 dark:text-gray-400" />
+                            </button>
+                          </div>
                         </div>
-                        <div className="max-h-96 overflow-y-auto divide-y divide-gray-100">
+                        <div className="overflow-y-auto divide-y divide-gray-100 dark:divide-gray-700 flex-1 min-h-0 overscroll-contain">
                           {notifications.map((n) => {
                             const NIcon = notificationIconMap[n.icon];
+                            const colors = colorClasses[n.color];
                             return (
                             <div
                               key={n.id}
                               onClick={() => n.unread && markAsRead(n.id)}
-                              className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 transition-colors cursor-pointer ${
-                                n.unread ? 'bg-blue-50/40' : ''
+                              className={`flex items-start gap-3 px-4 py-3 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors cursor-pointer ${
+                                n.unread ? 'bg-blue-50/40 dark:bg-blue-900/20' : ''
                               }`}
                             >
-                              <div className={`w-9 h-9 rounded-full bg-${n.color}-100 flex items-center justify-center shrink-0`}>
-                                <NIcon className={`w-5 h-5 text-${n.color}-600`} />
+                              <div className={`w-9 h-9 rounded-full ${colors.bg100} flex items-center justify-center shrink-0`}>
+                                <NIcon className={`w-5 h-5 ${colors.text600}`} />
                               </div>
                               <div className="flex-1 min-w-0">
                                 <div className="flex items-center justify-between gap-2">
-                                  <p className="text-sm font-medium text-gray-900 truncate">{n.title}</p>
+                                  <p className="text-sm font-medium text-gray-900 dark:text-gray-100 truncate">{n.title}</p>
                                   {n.unread && <span className="w-2 h-2 bg-blue-500 rounded-full shrink-0" />}
                                 </div>
-                                <p className="text-xs text-gray-500 mt-0.5 line-clamp-2">{n.message}</p>
-                                <p className="text-[11px] text-gray-400 mt-1">{n.time}</p>
+                                <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5 line-clamp-2">{n.message}</p>
+                                <p className="text-[11px] text-gray-400 dark:text-gray-500 mt-1">{n.time}</p>
                               </div>
                             </div>
                             );
@@ -277,7 +300,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                               markAllAsRead();
                             }
                           }}
-                          className="w-full py-2.5 text-sm font-medium text-blue-600 hover:bg-gray-50 transition-colors border-t"
+                          className="w-full py-2.5 text-sm font-medium text-blue-600 dark:text-blue-400 hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors border-t dark:border-gray-700 shrink-0"
                         >
                           {role === 'patient' ? 'View all notifications' : 'Mark all as read'}
                         </button>
@@ -289,7 +312,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
 
               <button
                 onClick={goToProfile}
-                className="flex items-center space-x-3 rounded-lg p-1 hover:bg-gray-100 transition-colors"
+                className="flex items-center space-x-3 rounded-lg p-1 hover:bg-gray-100 dark:hover:bg-gray-700 transition-colors"
                 aria-label="View profile"
               >
                 {/* eslint-disable-next-line @next/next/no-img-element */}
@@ -299,8 +322,8 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   className="w-9 h-9 rounded-full border-2 border-blue-500"
                 />
                 <div className="hidden sm:block text-left">
-                  <p className="text-sm font-semibold text-gray-900">{user?.name}</p>
-                  <p className="text-xs text-gray-500 capitalize">{role.replace('_', ' ')}</p>
+                  <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">{user?.name}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400 capitalize">{role.replace('_', ' ')}</p>
                 </div>
               </button>
             </div>
@@ -316,7 +339,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
             animate={{ x: 0 }}
             exit={{ x: -256 }}
             transition={{ type: 'spring', damping: 20 }}
-            className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white shadow-lg z-40 overflow-hidden"
+            className="hidden lg:block fixed left-0 top-16 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-lg z-40 overflow-hidden"
           >
             <nav className="p-3 h-full flex flex-col min-w-0">
               <div className="flex-1 space-y-1 overflow-y-auto overflow-x-hidden min-w-0">
@@ -324,7 +347,7 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                   <button
                     key={item.path}
                     onClick={() => router.push(item.path)}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left text-sm min-w-0"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left text-sm min-w-0"
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
                     <span className="font-medium truncate">{item.label}</span>
@@ -332,17 +355,17 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                 ))}
               </div>
 
-              <div className="border-t pt-3 space-y-1">
+              <div className="border-t dark:border-gray-700 pt-3 space-y-1">
                 <button
                   onClick={goToSettings}
-                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left text-sm"
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left text-sm"
                 >
-                  <Settings className="w-5 h-5 text-gray-600 shrink-0" />
-                  <span className="font-medium text-gray-700">Settings</span>
+                  <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0" />
+                  <span className="font-medium text-gray-700 dark:text-gray-300">Settings</span>
                 </button>
                 <button
                   onClick={requestLogout}
-                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm"
+                  className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors text-left text-sm"
                 >
                   <LogOut className="w-5 h-5 shrink-0" />
                   <span className="font-medium">Logout</span>
@@ -368,12 +391,12 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
               animate={{ x: 0 }}
               exit={{ x: -256 }}
               onClick={(e) => e.stopPropagation()}
-              className="absolute left-0 top-0 bottom-0 w-64 bg-white shadow-lg overflow-hidden"
+              className="absolute left-0 top-0 bottom-0 w-64 bg-white dark:bg-gray-800 shadow-lg overflow-hidden"
             >
-              <div className="p-4 border-b flex items-center justify-between">
-                <span className="font-semibold">Menu</span>
+              <div className="p-4 border-b dark:border-gray-700 flex items-center justify-between">
+                <span className="font-semibold text-gray-900 dark:text-gray-100">Menu</span>
                 <button onClick={() => setMobileMenuOpen(false)}>
-                  <X className="w-5 h-5" />
+                  <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                 </button>
               </div>
               <nav className="p-3 overflow-y-auto overflow-x-hidden max-h-[calc(100vh-4rem)]">
@@ -384,23 +407,23 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
                       router.push(item.path);
                       setMobileMenuOpen(false);
                     }}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-blue-50 hover:text-blue-600 transition-colors text-left text-sm min-w-0"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-blue-50 dark:hover:bg-blue-900/20 hover:text-blue-600 dark:hover:text-blue-400 transition-colors text-left text-sm min-w-0"
                   >
                     <item.icon className="w-5 h-5 shrink-0" />
                     <span className="font-medium truncate">{item.label}</span>
                   </button>
                 ))}
-                <div className="border-t mt-3 pt-3 space-y-1">
+                <div className="border-t dark:border-gray-700 mt-3 pt-3 space-y-1">
                   <button
                     onClick={goToSettings}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 transition-colors text-left text-sm"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-left text-sm"
                   >
-                    <Settings className="w-5 h-5 text-gray-600 shrink-0" />
-                    <span className="font-medium text-gray-700">Settings</span>
+                    <Settings className="w-5 h-5 text-gray-600 dark:text-gray-400 shrink-0" />
+                    <span className="font-medium text-gray-700 dark:text-gray-300">Settings</span>
                   </button>
                   <button
                     onClick={requestLogout}
-                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg hover:bg-red-50 hover:text-red-600 transition-colors text-left text-sm"
+                    className="w-full flex items-center space-x-3 px-4 py-2.5 rounded-lg text-gray-700 dark:text-gray-300 hover:bg-red-50 dark:hover:bg-red-900/20 hover:text-red-600 dark:hover:text-red-400 transition-colors text-left text-sm"
                   >
                     <LogOut className="w-5 h-5 shrink-0" />
                     <span className="font-medium">Logout</span>
@@ -439,21 +462,21 @@ const DashboardLayout: React.FC<DashboardLayoutProps> = ({ children, role }) => 
               exit={{ opacity: 0, scale: 0.9, y: 20 }}
               transition={{ type: 'spring', damping: 22, stiffness: 300 }}
               onClick={(e) => e.stopPropagation()}
-              className="w-full max-w-sm bg-white rounded-xl shadow-2xl p-4"
+              className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-4"
             >
               <div className="flex flex-col items-center text-center">
-                <div className="w-11 h-11 rounded-full bg-red-100 flex items-center justify-center mb-3">
-                  <LogOut className="w-5 h-5 text-red-600" />
+                <div className="w-11 h-11 rounded-full bg-red-100 dark:bg-red-900/30 flex items-center justify-center mb-3">
+                  <LogOut className="w-5 h-5 text-red-600 dark:text-red-400" />
                 </div>
-                <h3 className="text-base font-semibold text-gray-900">Log out?</h3>
-                <p className="text-sm text-gray-500 mt-1">
+                <h3 className="text-base font-semibold text-gray-900 dark:text-gray-100">Log out?</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
                   Are you sure you want to log out of your account?
                 </p>
               </div>
               <div className="mt-6 flex gap-3">
                 <button
                   onClick={() => setShowLogoutConfirm(false)}
-                  className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors"
+                  className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                 >
                   Cancel
                 </button>

@@ -167,11 +167,11 @@ const patients: Record<string, PatientDetail> = {
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    active: 'bg-green-100 text-green-700',
-    'follow-up': 'bg-yellow-100 text-yellow-700',
-    new: 'bg-blue-100 text-blue-700'
+    active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    'follow-up': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    new: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const DoctorPatientDetail: React.FC = () => {
@@ -185,10 +185,10 @@ const DoctorPatientDetail: React.FC = () => {
     return (
       <ProtectedRoute allowedRoles={['doctor']}>
         <DashboardLayout role="doctor">
-          <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-            <Stethoscope className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-            <h3 className="text-xl font-semibold text-gray-900 mb-2">Patient not found</h3>
-            <p className="text-gray-600 mb-6">No record exists for ID &quot;{patientId}&quot;.</p>
+          <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+            <Stethoscope className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+            <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Patient not found</h3>
+            <p className="text-gray-600 dark:text-gray-400 mb-6">No record exists for ID &quot;{patientId}&quot;.</p>
             <button
               onClick={() => router.push('/doctor/patients')}
               className="px-5 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors"
@@ -214,49 +214,49 @@ const DoctorPatientDetail: React.FC = () => {
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
             <button
               onClick={() => router.push('/doctor/patients')}
-              className="flex items-center gap-2 text-gray-600 hover:text-gray-900 mb-4 transition-colors"
+              className="flex items-center gap-2 text-gray-600 dark:text-gray-400 hover:text-gray-900 dark:hover:text-gray-100 mb-4 transition-colors"
             >
               <ArrowLeft className="w-4 h-4" /> Back to Patients
             </button>
 
-            <div className="bg-white rounded-xl shadow-lg p-6">
-              <div className="flex flex-col sm:flex-row sm:items-center gap-6">
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6">
+              <div className="flex flex-col sm:flex-row sm:items-center gap-4 sm:gap-6">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
                   src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${patient.name}`}
                   alt={patient.name}
-                  className="w-20 h-20 rounded-full bg-gray-100"
+                  className="w-16 h-16 sm:w-20 sm:h-20 rounded-full bg-gray-100 dark:bg-gray-700 shrink-0"
                 />
-                <div className="flex-1">
-                  <div className="flex flex-wrap items-center gap-3 mb-1">
-                    <h1 className="text-lg font-bold text-gray-900">{patient.name}</h1>
+                <div className="flex-1 min-w-0">
+                  <div className="flex flex-wrap items-center gap-2 sm:gap-3 mb-1">
+                    <h1 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{patient.name}</h1>
                     <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusColor(patient.status)}`}>
                       {patient.status}
                     </span>
                   </div>
-                  <p className="text-gray-600">{patient.age} yrs · {patient.gender} · {patient.condition}</p>
-                  <div className="flex flex-wrap gap-6 mt-2 text-sm text-gray-500">
-                    <span className="flex items-center gap-1"><Phone className="w-4 h-4" />{patient.phone}</span>
-                    <span className="flex items-center gap-1"><Mail className="w-4 h-4" />{patient.email}</span>
-                    <span className="flex items-center gap-1"><Calendar className="w-4 h-4" />Last visit: {patient.lastVisit}</span>
+                  <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">{patient.age} yrs · {patient.gender} · {patient.condition}</p>
+                  <div className="flex flex-col sm:flex-row sm:flex-wrap gap-1 sm:gap-x-4 sm:gap-y-1 mt-2 text-xs sm:text-sm text-gray-500 dark:text-gray-400">
+                    <span className="flex items-center gap-1"><Phone className="w-4 h-4 shrink-0" />{patient.phone}</span>
+                    <span className="flex items-center gap-1 truncate"><Mail className="w-4 h-4 shrink-0" />{patient.email}</span>
+                    <span className="flex items-center gap-1"><Calendar className="w-4 h-4 shrink-0" />Last visit: {patient.lastVisit}</span>
                   </div>
                 </div>
-                <div className="flex flex-wrap gap-2 sm:justify-end">
+                <div className="flex flex-col sm:flex-row flex-wrap gap-2 w-full sm:w-auto">
                   <button
                     onClick={() => router.push('/doctor/notes')}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700"
                   >
                     <ClipboardList className="w-4 h-4" /> Add Note
                   </button>
                   <button
                     onClick={() => router.push('/doctor/referrals')}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-blue-600 text-blue-600 rounded-lg text-sm font-medium hover:bg-blue-50"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-blue-600 dark:border-blue-500 text-blue-600 dark:text-blue-400 rounded-lg text-sm font-medium hover:bg-blue-50 dark:hover:bg-blue-900/20"
                   >
                     <Share2 className="w-4 h-4" /> Refer
                   </button>
                   <button
                     onClick={() => router.push('/doctor/messages')}
-                    className="inline-flex items-center gap-2 px-4 py-2 border border-gray-300 text-gray-700 rounded-lg text-sm font-medium hover:bg-gray-50"
+                    className="flex-1 sm:flex-none inline-flex items-center justify-center gap-2 px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700"
                   >
                     <MessageSquare className="w-4 h-4" /> Message
                   </button>
@@ -269,18 +269,18 @@ const DoctorPatientDetail: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
           >
-            <div className="border-b border-gray-200">
-              <div className="flex space-x-6 px-6">
+            <div className="border-b border-gray-200 dark:border-gray-700 overflow-x-auto scrollbar-hide">
+              <div className="flex min-w-max sm:min-w-0 space-x-4 sm:space-x-6 px-4 sm:px-6">
                 {tabs.map((tab) => (
                   <button
                     key={tab.id}
                     onClick={() => setActiveTab(tab.id)}
-                    className={`py-4 px-2 border-b-2 font-medium transition-colors flex items-center gap-2 ${
+                    className={`py-3 sm:py-4 px-2 border-b-2 font-medium text-sm sm:text-base transition-colors flex items-center gap-2 whitespace-nowrap ${
                       activeTab === tab.id
-                        ? 'border-blue-600 text-blue-600'
-                        : 'border-transparent text-gray-500 hover:text-gray-700'
+                        ? 'border-blue-600 text-blue-600 dark:text-blue-400'
+                        : 'border-transparent text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300'
                     }`}
                   >
                     <tab.icon className="w-4 h-4" />
@@ -290,17 +290,17 @@ const DoctorPatientDetail: React.FC = () => {
               </div>
             </div>
 
-            <div className="p-4">
+            <div className="p-4 sm:p-6">
               {activeTab === 'history' && (
                 <div className="space-y-6">
                   {patient.history.map((item, i) => (
-                    <div key={i} className="flex gap-6 p-4 bg-gray-50 rounded-lg">
-                      <div className="w-10 h-10 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                        <Activity className="w-5 h-5 text-blue-600" />
+                    <div key={i} className="flex gap-6 p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                      <div className="w-10 h-10 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
+                        <Activity className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       </div>
                       <div>
-                        <p className="font-medium text-gray-900">{item.event}</p>
-                        <p className="text-sm text-gray-500">{item.date} · {item.doctor}</p>
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{item.event}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400">{item.date} · {item.doctor}</p>
                       </div>
                     </div>
                   ))}
@@ -310,21 +310,35 @@ const DoctorPatientDetail: React.FC = () => {
               {activeTab === 'notes' && (
                 <div className="space-y-6">
                   {patient.notes.map((note, i) => (
-                    <div key={i} className="p-6 border border-gray-200 rounded-lg">
+                    <div key={i} className="p-6 border border-gray-200 dark:border-gray-700 rounded-lg">
                       <div className="flex items-center justify-between mb-2">
-                        <h4 className="font-semibold text-gray-900">{note.title}</h4>
-                        <span className="text-sm text-gray-500">{note.date}</span>
+                        <h4 className="font-semibold text-gray-900 dark:text-gray-100">{note.title}</h4>
+                        <span className="text-sm text-gray-500 dark:text-gray-400">{note.date}</span>
                       </div>
-                      <p className="text-gray-600 text-sm">{note.content}</p>
+                      <p className="text-gray-600 dark:text-gray-400 text-sm">{note.content}</p>
                     </div>
                   ))}
                 </div>
               )}
 
               {activeTab === 'vitals' && (
-                <div className="overflow-x-auto">
-                  <table className="w-full text-sm text-left">
-                    <thead className="text-gray-500 border-b">
+                <>
+                  <div className="md:hidden space-y-3">
+                    {patient.vitals.map((v, j) => (
+                      <div key={j} className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 space-y-2 text-sm">
+                        <p className="font-medium text-gray-900 dark:text-gray-100">{v.date}</p>
+                        <div className="grid grid-cols-2 gap-2 text-gray-600 dark:text-gray-400">
+                          <p>BP: <span className="font-medium text-gray-900 dark:text-gray-100">{v.bp}</span></p>
+                          <p>Pulse: <span className="font-medium text-gray-900 dark:text-gray-100">{v.pulse} bpm</span></p>
+                          <p>Temp: <span className="font-medium text-gray-900 dark:text-gray-100">{v.temp}</span></p>
+                          <p>SpO₂: <span className="font-medium text-gray-900 dark:text-gray-100">{v.spo2}</span></p>
+                        </div>
+                      </div>
+                    ))}
+                  </div>
+                  <div className="hidden md:block overflow-x-auto">
+                    <table className="w-full text-sm text-left min-w-[500px]">
+                    <thead className="text-gray-500 dark:text-gray-400 border-b border-gray-200 dark:border-gray-700">
                       <tr>
                         <th className="py-3 pr-4 font-medium">Date</th>
                         <th className="py-3 pr-4 font-medium">Blood Pressure</th>
@@ -333,10 +347,10 @@ const DoctorPatientDetail: React.FC = () => {
                         <th className="py-3 font-medium">SpO₂</th>
                       </tr>
                     </thead>
-                    <tbody className="divide-y divide-gray-100">
+                    <tbody className="divide-y divide-gray-100 dark:divide-gray-700 text-gray-600 dark:text-gray-400">
                       {patient.vitals.map((v, j) => (
                         <tr key={j}>
-                          <td className="py-3 pr-4 text-gray-900">{v.date}</td>
+                          <td className="py-3 pr-4 text-gray-900 dark:text-gray-100">{v.date}</td>
                           <td className="py-3 pr-4">{v.bp}</td>
                           <td className="py-3 pr-4">{v.pulse} bpm</td>
                           <td className="py-3 pr-4">{v.temp}</td>
@@ -345,7 +359,8 @@ const DoctorPatientDetail: React.FC = () => {
                       ))}
                     </tbody>
                   </table>
-                </div>
+                  </div>
+                </>
               )}
             </div>
           </motion.div>

@@ -27,11 +27,11 @@ const invoices: Invoice[] = [
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    paid: 'bg-green-100 text-green-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-    overdue: 'bg-red-100 text-red-700'
+    paid: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    overdue: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const AdminBilling: React.FC = () => {
@@ -93,13 +93,13 @@ const AdminBilling: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Billing</h1>
-              <p className="text-gray-600">Manage invoices and payments</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Billing</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage invoices and payments</p>
             </div>
             <div className="flex flex-wrap gap-2">
               <button
                 onClick={handleExportCsv}
-                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white border border-gray-300 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors"
+                className="inline-flex items-center justify-center gap-2 px-4 py-2.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 rounded-lg text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 dark:text-gray-300 transition-colors"
               >
                 <Download className="w-4 h-4" /> Export CSV
               </button>
@@ -113,7 +113,7 @@ const AdminBilling: React.FC = () => {
           </motion.div>
 
           {exportMsg && (
-            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 font-medium">
+            <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 dark:text-green-400 font-medium">
               {exportMsg}
             </motion.p>
           )}
@@ -125,13 +125,13 @@ const AdminBilling: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700"
               >
                 <div className={`p-3 rounded-lg bg-${s.color}-100 w-fit mb-4`}>
                   <s.icon className={`w-6 h-6 text-${s.color}-600`} />
                 </div>
-                <p className="text-gray-600 text-sm mb-1">{s.label}</p>
-                <p className="text-lg font-bold text-gray-900">{s.value}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">{s.label}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
               </motion.div>
             ))}
           </div>
@@ -143,7 +143,7 @@ const AdminBilling: React.FC = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-blue-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    filter === f ? 'bg-blue-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                   }`}
                 >
                   {f}
@@ -151,12 +151,12 @@ const AdminBilling: React.FC = () => {
               ))}
             </div>
             <div className="relative sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search invoice or patient..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
@@ -164,11 +164,11 @@ const AdminBilling: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
           >
             <div className="overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 text-sm text-gray-500">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-500 dark:text-gray-400">
                   <tr>
                     <th className="py-3 px-4 font-medium">Invoice</th>
                     <th className="py-3 px-4 font-medium">Patient</th>
@@ -178,19 +178,19 @@ const AdminBilling: React.FC = () => {
                     <th className="py-3 px-4 font-medium text-right">Amount</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filtered.map((inv) => (
-                    <tr key={inv.id} className="text-sm hover:bg-gray-50">
-                      <td className="py-3 px-4 font-medium text-blue-600">{inv.id}</td>
-                      <td className="py-3 px-4 text-gray-900">{inv.patient}</td>
-                      <td className="py-3 px-4 text-gray-600">{inv.service}</td>
-                      <td className="py-3 px-4 text-gray-600">{inv.date}</td>
+                    <tr key={inv.id} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50">
+                      <td className="py-3 px-4 font-medium text-blue-600 dark:text-blue-400">{inv.id}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-gray-100">{inv.patient}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{inv.service}</td>
+                      <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{inv.date}</td>
                       <td className="py-3 px-4">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${statusColor(inv.status)}`}>
                           {inv.status}
                         </span>
                       </td>
-                      <td className="py-3 px-4 text-right font-semibold text-gray-900">${inv.amount.toLocaleString()}</td>
+                      <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-gray-100">${inv.amount.toLocaleString()}</td>
                     </tr>
                   ))}
                 </tbody>
@@ -199,9 +199,9 @@ const AdminBilling: React.FC = () => {
 
             {filtered.length === 0 && (
               <div className="p-8 text-center">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No invoices found</h3>
-                <p className="text-gray-600">Try a different search or filter.</p>
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No invoices found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search or filter.</p>
               </div>
             )}
           </motion.div>

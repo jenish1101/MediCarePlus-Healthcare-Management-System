@@ -84,8 +84,8 @@ const AdminDepartments: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Departments</h1>
-              <p className="text-gray-600">Manage hospital departments and units</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Departments</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage hospital departments and units</p>
             </div>
             <button
               onClick={openCreate}
@@ -96,17 +96,17 @@ const AdminDepartments: React.FC = () => {
           </motion.div>
 
           <div className="grid grid-cols-3 gap-6 sm:gap-6 max-w-2xl">
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <p className="text-lg font-bold text-blue-600">{departments.length}</p>
-              <p className="text-gray-600 text-sm mt-1">Departments</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
+              <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{departments.length}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Departments</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <p className="text-lg font-bold text-green-600">{totalStaff}</p>
-              <p className="text-gray-600 text-sm mt-1">Total Staff</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
+              <p className="text-lg font-bold text-green-600 dark:text-green-400">{totalStaff}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Total Staff</p>
             </div>
-            <div className="bg-white rounded-xl p-6 shadow-lg text-center">
-              <p className="text-lg font-bold text-purple-600">{totalBeds}</p>
-              <p className="text-gray-600 text-sm mt-1">Total Beds</p>
+            <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
+              <p className="text-lg font-bold text-purple-600 dark:text-purple-400">{totalBeds}</p>
+              <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">Total Beds</p>
             </div>
           </div>
 
@@ -117,35 +117,35 @@ const AdminDepartments: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl shadow-lg p-4 border border-gray-100"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none p-4 border border-gray-100 dark:border-gray-700"
               >
                 <div className="flex items-start justify-between mb-4">
-                  <div className="w-12 h-12 rounded-xl bg-blue-100 flex items-center justify-center">
-                    <Building2 className="w-6 h-6 text-blue-600" />
+                  <div className="w-12 h-12 rounded-xl bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
+                    <Building2 className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                   </div>
-                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${dept.status === 'active' ? 'bg-green-100 text-green-700' : 'bg-gray-100 text-gray-500'}`}>
+                  <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${dept.status === 'active' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
                     {dept.status}
                   </span>
                 </div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-1">{dept.name}</h3>
-                <p className="text-sm text-gray-500 mb-4">Head: {dept.head}</p>
-                <div className="flex items-center gap-6 text-sm text-gray-600 mb-4">
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-1">{dept.name}</h3>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">Head: {dept.head}</p>
+                <div className="flex items-center gap-6 text-sm text-gray-600 dark:text-gray-400 mb-4">
                   <span className="flex items-center gap-1.5">
-                    <Users className="w-4 h-4 text-gray-400" />
+                    <Users className="w-4 h-4 text-gray-400 dark:text-gray-500" />
                     {dept.staffCount} staff
                   </span>
                   <span>{dept.beds} beds</span>
                 </div>
-                <div className="flex gap-2 pt-3 border-t">
+                <div className="flex gap-2 pt-3 border-t border-gray-200 dark:border-gray-700">
                   <button
                     onClick={() => openEdit(dept)}
-                    className="flex-1 py-2 rounded-lg border border-gray-300 text-gray-700 text-sm font-medium hover:bg-gray-50 transition-colors flex items-center justify-center gap-1.5"
+                    className="flex-1 py-2 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors flex items-center justify-center gap-1.5"
                   >
                     <Pencil className="w-4 h-4" /> Edit
                   </button>
                   <button
                     onClick={() => remove(dept.id)}
-                    className="p-2 rounded-lg border border-red-200 text-red-600 hover:bg-red-50 transition-colors"
+                    className="p-2 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -170,42 +170,42 @@ const AdminDepartments: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-md bg-white rounded-xl shadow-2xl p-6"
+                className="w-full max-w-md bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6"
               >
                 <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-xl font-semibold">{editingId ? 'Edit Department' : 'Add Department'}</h3>
-                  <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">{editingId ? 'Edit Department' : 'Add Department'}</h3>
+                  <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-700 dark:text-gray-300">
                     <X className="w-5 h-5" />
                   </button>
                 </div>
                 <form onSubmit={handleSubmit} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Department Name</label>
-                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Department Name</label>
+                    <input value={form.name} onChange={(e) => setForm({ ...form, name: e.target.value })} required className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Department Head</label>
-                    <input value={form.head} onChange={(e) => setForm({ ...form, head: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Department Head</label>
+                    <input value={form.head} onChange={(e) => setForm({ ...form, head: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div className="grid grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">Staff Count</label>
-                      <input type="number" value={form.staffCount} onChange={(e) => setForm({ ...form, staffCount: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Staff Count</label>
+                      <input type="number" value={form.staffCount} onChange={(e) => setForm({ ...form, staffCount: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-600 mb-1">Beds</label>
-                      <input type="number" value={form.beds} onChange={(e) => setForm({ ...form, beds: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent" />
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Beds</label>
+                      <input type="number" value={form.beds} onChange={(e) => setForm({ ...form, beds: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500" />
                     </div>
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Status</label>
-                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'inactive' })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent">
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Status</label>
+                    <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value as 'active' | 'inactive' })} className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100">
                       <option value="active">Active</option>
                       <option value="inactive">Inactive</option>
                     </select>
                   </div>
                   <div className="flex gap-3 pt-2">
-                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
                     <button type="submit" className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">

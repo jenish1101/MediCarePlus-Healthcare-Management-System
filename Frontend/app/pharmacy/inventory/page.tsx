@@ -2,11 +2,12 @@
 
 import React, { useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Pill, AlertTriangle, X, Package } from 'lucide-react';
+import { Search, Plus, Pill, AlertTriangle, X, Package, Building2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { mockInventory } from '@/data/mockData';
 import { Inventory } from '@/types';
+import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const LOW_STOCK = 500;
 
@@ -40,7 +41,7 @@ const PharmacyInventory: React.FC = () => {
   };
 
   const lowStock = items.filter((i) => i.quantity < LOW_STOCK).length;
-  const stats = [
+  const stats: Array<{ label: string; value: number; color: ThemeColor }> = [
     { label: 'Total Items', value: items.length, color: 'blue' },
     { label: 'Low Stock', value: lowStock, color: 'red' },
     { label: 'In Stock', value: items.length - lowStock, color: 'green' }
@@ -49,57 +50,90 @@ const PharmacyInventory: React.FC = () => {
   return (
     <ProtectedRoute allowedRoles={['pharmacist']}>
       <DashboardLayout role="pharmacist">
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
+            className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 sm:gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Inventory</h1>
-              <p className="text-gray-600">Manage your medicine stock</p>
+              <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Inventory</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Manage your medicine stock</p>
             </div>
             <button
               onClick={() => setShowModal(true)}
-              className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-green-600 text-white rounded-lg font-semibold hover:bg-green-700 transition-colors"
+              className="w-full sm:w-auto inline-flex items-center justify-center gap-2 px-4 sm:px-5 py-2.5 sm:py-3 bg-green-600 text-white rounded-lg text-sm sm:text-base font-semibold hover:bg-green-700 transition-colors"
             >
-              <Plus className="w-5 h-5" /> Add Medicine
+              <Plus className="w-4 h-4 sm:w-5 sm:h-5" /> Add Medicine
             </button>
           </motion.div>
 
-          <div className="grid grid-cols-3 gap-6 sm:gap-6">
-            {stats.map((s, i) => (
+          <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
+            {stats.map((s, i) => {
+              const colors = colorClasses[s.color];
+              return (
               <motion.div
                 key={s.label}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center min-w-0"
               >
-                <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className={`text-base sm:text-xl font-bold ${colors.text600}`}>{s.value}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mt-0.5 sm:mt-1">{s.label}</p>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="relative sm:w-72">
-            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+          <div className="relative w-full sm:max-w-xs">
+            <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
             <input
               value={search}
               onChange={(e) => setSearch(e.target.value)}
               placeholder="Search medicines..."
-              className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent"
+              className="w-full pl-9 sm:pl-10 pr-4 py-2 sm:py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
             />
           </div>
 
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
           >
-            <div className="overflow-x-auto">
+            {/* Mobile cards */}
+            <div className="md:hidden divide-y divide-gray-100 dark:divide-gray-700">
+              {filtered.map((item) => {
+                const low = item.quantity < LOW_STOCK;
+                return (
+                  <div key={item.id} className="p-3 sm:p-4 space-y-2">
+                    <div className="flex items-center justify-between gap-2">
+                      <div className="flex items-center gap-2 min-w-0">
+                        <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center shrink-0">
+                          <Pill className="w-4 h-4 text-green-600 dark:text-green-400" />
+                        </div>
+                        <span className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{item.medicineName}</span>
+                      </div>
+                      <span className={`text-sm font-semibold shrink-0 inline-flex items-center gap-1 ${low ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
+                        {low && <AlertTriangle className="w-3.5 h-3.5" />}
+                        {item.quantity}
+                      </span>
+                    </div>
+                    <div className="grid grid-cols-2 gap-1 text-xs text-gray-500 dark:text-gray-400 pl-10">
+                      <p>Batch: {item.batchNumber}</p>
+                      <p>Expiry: {item.expiryDate}</p>
+                      <p className="col-span-2 flex items-center gap-1"><Building2 className="w-3 h-3" />{item.supplier}</p>
+                      <p>Price: ${item.price.toFixed(2)}</p>
+                    </div>
+                  </div>
+                );
+              })}
+            </div>
+
+            {/* Desktop table */}
+            <div className="hidden md:block overflow-x-auto">
               <table className="w-full text-left">
-                <thead className="bg-gray-50 text-sm text-gray-500">
+                <thead className="bg-gray-50 dark:bg-gray-900/50 text-sm text-gray-500 dark:text-gray-400">
                   <tr>
                     <th className="py-3 px-4 font-medium">Medicine</th>
                     <th className="py-3 px-4 font-medium">Batch</th>
@@ -109,29 +143,29 @@ const PharmacyInventory: React.FC = () => {
                     <th className="py-3 px-4 font-medium text-right">Price</th>
                   </tr>
                 </thead>
-                <tbody className="divide-y divide-gray-100">
+                <tbody className="divide-y divide-gray-100 dark:divide-gray-700">
                   {filtered.map((item) => {
                     const low = item.quantity < LOW_STOCK;
                     return (
-                      <tr key={item.id} className="text-sm hover:bg-gray-50">
+                      <tr key={item.id} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50">
                         <td className="py-3 px-4">
                           <div className="flex items-center gap-2">
-                            <div className="w-8 h-8 rounded-lg bg-green-100 flex items-center justify-center">
-                              <Pill className="w-4 h-4 text-green-600" />
+                            <div className="w-8 h-8 rounded-lg bg-green-100 dark:bg-green-900/30 flex items-center justify-center">
+                              <Pill className="w-4 h-4 text-green-600 dark:text-green-400" />
                             </div>
-                            <span className="font-medium text-gray-900">{item.medicineName}</span>
+                            <span className="font-medium text-gray-900 dark:text-gray-100">{item.medicineName}</span>
                           </div>
                         </td>
-                        <td className="py-3 px-4 text-gray-600">{item.batchNumber}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.batchNumber}</td>
                         <td className="py-3 px-4">
-                          <span className={`inline-flex items-center gap-1 font-medium ${low ? 'text-red-600' : 'text-gray-900'}`}>
+                          <span className={`inline-flex items-center gap-1 font-medium ${low ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
                             {low && <AlertTriangle className="w-4 h-4" />}
                             {item.quantity}
                           </span>
                         </td>
-                        <td className="py-3 px-4 text-gray-600">{item.expiryDate}</td>
-                        <td className="py-3 px-4 text-gray-600">{item.supplier}</td>
-                        <td className="py-3 px-4 text-right font-semibold text-gray-900">${item.price.toFixed(2)}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.expiryDate}</td>
+                        <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{item.supplier}</td>
+                        <td className="py-3 px-4 text-right font-semibold text-gray-900 dark:text-gray-100">${item.price.toFixed(2)}</td>
                       </tr>
                     );
                   })}
@@ -140,10 +174,10 @@ const PharmacyInventory: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="p-8 text-center">
-                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No medicines found</h3>
-                <p className="text-gray-600">Try a different search term.</p>
+              <div className="p-6 sm:p-8 text-center">
+                <Package className="w-10 h-10 sm:w-12 sm:h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No medicines found</h3>
+                <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Try a different search term.</p>
               </div>
             )}
           </motion.div>
@@ -156,7 +190,7 @@ const PharmacyInventory: React.FC = () => {
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+              className="fixed inset-0 z-[60] flex items-end sm:items-center justify-center bg-black/50 p-0 sm:p-4"
               onClick={() => setShowModal(false)}
             >
               <motion.div
@@ -164,44 +198,44 @@ const PharmacyInventory: React.FC = () => {
                 animate={{ opacity: 1, scale: 1, y: 0 }}
                 exit={{ opacity: 0, scale: 0.95, y: 20 }}
                 onClick={(e) => e.stopPropagation()}
-                className="w-full max-w-lg bg-white rounded-xl shadow-2xl p-4 max-h-[90vh] overflow-y-auto"
+                className="w-full sm:max-w-lg bg-white dark:bg-gray-800 rounded-t-xl sm:rounded-xl shadow-2xl p-4 sm:p-6 max-h-[90vh] overflow-y-auto"
               >
-                <div className="flex items-center justify-between mb-5">
-                  <h3 className="text-xl font-semibold">Add Medicine</h3>
-                  <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 rounded-lg">
-                    <X className="w-5 h-5" />
+                <div className="flex items-center justify-between mb-4 sm:mb-5">
+                  <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Add Medicine</h3>
+                  <button onClick={() => setShowModal(false)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg">
+                    <X className="w-5 h-5 text-gray-700 dark:text-gray-300" />
                   </button>
                 </div>
-                <form onSubmit={handleAdd} className="grid sm:grid-cols-2 gap-6">
+                <form onSubmit={handleAdd} className="grid sm:grid-cols-2 gap-4 sm:gap-6">
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Medicine Name</label>
-                    <input value={form.medicineName} onChange={(e) => setForm({ ...form, medicineName: e.target.value })} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Medicine Name</label>
+                    <input value={form.medicineName} onChange={(e) => setForm({ ...form, medicineName: e.target.value })} required className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Batch Number</label>
-                    <input value={form.batchNumber} onChange={(e) => setForm({ ...form, batchNumber: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Batch Number</label>
+                    <input value={form.batchNumber} onChange={(e) => setForm({ ...form, batchNumber: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Quantity</label>
-                    <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Quantity</label>
+                    <input type="number" value={form.quantity} onChange={(e) => setForm({ ...form, quantity: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Expiry Date</label>
-                    <input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Expiry Date</label>
+                    <input type="date" value={form.expiryDate} onChange={(e) => setForm({ ...form, expiryDate: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Price ($)</label>
-                    <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Price ($)</label>
+                    <input type="number" step="0.01" value={form.price} onChange={(e) => setForm({ ...form, price: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div className="sm:col-span-2">
-                    <label className="block text-sm font-medium text-gray-600 mb-1">Supplier</label>
-                    <input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent" />
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Supplier</label>
+                    <input value={form.supplier} onChange={(e) => setForm({ ...form, supplier: e.target.value })} className="w-full px-4 py-2.5 border border-gray-300 rounded-lg text-sm focus:ring-2 focus:ring-green-500 focus:border-transparent dark:bg-gray-900 dark:border-gray-600 dark:text-gray-100 dark:placeholder-gray-500" />
                   </div>
                   <div className="sm:col-span-2 flex gap-3 pt-2">
-                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 text-gray-700 font-medium hover:bg-gray-50 transition-colors">
+                    <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-green-600 text-white font-medium hover:bg-green-700 transition-colors">
+                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors">
                       Add
                     </button>
                   </div>

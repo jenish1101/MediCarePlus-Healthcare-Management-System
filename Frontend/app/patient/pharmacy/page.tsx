@@ -23,11 +23,11 @@ type CategoryFilter = 'all' | 'pain' | 'antibiotic' | 'vitamin';
 type SortOption = 'name' | 'price-asc' | 'price-desc' | 'stock';
 
 const orderStatusColor: Record<string, string> = {
-  delivered: 'bg-green-100 text-green-700 border-green-200',
-  shipped: 'bg-blue-100 text-blue-700 border-blue-200',
-  confirmed: 'bg-purple-100 text-purple-700 border-purple-200',
-  pending: 'bg-yellow-100 text-yellow-700 border-yellow-200',
-  cancelled: 'bg-red-100 text-red-700 border-red-200'
+  delivered: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400 border-green-200 dark:border-green-800',
+  shipped: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400 border-blue-200 dark:border-blue-800',
+  confirmed: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 border-purple-200 dark:border-purple-800',
+  pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400 border-yellow-200 dark:border-yellow-800',
+  cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 border-red-200 dark:border-red-800'
 };
 
 const orderStatusIcon: Record<string, string> = {
@@ -130,11 +130,11 @@ const PatientPharmacy: React.FC = () => {
             className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 sm:text-3xl">Pharmacy</h1>
-              <p className="mt-1 text-gray-500">Order medicines and track your deliveries</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 sm:text-3xl">Pharmacy</h1>
+              <p className="mt-1 text-gray-500 dark:text-gray-400">Order medicines and track your deliveries</p>
             </div>
 
-            <div className="inline-flex flex-wrap self-end rounded-xl border border-gray-200 bg-white p-1 shadow-sm sm:self-auto">
+            <div className="inline-flex flex-wrap self-end rounded-xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-1 shadow-sm sm:self-auto">
               {([
                 { id: 'browse' as Tab, label: 'Browse Medicines', badge: 0 },
                 { id: 'cart' as Tab, label: 'My Cart', badge: cartCount },
@@ -145,14 +145,14 @@ const PatientPharmacy: React.FC = () => {
                   type="button"
                   onClick={() => setTab(t.id)}
                   className={`relative rounded-lg px-4 py-2 text-sm font-semibold transition-colors sm:px-5 sm:py-2.5 ${
-                    tab === t.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 hover:bg-gray-50'
+                    tab === t.id ? 'bg-blue-600 text-white shadow-sm' : 'text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700'
                   }`}
                 >
                   {t.label}
                   {t.badge > 0 && (
                     <span
                       className={`ml-2 inline-flex h-5 min-w-[1.25rem] items-center justify-center rounded-full px-1.5 text-xs font-bold ${
-                        tab === t.id ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-700'
+                        tab === t.id ? 'bg-white/25 text-white' : 'bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400'
                       }`}
                     >
                       {t.badge}
@@ -178,14 +178,14 @@ const PatientPharmacy: React.FC = () => {
             ].map((item) => (
               <div
                 key={item.label}
-                className="flex items-center gap-3 rounded-xl border border-gray-100 bg-white p-4 shadow-sm"
+                className="flex items-center gap-3 rounded-xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-4 shadow-sm dark:shadow-none"
               >
-                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50">
-                  <item.icon className="h-5 w-5 text-emerald-600" />
+                <div className="flex h-10 w-10 shrink-0 items-center justify-center rounded-xl bg-emerald-50 dark:bg-emerald-900/20">
+                  <item.icon className="h-5 w-5 text-emerald-600 dark:text-emerald-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{item.label}</p>
-                  <p className="text-lg font-bold text-gray-900">{item.value}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.value}</p>
                 </div>
               </div>
             ))}
@@ -194,14 +194,14 @@ const PatientPharmacy: React.FC = () => {
           {tab === 'browse' && (
             <div className="space-y-5">
               {/* Filters */}
-              <div className="space-y-4 rounded-2xl border border-gray-100 bg-white p-5 shadow-sm">
+              <div className="space-y-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm dark:shadow-none">
                 <div className="relative">
-                  <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400" />
+                  <Search className="absolute left-3.5 top-1/2 h-5 w-5 -translate-y-1/2 text-gray-400 dark:text-gray-500" />
                   <input
                     value={search}
                     onChange={(e) => setSearch(e.target.value)}
                     placeholder="Search by name, supplier, or batch..."
-                    className="w-full rounded-xl border border-gray-200 bg-gray-50/50 py-3 pl-11 pr-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-500"
+                    className="w-full rounded-xl border border-gray-200 dark:border-gray-600 bg-gray-50/50 dark:bg-gray-900 py-3 pl-11 pr-4 focus:border-blue-500 focus:ring-2 focus:ring-blue-500 dark:text-gray-100 dark:placeholder-gray-500"
                   />
                 </div>
 
@@ -214,7 +214,7 @@ const PatientPharmacy: React.FC = () => {
                       className={`rounded-full px-3.5 py-1.5 text-sm font-medium transition-colors ${
                         category === c.id
                           ? 'bg-emerald-600 text-white shadow-sm'
-                          : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                          : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                       }`}
                     >
                       {c.label}
@@ -222,15 +222,15 @@ const PatientPharmacy: React.FC = () => {
                   ))}
                 </div>
 
-                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 pt-3">
-                  <p className="flex items-center gap-2 text-sm text-gray-600">
+                <div className="flex flex-wrap items-center justify-between gap-3 border-t border-gray-100 dark:border-gray-700 pt-3">
+                  <p className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                     <SlidersHorizontal className="h-4 w-4" />
                     <span className="font-medium">{medicines.length} medicine{medicines.length !== 1 ? 's' : ''}</span>
                   </p>
                   <select
                     value={sortBy}
                     onChange={(e) => setSortBy(e.target.value as SortOption)}
-                    className="rounded-lg border border-gray-200 bg-white px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500"
+                    className="rounded-lg border border-gray-200 dark:border-gray-600 bg-white dark:bg-gray-900 px-3 py-2 text-sm focus:ring-2 focus:ring-blue-500 dark:text-gray-100"
                   >
                     <option value="name">Name A–Z</option>
                     <option value="price-asc">Price: low to high</option>
@@ -256,10 +256,10 @@ const PatientPharmacy: React.FC = () => {
                   ))}
                 </div>
               ) : (
-                <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
-                  <Search className="mx-auto mb-4 h-12 w-12 text-gray-300" />
-                  <h3 className="text-xl font-semibold text-gray-900">No medicines found</h3>
-                  <p className="mt-2 text-gray-500">Try a different search or category.</p>
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center shadow-sm dark:shadow-none">
+                  <Search className="mx-auto mb-4 h-12 w-12 text-gray-300 dark:text-gray-600" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">No medicines found</h3>
+                  <p className="mt-2 text-gray-500 dark:text-gray-400">Try a different search or category.</p>
                 </div>
               )}
             </div>
@@ -271,13 +271,13 @@ const PatientPharmacy: React.FC = () => {
                 <div className="grid gap-6 lg:grid-cols-3">
                   <div className="space-y-4 lg:col-span-2">
                     <div className="flex items-center justify-between">
-                      <h2 className="text-lg font-bold text-gray-900">
-                        Cart Items <span className="font-normal text-gray-500">({cartCount})</span>
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">
+                        Cart Items <span className="font-normal text-gray-500 dark:text-gray-400">({cartCount})</span>
                       </h2>
                       <button
                         type="button"
                         onClick={clearCart}
-                        className="text-sm font-medium text-red-500 hover:text-red-600"
+                        className="text-sm font-medium text-red-500 dark:text-red-400 hover:text-red-600 dark:hover:text-red-300"
                       >
                         Clear all
                       </button>
@@ -301,42 +301,42 @@ const PatientPharmacy: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setTab('browse')}
-                      className="text-sm font-medium text-blue-600 hover:text-blue-700"
+                      className="text-sm font-medium text-blue-600 dark:text-blue-400 hover:text-blue-700 dark:hover:text-blue-300"
                     >
                       ← Continue shopping
                     </button>
                   </div>
 
                   <div className="lg:col-span-1">
-                    <div className="sticky top-4 space-y-4 rounded-2xl border border-gray-200 bg-white p-5 shadow-sm">
-                      <h2 className="text-lg font-bold text-gray-900">Order Summary</h2>
+                    <div className="sticky top-4 space-y-4 rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm dark:shadow-none">
+                      <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100">Order Summary</h2>
 
-                      <div className="space-y-3 border-b border-gray-100 pb-4 text-sm">
+                      <div className="space-y-3 border-b border-gray-100 dark:border-gray-700 pb-4 text-sm">
                         {cartItems.map(({ medicine, quantity, lineTotal }) => (
                           <div key={medicine.id} className="flex justify-between gap-3">
-                            <span className="truncate text-gray-600">
+                            <span className="truncate text-gray-600 dark:text-gray-400">
                               {medicine.medicineName}{' '}
-                              <span className="text-gray-400">× {quantity}</span>
+                              <span className="text-gray-400 dark:text-gray-500">× {quantity}</span>
                             </span>
-                            <span className="shrink-0 font-medium text-gray-900">${lineTotal.toFixed(2)}</span>
+                            <span className="shrink-0 font-medium text-gray-900 dark:text-gray-100">${lineTotal.toFixed(2)}</span>
                           </div>
                         ))}
                       </div>
 
                       <div className="space-y-2 text-sm">
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
                           <span>Subtotal</span>
-                          <span className="font-medium text-gray-900">${cartTotal.toFixed(2)}</span>
+                          <span className="font-medium text-gray-900 dark:text-gray-100">${cartTotal.toFixed(2)}</span>
                         </div>
-                        <div className="flex justify-between text-gray-600">
+                        <div className="flex justify-between text-gray-600 dark:text-gray-400">
                           <span>Delivery</span>
-                          <span className="font-medium text-green-600">Free</span>
+                          <span className="font-medium text-green-600 dark:text-green-400">Free</span>
                         </div>
                       </div>
 
-                      <div className="flex justify-between border-t border-gray-100 pt-4">
-                        <span className="font-semibold text-gray-900">Total</span>
-                        <span className="text-2xl font-bold text-emerald-600">${cartTotal.toFixed(2)}</span>
+                      <div className="flex justify-between border-t border-gray-100 dark:border-gray-700 pt-4">
+                        <span className="font-semibold text-gray-900 dark:text-gray-100">Total</span>
+                        <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${cartTotal.toFixed(2)}</span>
                       </div>
 
                       <button
@@ -346,19 +346,19 @@ const PatientPharmacy: React.FC = () => {
                         Proceed to Checkout
                       </button>
 
-                      <p className="text-center text-xs text-gray-400">
+                      <p className="text-center text-xs text-gray-400 dark:text-gray-500">
                         Secure checkout · Prescription may be required for some items
                       </p>
                     </div>
                   </div>
                 </div>
               ) : (
-                <div className="rounded-2xl border border-gray-100 bg-white p-12 text-center shadow-sm">
-                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100">
-                    <ShoppingBag className="h-8 w-8 text-gray-400" />
+                <div className="rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-12 text-center shadow-sm dark:shadow-none">
+                  <div className="mx-auto mb-4 flex h-16 w-16 items-center justify-center rounded-2xl bg-gray-100 dark:bg-gray-700">
+                    <ShoppingBag className="h-8 w-8 text-gray-400 dark:text-gray-500" />
                   </div>
-                  <h3 className="text-xl font-semibold text-gray-900">Your cart is empty</h3>
-                  <p className="mx-auto mt-2 max-w-sm text-gray-500">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Your cart is empty</h3>
+                  <p className="mx-auto mt-2 max-w-sm text-gray-500 dark:text-gray-400">
                     You haven&apos;t added any medicines yet. Browse our catalog and add items to your cart.
                   </p>
                   <button
@@ -382,19 +382,19 @@ const PatientPharmacy: React.FC = () => {
                   initial={{ opacity: 0, y: 16 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="overflow-hidden rounded-2xl border border-gray-200 bg-white shadow-sm"
+                  className="overflow-hidden rounded-2xl border border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800 shadow-sm dark:shadow-none"
                 >
                   <div className="h-1 bg-gradient-to-r from-blue-500 to-indigo-500" />
                   <div className="p-5 sm:p-6">
                     <div className="flex flex-col gap-4 sm:flex-row sm:items-start sm:justify-between">
                       <div className="flex gap-4">
-                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50">
-                          <Package className="h-7 w-7 text-blue-600" />
+                        <div className="flex h-14 w-14 shrink-0 items-center justify-center rounded-2xl bg-blue-50 dark:bg-blue-900/20">
+                          <Package className="h-7 w-7 text-blue-600 dark:text-blue-400" />
                         </div>
                         <div>
-                          <h4 className="text-lg font-bold text-gray-900">Order #{order.id.toUpperCase()}</h4>
-                          <p className="text-sm text-gray-500">Placed on {order.date}</p>
-                          <p className="mt-1 flex items-center gap-1 text-sm text-gray-600">
+                          <h4 className="text-lg font-bold text-gray-900 dark:text-gray-100">Order #{order.id.toUpperCase()}</h4>
+                          <p className="text-sm text-gray-500 dark:text-gray-400">Placed on {order.date}</p>
+                          <p className="mt-1 flex items-center gap-1 text-sm text-gray-600 dark:text-gray-400">
                             <Truck className="h-4 w-4 shrink-0" />
                             {order.address}
                           </p>
@@ -403,31 +403,31 @@ const PatientPharmacy: React.FC = () => {
                       <div className="flex items-center gap-4 sm:flex-col sm:items-end">
                         <span
                           className={`rounded-full border px-3 py-1 text-xs font-semibold ${
-                            orderStatusColor[order.status] ?? 'bg-gray-100 text-gray-700'
+                            orderStatusColor[order.status] ?? 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300'
                           }`}
                         >
                           {orderStatusIcon[order.status] ?? order.status}
                         </span>
-                        <p className="text-2xl font-bold text-emerald-600">${order.total}</p>
+                        <p className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${order.total}</p>
                       </div>
                     </div>
 
-                    <div className="mt-5 space-y-2 border-t border-gray-100 pt-5">
+                    <div className="mt-5 space-y-2 border-t border-gray-100 dark:border-gray-700 pt-5">
                       {order.medicines.map((med, j) => (
                         <div
                           key={j}
-                          className="flex items-center justify-between gap-4 rounded-xl bg-gray-50 px-4 py-3"
+                          className="flex items-center justify-between gap-4 rounded-xl bg-gray-50 dark:bg-gray-900/40 px-4 py-3"
                         >
                           <div className="flex min-w-0 items-center gap-3">
-                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50">
-                              <Pill className="h-4 w-4 text-emerald-600" />
+                            <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-lg bg-emerald-50 dark:bg-emerald-900/20">
+                              <Pill className="h-4 w-4 text-emerald-600 dark:text-emerald-400" />
                             </div>
                             <div className="min-w-0">
-                              <p className="truncate font-medium text-gray-900">{med.name}</p>
-                              <p className="text-sm text-gray-500">Qty: {med.quantity} × ${med.price}</p>
+                              <p className="truncate font-medium text-gray-900 dark:text-gray-100">{med.name}</p>
+                              <p className="text-sm text-gray-500 dark:text-gray-400">Qty: {med.quantity} × ${med.price}</p>
                             </div>
                           </div>
-                          <p className="shrink-0 font-bold text-gray-900">${(med.price * med.quantity).toFixed(2)}</p>
+                          <p className="shrink-0 font-bold text-gray-900 dark:text-gray-100">${(med.price * med.quantity).toFixed(2)}</p>
                         </div>
                       ))}
                     </div>
@@ -453,7 +453,7 @@ const PatientPharmacy: React.FC = () => {
                 initial={{ opacity: 0, y: 40 }}
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: 40 }}
-                className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-lg rounded-2xl border border-emerald-200 bg-white p-4 shadow-2xl sm:left-auto sm:right-8"
+                className="fixed bottom-4 left-4 right-4 z-40 mx-auto max-w-lg rounded-2xl border border-emerald-200 dark:border-emerald-800 bg-white dark:bg-gray-800 p-4 shadow-2xl sm:left-auto sm:right-8"
               >
                 <div className="flex items-center justify-between gap-4">
                   <button
@@ -461,17 +461,17 @@ const PatientPharmacy: React.FC = () => {
                     onClick={() => setTab('cart')}
                     className="text-left transition-opacity hover:opacity-80"
                   >
-                    <p className="text-sm font-semibold text-gray-900">
+                    <p className="text-sm font-semibold text-gray-900 dark:text-gray-100">
                       {cartCount} item{cartCount !== 1 ? 's' : ''} in cart
                     </p>
-                    <p className="text-lg font-bold text-emerald-600">${cartTotal.toFixed(2)}</p>
-                    <p className="text-xs text-blue-600">Tap to view cart</p>
+                    <p className="text-lg font-bold text-emerald-600 dark:text-emerald-400">${cartTotal.toFixed(2)}</p>
+                    <p className="text-xs text-blue-600 dark:text-blue-400">Tap to view cart</p>
                   </button>
                   <div className="flex gap-2">
                     <button
                       type="button"
                       onClick={clearCart}
-                      className="rounded-xl border border-gray-200 px-3 py-2 text-sm font-medium text-gray-600 hover:bg-gray-50"
+                      className="rounded-xl border border-gray-200 dark:border-gray-600 px-3 py-2 text-sm font-medium text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700"
                     >
                       Clear
                     </button>
