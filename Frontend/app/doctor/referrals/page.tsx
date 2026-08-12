@@ -59,9 +59,9 @@ const initialReferrals: Referral[] = [
 ];
 
 const statusConfig = {
-  pending: { icon: Clock, color: 'bg-yellow-100 text-yellow-700', label: 'Pending' },
-  accepted: { icon: AlertCircle, color: 'bg-blue-100 text-blue-700', label: 'Accepted' },
-  completed: { icon: CheckCircle, color: 'bg-green-100 text-green-700', label: 'Completed' }
+  pending: { icon: Clock, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', label: 'Pending' },
+  accepted: { icon: AlertCircle, color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400', label: 'Accepted' },
+  completed: { icon: CheckCircle, color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', label: 'Completed' }
 };
 
 const DoctorReferrals: React.FC = () => {
@@ -103,37 +103,37 @@ const DoctorReferrals: React.FC = () => {
       <DashboardLayout role="doctor">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Referrals</h1>
-            <p className="text-gray-600">Refer patients to specialists and track referral status</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Referrals</h1>
+            <p className="text-gray-600 dark:text-gray-400">Refer patients to specialists and track referral status</p>
           </motion.div>
 
-          <div className="grid lg:grid-cols-3 gap-6">
+          <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="lg:col-span-1 bg-white rounded-xl shadow-lg p-4 h-fit"
+              className="lg:col-span-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6 h-fit order-2 lg:order-1"
             >
               <div className="flex items-center gap-2 mb-5">
-                <UserPlus className="w-5 h-5 text-blue-600" />
-                <h3 className="text-xl font-semibold">New Referral</h3>
+                <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">New Referral</h3>
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Patient Name</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Patient Name</label>
                   <input
                     value={form.patientName}
                     onChange={(e) => setForm({ ...form, patientName: e.target.value })}
                     placeholder="e.g. John Patient"
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Specialist</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Specialist</label>
                   <select
                     value={form.specialist}
                     onChange={(e) => handleSpecialistChange(e.target.value)}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                     required
                   >
                     <option value="">Select specialist...</option>
@@ -143,18 +143,18 @@ const DoctorReferrals: React.FC = () => {
                   </select>
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Reason for Referral</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Reason for Referral</label>
                   <textarea
                     value={form.reason}
                     onChange={(e) => setForm({ ...form, reason: e.target.value })}
                     placeholder="Clinical indication for referral..."
                     rows={3}
-                    className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none"
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent resize-none dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                     required
                   />
                 </div>
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 mb-1">Urgency</label>
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Urgency</label>
                   <div className="flex gap-3">
                     {(['routine', 'urgent'] as const).map((u) => (
                       <button
@@ -164,7 +164,7 @@ const DoctorReferrals: React.FC = () => {
                         className={`flex-1 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
                           form.urgency === u
                             ? u === 'urgent' ? 'bg-red-600 text-white' : 'bg-blue-600 text-white'
-                            : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                         }`}
                       >
                         {u}
@@ -181,8 +181,8 @@ const DoctorReferrals: React.FC = () => {
               </form>
             </motion.div>
 
-            <div className="lg:col-span-2 space-y-6">
-              <h3 className="text-xl font-semibold text-gray-900">Referral History</h3>
+            <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-1 lg:order-2">
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Referral History</h3>
               {referrals.map((ref, i) => {
                 const cfg = statusConfig[ref.status];
                 const StatusIcon = cfg.icon;
@@ -192,18 +192,18 @@ const DoctorReferrals: React.FC = () => {
                     initial={{ opacity: 0, y: 20 }}
                     animate={{ opacity: 1, y: 0 }}
                     transition={{ delay: i * 0.05 }}
-                    className="bg-white border border-gray-200 rounded-xl p-4 shadow-sm"
+                    className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 shadow-sm dark:shadow-none"
                   >
                     <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-3">
                       <div>
-                        <h4 className="font-semibold text-lg">{ref.patientName}</h4>
-                        <p className="text-sm text-gray-600">
+                        <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{ref.patientName}</h4>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">
                           Referred to {ref.specialist} · {ref.specialty}
                         </p>
                       </div>
                       <div className="flex items-center gap-2">
                         <span className={`px-2.5 py-1 rounded-full text-xs font-medium capitalize ${
-                          ref.urgency === 'urgent' ? 'bg-red-100 text-red-700' : 'bg-gray-100 text-gray-600'
+                          ref.urgency === 'urgent' ? 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300'
                         }`}>
                           {ref.urgency}
                         </span>
@@ -213,8 +213,8 @@ const DoctorReferrals: React.FC = () => {
                         </span>
                       </div>
                     </div>
-                    <p className="text-sm text-gray-700 bg-gray-50 rounded-lg p-3 mb-2">{ref.reason}</p>
-                    <p className="text-xs text-gray-500">Submitted {ref.date}</p>
+                    <p className="text-sm text-gray-700 dark:text-gray-300 bg-gray-50 dark:bg-gray-900/40 rounded-lg p-3 mb-2">{ref.reason}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400">Submitted {ref.date}</p>
                   </motion.div>
                 );
               })}

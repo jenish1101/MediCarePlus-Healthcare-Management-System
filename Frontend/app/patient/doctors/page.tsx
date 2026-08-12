@@ -56,8 +56,8 @@ const FindDoctors: React.FC = () => {
         <div className="space-y-6 max-w-6xl mx-auto pb-8">
           {/* Header */}
           <motion.div initial={{ opacity: 0, y: 16 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900">Find Doctors</h1>
-            <p className="text-gray-500 mt-1">Search and book appointments with top specialists</p>
+            <h1 className="text-2xl sm:text-3xl font-bold text-gray-900 dark:text-gray-100">Find Doctors</h1>
+            <p className="text-gray-500 dark:text-gray-400 mt-1">Search and book appointments with top specialists</p>
           </motion.div>
 
           {/* Summary strip */}
@@ -73,13 +73,13 @@ const FindDoctors: React.FC = () => {
               { label: 'Avg. Rating', value: avgRating, icon: Search },
               { label: 'Showing', value: String(filteredDoctors.length), icon: MapPin }
             ].map((item) => (
-              <div key={item.label} className="flex items-center gap-3 p-4 rounded-xl bg-white border border-gray-100 shadow-sm">
-                <div className="w-10 h-10 rounded-xl bg-blue-50 flex items-center justify-center shrink-0">
-                  <item.icon className="w-5 h-5 text-blue-600" />
+              <div key={item.label} className="flex items-center gap-3 p-4 rounded-xl bg-white dark:bg-gray-800 border border-gray-100 dark:border-gray-700 shadow-sm">
+                <div className="w-10 h-10 rounded-xl bg-blue-50 dark:bg-blue-900/30 flex items-center justify-center shrink-0">
+                  <item.icon className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                 </div>
                 <div>
-                  <p className="text-xs text-gray-500">{item.label}</p>
-                  <p className="text-lg font-bold text-gray-900">{item.value}</p>
+                  <p className="text-xs text-gray-500 dark:text-gray-400">{item.label}</p>
+                  <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{item.value}</p>
                 </div>
               </div>
             ))}
@@ -90,23 +90,23 @@ const FindDoctors: React.FC = () => {
             initial={{ opacity: 0, y: 16 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-2xl shadow-lg border border-gray-100 p-5 sm:p-6 space-y-4"
+            className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-none border border-gray-100 dark:border-gray-700 p-5 sm:p-6 space-y-4"
           >
             <div className="grid lg:grid-cols-4 gap-3">
               <div className="relative lg:col-span-2">
-                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={searchTerm}
                   onChange={(e) => setSearchTerm(e.target.value)}
                   placeholder="Search by name, specialization, qualification..."
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50/50"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-blue-500 bg-gray-50/50 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                 />
               </div>
               <select
                 value={selectedSpecialization}
                 onChange={(e) => setSelectedSpecialization(e.target.value)}
-                className="px-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50/50 text-gray-700"
+                className="px-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50/50 dark:bg-gray-900 text-gray-700 dark:text-gray-300"
               >
                 <option value="">All Specializations</option>
                 {specializations.map((spec) => (
@@ -116,13 +116,13 @@ const FindDoctors: React.FC = () => {
                 ))}
               </select>
               <div className="relative">
-                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <MapPin className="absolute left-3.5 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="text"
                   value={selectedLocation}
                   onChange={(e) => setSelectedLocation(e.target.value)}
                   placeholder="City or state..."
-                  className="w-full pl-11 pr-4 py-3 border border-gray-200 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50/50"
+                  className="w-full pl-11 pr-4 py-3 border border-gray-200 dark:border-gray-600 rounded-xl focus:ring-2 focus:ring-blue-500 bg-gray-50/50 dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                 />
               </div>
             </div>
@@ -134,7 +134,7 @@ const FindDoctors: React.FC = () => {
                 className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                   !selectedSpecialization
                     ? 'bg-blue-600 text-white shadow-sm'
-                    : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                 }`}
               >
                 All
@@ -146,7 +146,7 @@ const FindDoctors: React.FC = () => {
                   className={`px-3 py-1.5 rounded-full text-sm font-medium transition-colors ${
                     selectedSpecialization === spec
                       ? 'bg-blue-600 text-white shadow-sm'
-                      : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                      : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {spec}
@@ -155,8 +155,8 @@ const FindDoctors: React.FC = () => {
             </div>
 
             {/* Sort + clear */}
-            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100">
-              <div className="flex items-center gap-2 text-sm text-gray-600">
+            <div className="flex flex-wrap items-center justify-between gap-3 pt-2 border-t border-gray-100 dark:border-gray-700">
+              <div className="flex items-center gap-2 text-sm text-gray-600 dark:text-gray-400">
                 <SlidersHorizontal className="w-4 h-4" />
                 <span className="font-medium">{filteredDoctors.length} doctor{filteredDoctors.length !== 1 ? 's' : ''} found</span>
               </div>
@@ -164,7 +164,7 @@ const FindDoctors: React.FC = () => {
                 <select
                   value={sortBy}
                   onChange={(e) => setSortBy(e.target.value as SortOption)}
-                  className="text-sm px-3 py-2 border border-gray-200 rounded-lg bg-white focus:ring-2 focus:ring-blue-500"
+                  className="text-sm px-3 py-2 border border-gray-200 dark:border-gray-600 rounded-lg bg-white dark:bg-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500"
                 >
                   <option value="rating">Top rated</option>
                   <option value="experience">Most experienced</option>
@@ -174,7 +174,7 @@ const FindDoctors: React.FC = () => {
                 {hasFilters && (
                   <button
                     onClick={clearFilters}
-                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-600 hover:bg-red-50 rounded-lg transition-colors"
+                    className="inline-flex items-center gap-1 px-3 py-2 text-sm font-medium text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                   >
                     <X className="w-4 h-4" /> Clear
                   </button>
@@ -194,13 +194,13 @@ const FindDoctors: React.FC = () => {
             <motion.div
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
-              className="bg-white rounded-2xl shadow-lg border border-gray-100 p-12 text-center"
+              className="bg-white dark:bg-gray-800 rounded-2xl shadow-lg dark:shadow-none border border-gray-100 dark:border-gray-700 p-12 text-center"
             >
-              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 flex items-center justify-center">
-                <Search className="w-8 h-8 text-gray-400" />
+              <div className="w-16 h-16 mx-auto mb-4 rounded-2xl bg-gray-100 dark:bg-gray-700 flex items-center justify-center">
+                <Search className="w-8 h-8 text-gray-400 dark:text-gray-500" />
               </div>
-              <h3 className="text-xl font-semibold text-gray-900 mb-2">No doctors found</h3>
-              <p className="text-gray-500 mb-6 max-w-sm mx-auto">
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No doctors found</h3>
+              <p className="text-gray-500 dark:text-gray-400 mb-6 max-w-sm mx-auto">
                 Try a different specialization, location, or search term.
               </p>
               <button

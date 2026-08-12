@@ -17,6 +17,7 @@ import {
   CheckCircle
 } from 'lucide-react';
 import { useAuth } from '@/contexts/AuthContext';
+import ThemeToggle from '@/components/ThemeToggle';
 
 const SignupPage: React.FC = () => {
   const router = useRouter();
@@ -67,7 +68,7 @@ const SignupPage: React.FC = () => {
   ];
 
   return (
-    <div className="min-h-screen flex bg-gray-50">
+    <div className="min-h-screen flex bg-gray-50 dark:bg-gray-900">
       {/* Left: Branded visual panel */}
       <div className="relative hidden lg:flex lg:w-1/2 xl:w-[55%] flex-col justify-between overflow-hidden bg-gradient-to-br from-blue-600 via-indigo-600 to-purple-700 p-8 text-white">
         <div className="pointer-events-none absolute -top-24 -left-24 w-96 h-96 rounded-full bg-white/10 blur-3xl" />
@@ -127,13 +128,16 @@ const SignupPage: React.FC = () => {
           animate={{ opacity: 1, y: 0 }}
           className="w-full max-w-md"
         >
-          <button
-            onClick={() => router.push('/')}
-            className="mb-8 inline-flex items-center text-sm text-gray-500 hover:text-blue-600 transition-colors"
-          >
-            <ArrowLeft className="w-4 h-4 mr-2" />
-            Back to home
-          </button>
+          <div className="mb-8 flex items-center justify-between">
+            <button
+              onClick={() => router.push('/')}
+              className="inline-flex items-center text-sm text-gray-500 dark:text-gray-400 hover:text-blue-600 dark:hover:text-blue-400 transition-colors"
+            >
+              <ArrowLeft className="w-4 h-4 mr-2" />
+              Back to home
+            </button>
+            <ThemeToggle />
+          </div>
 
           <div className="lg:hidden flex items-center gap-2 mb-6">
             <Heart className="w-8 h-8 text-red-500" />
@@ -142,18 +146,18 @@ const SignupPage: React.FC = () => {
             </span>
           </div>
 
-          <h1 className="text-2xl font-bold text-gray-900">Create your account</h1>
-          <p className="text-gray-500 mt-1 mb-8">Sign up as a patient to get started</p>
+          <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100">Create your account</h1>
+          <p className="text-gray-500 dark:text-gray-400 mt-1 mb-8">Sign up as a patient to get started</p>
 
           <form onSubmit={handleSignup} className="space-y-5">
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Full Name</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Full Name</label>
               <div className="relative">
-                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <User className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   value={form.name}
                   onChange={(e) => update('name', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   placeholder="Jane Doe"
                   required
                 />
@@ -161,14 +165,14 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Email</label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Email</label>
               <div className="relative">
-                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Mail className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="email"
                   value={form.email}
                   onChange={(e) => update('email', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   placeholder="you@example.com"
                   required
                 />
@@ -176,14 +180,14 @@ const SignupPage: React.FC = () => {
             </div>
 
             <div>
-              <label className="block text-sm font-medium text-gray-700 mb-2">Phone <span className="text-gray-400 font-normal">(optional)</span></label>
+              <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Phone <span className="text-gray-400 dark:text-gray-500 font-normal">(optional)</span></label>
               <div className="relative">
-                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                <Phone className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                 <input
                   type="tel"
                   value={form.phone}
                   onChange={(e) => update('phone', e.target.value)}
-                  className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                  className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                   placeholder="+1 555 123 4567"
                 />
               </div>
@@ -191,21 +195,21 @@ const SignupPage: React.FC = () => {
 
             <div className="grid grid-cols-1 sm:grid-cols-2 gap-6">
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Password</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Password</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={form.password}
                     onChange={(e) => update('password', e.target.value)}
-                    className="w-full pl-10 pr-11 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-11 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                     placeholder="••••••••"
                     required
                   />
                   <button
                     type="button"
                     onClick={() => setShowPassword((s) => !s)}
-                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 hover:text-gray-600"
+                    className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 dark:text-gray-500 hover:text-gray-600 dark:hover:text-gray-300"
                     aria-label={showPassword ? 'Hide password' : 'Show password'}
                   >
                     {showPassword ? <EyeOff className="w-5 h-5" /> : <Eye className="w-5 h-5" />}
@@ -213,14 +217,14 @@ const SignupPage: React.FC = () => {
                 </div>
               </div>
               <div>
-                <label className="block text-sm font-medium text-gray-700 mb-2">Confirm</label>
+                <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-2">Confirm</label>
                 <div className="relative">
-                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+                  <Lock className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
                   <input
                     type={showPassword ? 'text' : 'password'}
                     value={form.confirm}
                     onChange={(e) => update('confirm', e.target.value)}
-                    className="w-full pl-10 pr-4 py-3 border border-gray-300 rounded-xl focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
+                    className="w-full pl-10 pr-4 py-3 border border-gray-300 dark:border-gray-600 rounded-xl bg-white dark:bg-gray-800 text-gray-900 dark:text-gray-100 focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-shadow"
                     placeholder="••••••••"
                     required
                   />
@@ -228,20 +232,20 @@ const SignupPage: React.FC = () => {
               </div>
             </div>
 
-            <label className="flex items-start gap-2 text-sm text-gray-600">
+            <label className="flex items-start gap-2 text-sm text-gray-600 dark:text-gray-400">
               <input
                 type="checkbox"
                 checked={agree}
                 onChange={(e) => setAgree(e.target.checked)}
-                className="mt-0.5 w-4 h-4 rounded border-gray-300 text-blue-600 focus:ring-blue-500"
+                className="mt-0.5 w-4 h-4 rounded border-gray-300 dark:border-gray-600 dark:bg-gray-800 text-blue-600 focus:ring-blue-500"
               />
               <span>
                 I agree to the{' '}
-                <Link href="/terms-of-service" className="text-blue-600 font-medium hover:underline">
+                <Link href="/terms-of-service" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
                   Terms of Service
                 </Link>{' '}
                 and{' '}
-                <Link href="/privacy-policy" className="text-blue-600 font-medium hover:underline">
+                <Link href="/privacy-policy" className="text-blue-600 dark:text-blue-400 font-medium hover:underline">
                   Privacy Policy
                 </Link>
                 .
@@ -252,7 +256,7 @@ const SignupPage: React.FC = () => {
               <motion.div
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
-                className="p-3 bg-red-50 text-red-600 rounded-lg text-sm"
+                className="p-3 bg-red-50 dark:bg-red-900/30 text-red-600 dark:text-red-400 rounded-lg text-sm"
               >
                 {error}
               </motion.div>
@@ -272,14 +276,14 @@ const SignupPage: React.FC = () => {
             </button>
           </form>
 
-          <p className="mt-7 text-center text-sm text-gray-600">
+          <p className="mt-7 text-center text-sm text-gray-600 dark:text-gray-400">
             Already have an account?{' '}
-            <Link href="/login" className="font-semibold text-blue-600 hover:underline">
+            <Link href="/login" className="font-semibold text-blue-600 dark:text-blue-400 hover:underline">
               Sign in
             </Link>
           </p>
 
-          <p className="mt-3 text-center text-xs text-gray-400">
+          <p className="mt-3 text-center text-xs text-gray-400 dark:text-gray-500">
             Are you a doctor, pharmacist, or lab technician? Your account is created by your hospital administrator.
           </p>
         </motion.div>

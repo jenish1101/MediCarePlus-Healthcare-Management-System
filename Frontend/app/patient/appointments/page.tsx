@@ -10,12 +10,12 @@ import { mockAppointments } from '@/data/mockData';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    scheduled: 'bg-blue-100 text-blue-700',
-    completed: 'bg-green-100 text-green-700',
-    cancelled: 'bg-red-100 text-red-700',
-    rescheduled: 'bg-yellow-100 text-yellow-700'
+    scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    cancelled: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    rescheduled: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const PatientAppointments: React.FC = () => {
@@ -44,8 +44,8 @@ const PatientAppointments: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">My Appointments</h1>
-              <p className="text-gray-600">Manage your upcoming and past appointments</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">My Appointments</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage your upcoming and past appointments</p>
             </div>
             <button
               onClick={() => router.push('/patient/book-appointment')}
@@ -64,10 +64,10 @@ const PatientAppointments: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center"
               >
                 <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -81,7 +81,7 @@ const PatientAppointments: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
                   filter === f
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                 }`}
               >
                 {f === 'all' ? 'All' : f}
@@ -97,18 +97,18 @@ const PatientAppointments: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg transition-shadow"
               >
                 <div className="flex items-start justify-between mb-4">
                   <div className="flex items-start space-x-4">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                      <Stethoscope className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
+                      <Stethoscope className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-lg">{apt.doctorName}</h4>
-                      <p className="text-gray-600">{apt.doctorSpecialization}</p>
-                      <p className="text-sm text-gray-500 mt-1">{apt.reason}</p>
-                      <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm text-gray-500">
+                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{apt.doctorName}</h4>
+                      <p className="text-gray-600 dark:text-gray-400">{apt.doctorSpecialization}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{apt.reason}</p>
+                      <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                         <span className="flex items-center">
                           <Calendar className="w-4 h-4 mr-1" />
                           {apt.date}
@@ -117,7 +117,7 @@ const PatientAppointments: React.FC = () => {
                           <Clock className="w-4 h-4 mr-1" />
                           {apt.time}
                         </span>
-                        <span className="capitalize px-2 py-0.5 rounded bg-gray-100 text-gray-600 text-xs">
+                        <span className="capitalize px-2 py-0.5 rounded bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 text-xs">
                           {apt.type}
                         </span>
                       </div>
@@ -127,16 +127,16 @@ const PatientAppointments: React.FC = () => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium ${statusColor(apt.status)}`}>
                       {apt.status}
                     </span>
-                    <span className="text-lg font-bold text-blue-600">${apt.fees}</span>
+                    <span className="text-lg font-bold text-blue-600 dark:text-blue-400">${apt.fees}</span>
                   </div>
                 </div>
 
                 {apt.status === 'scheduled' ? (
                   <div className="flex flex-wrap gap-3">
-                    <button className="flex-1 min-w-[120px] py-2 border border-blue-600 text-blue-600 rounded-lg hover:bg-blue-50 transition-colors">
+                    <button className="flex-1 min-w-[120px] py-2 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                       Reschedule
                     </button>
-                    <button className="flex-1 min-w-[120px] py-2 border border-red-600 text-red-600 rounded-lg hover:bg-red-50 transition-colors">
+                    <button className="flex-1 min-w-[120px] py-2 border border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
                       Cancel
                     </button>
                     {apt.type === 'video' && (
@@ -150,7 +150,7 @@ const PatientAppointments: React.FC = () => {
                     )}
                   </div>
                 ) : (
-                  <div className="flex items-center text-green-600 text-sm font-medium">
+                  <div className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
                     <CheckCircle className="w-5 h-5 mr-2" />
                     Visit completed
                   </div>
@@ -159,10 +159,10 @@ const PatientAppointments: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No appointments</h3>
-                <p className="text-gray-600">You have no {filter !== 'all' ? filter : ''} appointments.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No appointments</h3>
+                <p className="text-gray-600 dark:text-gray-400">You have no {filter !== 'all' ? filter : ''} appointments.</p>
               </div>
             )}
           </div>

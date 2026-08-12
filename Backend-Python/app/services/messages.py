@@ -2,28 +2,11 @@ from datetime import datetime, timezone
 from typing import List
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
 
 from app.core.exceptions import NotFoundError
 from app.models.messaging import ChatMessage, MessageThread
 from app.models.user import User
-
-
-class ThreadOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    patient_name: str
-    last_message: str
-    last_time: str
-    unread_for_doctor: int
-    unread_for_patient: int
-    messages: List[ChatMessage]
-
-    model_config = {"populate_by_name": True}
-
-
-class SendMessage(BaseModel):
-    text: str
+from app.schemas.messages import SendMessage, ThreadOut
 
 
 async def list_threads(doctor: User) -> List[ThreadOut]:

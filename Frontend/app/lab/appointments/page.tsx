@@ -26,11 +26,11 @@ const initialAppointments: LabAppointment[] = [
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
-    scheduled: 'bg-blue-100 text-blue-700',
-    collected: 'bg-purple-100 text-purple-700',
-    completed: 'bg-green-100 text-green-700'
+    scheduled: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400',
+    collected: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
+    completed: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const LabAppointments: React.FC = () => {
@@ -61,8 +61,8 @@ const LabAppointments: React.FC = () => {
       <DashboardLayout role="lab_tech">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Appointments</h1>
-            <p className="text-gray-600">Sample collection schedule</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Appointments</h1>
+            <p className="text-gray-600 dark:text-gray-400">Sample collection schedule</p>
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
@@ -72,10 +72,10 @@ const LabAppointments: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.08 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center"
               >
                 <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -87,7 +87,7 @@ const LabAppointments: React.FC = () => {
                   key={f}
                   onClick={() => setFilter(f)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                    filter === f ? 'bg-purple-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    filter === f ? 'bg-purple-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm dark:shadow-none dark:border dark:border-gray-700'
                   }`}
                 >
                   {f}
@@ -95,12 +95,12 @@ const LabAppointments: React.FC = () => {
               ))}
             </div>
             <div className="relative sm:w-64">
-              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400" />
+              <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
                 placeholder="Search patient or test..."
-                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
@@ -112,7 +112,7 @@ const LabAppointments: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white border border-gray-200 rounded-xl p-4 hover:shadow-lg transition-shadow"
+                className="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-700 rounded-xl p-4 hover:shadow-lg dark:hover:shadow-none transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                   <div className="flex items-start gap-6">
@@ -120,12 +120,12 @@ const LabAppointments: React.FC = () => {
                     <img
                       src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${apt.patientName}`}
                       alt={apt.patientName}
-                      className="w-12 h-12 rounded-full bg-gray-100"
+                      className="w-12 h-12 rounded-full bg-gray-100 dark:bg-gray-700"
                     />
                     <div>
-                      <h4 className="font-semibold text-lg">{apt.patientName}</h4>
-                      <p className="text-sm text-gray-600">{apt.testName}</p>
-                      <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm text-gray-500">
+                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{apt.patientName}</h4>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">{apt.testName}</p>
+                      <div className="flex flex-wrap items-center mt-2 gap-x-4 gap-y-1 text-sm text-gray-500 dark:text-gray-400">
                         <span className="flex items-center"><Calendar className="w-4 h-4 mr-1" />{apt.date}</span>
                         <span className="flex items-center"><Clock className="w-4 h-4 mr-1" />{apt.time}</span>
                         <span className="flex items-center gap-1">
@@ -148,7 +148,7 @@ const LabAppointments: React.FC = () => {
                       </button>
                     )}
                     {apt.status !== 'scheduled' && (
-                      <span className="flex items-center text-green-600 text-sm font-medium">
+                      <span className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4 mr-1" /> {apt.status === 'collected' ? 'Sample collected' : 'Completed'}
                       </span>
                     )}
@@ -158,10 +158,10 @@ const LabAppointments: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No appointments found</h3>
-                <p className="text-gray-600">Try a different search or filter.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Calendar className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No appointments found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search or filter.</p>
               </div>
             )}
           </div>

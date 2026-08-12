@@ -1,144 +1,33 @@
 from collections import defaultdict
 from datetime import date, timedelta
-from typing import List, Optional
+from typing import List
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
 
-from app.core.enums import (
-    FulfillmentStatus,
-    OrderStatus,
-    PurchaseOrderStatus,
-    ReturnStatus,
-    UserRole,
-)
+from app.core.enums import FulfillmentStatus, OrderStatus, PurchaseOrderStatus, ReturnStatus, UserRole
 from app.core.utils import get_or_404
 from app.models.pharmacy import (
     FulfillmentPrescription,
     InventoryItem,
-    OrderMedicineItem,
     PharmacyOrder,
     PurchaseOrder,
-    PurchaseOrderItem,
     ReturnRequest,
     SupplierInfo,
 )
 from app.models.user import User
-
-
-class InventoryOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    medicine_name: str
-    batch_number: str
-    quantity: int
-    expiry_date: str
-    supplier: str
-    price: float
-
-    model_config = {"populate_by_name": True}
-
-
-class InventoryCreate(BaseModel):
-    medicine_name: str
-    batch_number: str
-    quantity: int
-    expiry_date: str
-    supplier: str
-    price: float
-
-
-class OrderCreate(BaseModel):
-    medicines: List[OrderMedicineItem]
-    address: str
-    prescription_id: Optional[PydanticObjectId] = None
-
-
-class OrderOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    medicines: List[OrderMedicineItem]
-    total: float
-    status: OrderStatus
-    date: str
-    address: str
-
-    model_config = {"populate_by_name": True}
-
-
-class FulfillmentOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    rx_id: str
-    prescription_id: PydanticObjectId
-    patient_name: str
-    doctor_name: str
-    date: str
-    medicines: List[str]
-    status: FulfillmentStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class PurchaseOrderCreate(BaseModel):
-    supplier: str
-    items: List[PurchaseOrderItem]
-    order_date: str
-    expected_delivery: str
-
-
-class PurchaseOrderOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    supplier: str
-    items: List[PurchaseOrderItem]
-    total: float
-    order_date: str
-    expected_delivery: str
-    status: PurchaseOrderStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class ReturnOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    order_id: PydanticObjectId
-    patient_name: str
-    medicines: List[str]
-    amount: float
-    reason: str
-    request_date: str
-    status: ReturnStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class SupplierOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    contact_email: str
-    contact_phone: str
-    address: str
-    products_count: int
-
-    model_config = {"populate_by_name": True}
-
-
-class ExpiryAlertOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    medicine_name: str
-    batch_number: str
-    quantity: int
-    expiry_date: str
-    alert_type: str
-
-    model_config = {"populate_by_name": True}
-
-
-class SalesSummary(BaseModel):
-    monthly_sales: float
-    growth_percent: float
-    total_orders: int
-    units_sold: int
-    monthly: List[dict]
-    top_sellers: List[dict]
+from app.schemas.pharmacy import (
+    ExpiryAlertOut,
+    FulfillmentOut,
+    InventoryCreate,
+    InventoryOut,
+    OrderCreate,
+    OrderOut,
+    PurchaseOrderCreate,
+    PurchaseOrderOut,
+    ReturnOut,
+    SalesSummary,
+    SupplierOut,
+)
 
 
 async def list_inventory(low_stock: bool = False) -> List[InventoryOut]:

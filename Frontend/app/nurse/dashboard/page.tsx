@@ -35,56 +35,56 @@ const NurseDashboard: React.FC = () => {
             <p className="text-white/90">Assigned patients and vitals schedule</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6">
             {stats.map((stat, i) => (
-              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-white rounded-xl p-6 shadow-lg">
-                <div className={`p-3 rounded-lg bg-${stat.color}-100 inline-block mb-4`}>
-                  <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+              <motion.div key={stat.label} initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} transition={{ delay: i * 0.1 }} className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700">
+                <div className={`p-2 sm:p-3 rounded-lg bg-${stat.color}-100 inline-block mb-2 sm:mb-4`}>
+                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 text-${stat.color}-600`} />
                 </div>
-                <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1">{stat.label}</p>
+                <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
               </motion.div>
             ))}
           </div>
 
           <div className="grid lg:grid-cols-2 gap-6">
-            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4">Assigned Patients</h3>
+            <motion.div initial={{ opacity: 0, x: -20 }} animate={{ opacity: 1, x: 0 }} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-6">
+              <h3 className="text-xl font-semibold mb-4 text-gray-900 dark:text-gray-100">Assigned Patients</h3>
               <div className="space-y-3">
                 {assignedPatients.map((p) => (
-                  <div key={p.id} className="p-6 bg-gray-50 rounded-lg">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-900">{p.name}</p>
-                        <p className="text-sm text-gray-600">Room {p.room} · {p.condition}</p>
+                  <div key={p.id} className="p-4 sm:p-6 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{p.name}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Room {p.room} · {p.condition}</p>
                       </div>
-                      <span className="text-sm text-rose-600 font-medium">Vitals: {p.vitalsDue}</span>
+                      <span className="text-sm text-rose-600 dark:text-rose-400 font-medium shrink-0">Vitals: {p.vitalsDue}</span>
                     </div>
                   </div>
                 ))}
               </div>
             </motion.div>
 
-            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white rounded-xl shadow-lg p-6">
-              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2">
-                <HeartPulse className="w-5 h-5 text-rose-600" /> Vitals Due
+            <motion.div initial={{ opacity: 0, x: 20 }} animate={{ opacity: 1, x: 0 }} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-6">
+              <h3 className="text-xl font-semibold mb-4 flex items-center gap-2 text-gray-900 dark:text-gray-100">
+                <HeartPulse className="w-5 h-5 text-rose-600 dark:text-rose-400" /> Vitals Due
               </h3>
               <div className="space-y-3">
                 {vitalsDue.map((v) => (
-                  <div key={v.id} className={`p-4 rounded-lg border ${v.overdue ? 'bg-red-50 border-red-200' : 'bg-gray-50 border-gray-100'}`}>
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <p className="font-medium text-gray-900">{v.patient}</p>
-                        <p className="text-sm text-gray-600">Room {v.room} · {v.type}</p>
+                  <div key={v.id} className={`p-4 rounded-lg border ${v.overdue ? 'bg-red-50 dark:bg-red-900/20 border-red-200 dark:border-red-800' : 'bg-gray-50 dark:bg-gray-900/40 border-gray-100 dark:border-gray-700'}`}>
+                    <div className="flex flex-col sm:flex-row sm:justify-between sm:items-start gap-1 sm:gap-3">
+                      <div className="min-w-0">
+                        <p className="font-medium text-gray-900 dark:text-gray-100 truncate">{v.patient}</p>
+                        <p className="text-sm text-gray-600 dark:text-gray-400">Room {v.room} · {v.type}</p>
                       </div>
-                      <div className="text-right">
-                        {v.overdue && <span className="text-xs font-medium text-red-700 bg-red-100 px-2 py-0.5 rounded-full">Overdue</span>}
-                        <p className="text-sm text-gray-500 flex items-center gap-1 justify-end mt-1">
+                      <div className="sm:text-right shrink-0">
+                        {v.overdue && <span className="text-xs font-medium text-red-700 dark:text-red-400 bg-red-100 dark:bg-red-900/30 px-2 py-0.5 rounded-full">Overdue</span>}
+                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center gap-1 sm:justify-end mt-1">
                           <Clock className="w-3.5 h-3.5" /> {v.due}
                         </p>
                       </div>
                     </div>
-                    <button className="mt-2 text-sm font-medium text-rose-600 hover:text-rose-800">Record vitals →</button>
+                    <button className="mt-2 text-sm font-medium text-rose-600 dark:text-rose-400 hover:text-rose-800 dark:hover:text-rose-300">Record vitals →</button>
                   </div>
                 ))}
               </div>

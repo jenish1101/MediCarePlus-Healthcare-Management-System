@@ -25,11 +25,11 @@ const initialInvoices: Invoice[] = [
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
-    paid: 'bg-green-100 text-green-700',
-    pending: 'bg-yellow-100 text-yellow-700',
-    overdue: 'bg-red-100 text-red-700'
+    paid: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
+    pending: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
+    overdue: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
   };
-  return colors[status] || 'bg-gray-100 text-gray-700';
+  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
 const PatientBilling: React.FC = () => {
@@ -73,8 +73,8 @@ const PatientBilling: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Billing & Payments</h1>
-              <p className="text-gray-600">View invoices and pay online</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Billing & Payments</h1>
+              <p className="text-gray-600 dark:text-gray-400">View invoices and pay online</p>
             </div>
             <button className="inline-flex items-center justify-center gap-2 px-5 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors">
               <Download className="w-5 h-5" />
@@ -89,13 +89,13 @@ const PatientBilling: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-5 sm:p-4 shadow-lg"
+                className="bg-white dark:bg-gray-800 rounded-xl p-5 sm:p-4 shadow-lg dark:shadow-none dark:border dark:border-gray-700"
               >
                 <div className={`p-3 rounded-lg bg-${s.color}-100 w-fit mb-4`}>
                   <s.icon className={`w-6 h-6 text-${s.color}-600`} />
                 </div>
-                <p className="text-gray-600 text-sm mb-1">{s.label}</p>
-                <p className="text-lg font-bold text-gray-900">{s.value}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mb-1">{s.label}</p>
+                <p className="text-lg font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
               </motion.div>
             ))}
           </div>
@@ -108,7 +108,7 @@ const PatientBilling: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
                   filter === f
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                 }`}
               >
                 {f}
@@ -123,17 +123,17 @@ const PatientBilling: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 hover:shadow-xl transition-shadow"
               >
                 <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
                   <div className="flex items-start gap-6">
-                    <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center shrink-0">
-                      <FileText className="w-6 h-6 text-blue-600" />
+                    <div className="w-12 h-12 bg-blue-100 dark:bg-blue-900/30 rounded-full flex items-center justify-center shrink-0">
+                      <FileText className="w-6 h-6 text-blue-600 dark:text-blue-400" />
                     </div>
                     <div>
-                      <p className="font-semibold text-blue-600">{inv.id}</p>
-                      <p className="font-medium text-gray-900">{inv.service}</p>
-                      <p className="text-sm text-gray-500 mt-1">{inv.date}</p>
+                      <p className="font-semibold text-blue-600 dark:text-blue-400">{inv.id}</p>
+                      <p className="font-medium text-gray-900 dark:text-gray-100">{inv.service}</p>
+                      <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">{inv.date}</p>
                     </div>
                   </div>
 
@@ -141,7 +141,7 @@ const PatientBilling: React.FC = () => {
                     <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${statusColor(inv.status)}`}>
                       {inv.status}
                     </span>
-                    <p className="text-2xl font-bold text-gray-900">${inv.amount.toLocaleString()}</p>
+                    <p className="text-2xl font-bold text-gray-900 dark:text-gray-100">${inv.amount.toLocaleString()}</p>
 
                     {inv.status !== 'paid' ? (
                       <button
@@ -162,7 +162,7 @@ const PatientBilling: React.FC = () => {
                         )}
                       </button>
                     ) : (
-                      <span className="inline-flex items-center gap-1 text-green-600 text-sm font-medium">
+                      <span className="inline-flex items-center gap-1 text-green-600 dark:text-green-400 text-sm font-medium">
                         <CheckCircle className="w-4 h-4" />
                         Paid
                       </span>
@@ -174,7 +174,7 @@ const PatientBilling: React.FC = () => {
                   <motion.div
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
-                    className="mt-4 p-3 bg-green-50 text-green-700 rounded-lg text-sm font-medium flex items-center gap-2"
+                    className="mt-4 p-3 bg-green-50 dark:bg-green-900/30 text-green-700 dark:text-green-400 rounded-lg text-sm font-medium flex items-center gap-2"
                   >
                     <CheckCircle className="w-4 h-4" />
                     Payment successful! Invoice {inv.id} has been paid.
@@ -184,10 +184,10 @@ const PatientBilling: React.FC = () => {
             ))}
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No invoices found</h3>
-                <p className="text-gray-600">Try a different filter.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No invoices found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different filter.</p>
               </div>
             )}
           </div>

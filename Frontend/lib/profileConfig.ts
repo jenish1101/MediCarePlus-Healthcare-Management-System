@@ -69,57 +69,57 @@ const themes: Record<UserRole, ProfileTheme> = {
   patient: {
     gradient: 'from-blue-500 via-indigo-500 to-purple-600',
     accent: 'blue',
-    accentLight: 'bg-blue-50',
-    accentText: 'text-blue-600',
+    accentLight: 'bg-blue-50 dark:bg-blue-900/30',
+    accentText: 'text-blue-600 dark:text-blue-400',
     ring: 'focus:ring-blue-500 focus:border-blue-500'
   },
   doctor: {
     gradient: 'from-violet-500 via-purple-500 to-fuchsia-600',
     accent: 'purple',
-    accentLight: 'bg-purple-50',
-    accentText: 'text-purple-600',
+    accentLight: 'bg-purple-50 dark:bg-purple-900/30',
+    accentText: 'text-purple-600 dark:text-purple-400',
     ring: 'focus:ring-purple-500 focus:border-purple-500'
   },
   admin: {
     gradient: 'from-orange-500 via-red-500 to-rose-600',
     accent: 'red',
-    accentLight: 'bg-red-50',
-    accentText: 'text-red-600',
+    accentLight: 'bg-red-50 dark:bg-red-900/30',
+    accentText: 'text-red-600 dark:text-red-400',
     ring: 'focus:ring-red-500 focus:border-red-500'
   },
   pharmacist: {
     gradient: 'from-emerald-500 via-green-500 to-teal-600',
     accent: 'green',
-    accentLight: 'bg-green-50',
-    accentText: 'text-green-600',
+    accentLight: 'bg-green-50 dark:bg-green-900/30',
+    accentText: 'text-green-600 dark:text-green-400',
     ring: 'focus:ring-green-500 focus:border-green-500'
   },
   lab_tech: {
     gradient: 'from-indigo-500 via-purple-500 to-violet-600',
     accent: 'indigo',
-    accentLight: 'bg-indigo-50',
-    accentText: 'text-indigo-600',
+    accentLight: 'bg-indigo-50 dark:bg-indigo-900/30',
+    accentText: 'text-indigo-600 dark:text-indigo-400',
     ring: 'focus:ring-indigo-500 focus:border-indigo-500'
   },
   receptionist: {
     gradient: 'from-teal-500 via-cyan-500 to-sky-600',
     accent: 'teal',
-    accentLight: 'bg-teal-50',
-    accentText: 'text-teal-600',
+    accentLight: 'bg-teal-50 dark:bg-teal-900/30',
+    accentText: 'text-teal-600 dark:text-teal-400',
     ring: 'focus:ring-teal-500 focus:border-teal-500'
   },
   nurse: {
     gradient: 'from-rose-500 via-pink-500 to-fuchsia-600',
     accent: 'rose',
-    accentLight: 'bg-rose-50',
-    accentText: 'text-rose-600',
+    accentLight: 'bg-rose-50 dark:bg-rose-900/30',
+    accentText: 'text-rose-600 dark:text-rose-400',
     ring: 'focus:ring-rose-500 focus:border-rose-500'
   },
   supplier: {
     gradient: 'from-amber-500 via-orange-500 to-red-500',
     accent: 'amber',
-    accentLight: 'bg-amber-50',
-    accentText: 'text-amber-600',
+    accentLight: 'bg-amber-50 dark:bg-amber-900/30',
+    accentText: 'text-amber-600 dark:text-amber-400',
     ring: 'focus:ring-amber-500 focus:border-amber-500'
   }
 };

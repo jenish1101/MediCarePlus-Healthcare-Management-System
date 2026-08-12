@@ -82,8 +82,8 @@ const FamilyMembers: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Family Members</h1>
-              <p className="text-gray-600">Manage dependents under your account</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Family Members</h1>
+              <p className="text-gray-600 dark:text-gray-400">Manage dependents under your account</p>
             </div>
             <button
               onClick={() => setShowForm(true)}
@@ -101,10 +101,10 @@ const FamilyMembers: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center"
               >
                 <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
@@ -139,40 +139,40 @@ const FamilyMembers: React.FC = () => {
               >
                 <form
                   onSubmit={handleAdd}
-                  className="bg-white rounded-xl shadow-lg p-4 space-y-6"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 space-y-6"
                 >
                   <div className="flex items-center justify-between mb-2">
-                    <h3 className="text-xl font-semibold flex items-center gap-2">
-                      <UserPlus className="w-5 h-5 text-blue-600" />
+                    <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 flex items-center gap-2">
+                      <UserPlus className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                       Add Family Member
                     </h3>
                     <button
                       type="button"
                       onClick={() => setShowForm(false)}
-                      className="p-1 hover:bg-gray-100 rounded-lg transition-colors"
+                      className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg transition-colors"
                     >
-                      <X className="w-5 h-5 text-gray-500" />
+                      <X className="w-5 h-5 text-gray-500 dark:text-gray-400" />
                     </button>
                   </div>
 
                   <div className="grid sm:grid-cols-2 gap-6">
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Full Name</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Full Name</label>
                       <input
                         required
                         value={form.name}
                         onChange={(e) => setForm({ ...form, name: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                         placeholder="Enter full name"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Relationship</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Relationship</label>
                       <select
                         required
                         value={form.relationship}
                         onChange={(e) => setForm({ ...form, relationship: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                       >
                         <option value="">Select relationship</option>
                         {relationshipOptions.map((r) => (
@@ -181,29 +181,29 @@ const FamilyMembers: React.FC = () => {
                       </select>
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Date of Birth</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Date of Birth</label>
                       <input
                         type="date"
                         value={form.dateOfBirth}
                         onChange={(e) => setForm({ ...form, dateOfBirth: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Phone</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Phone</label>
                       <input
                         value={form.phone}
                         onChange={(e) => setForm({ ...form, phone: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                         placeholder="+1 (555) 000-0000"
                       />
                     </div>
                     <div>
-                      <label className="block text-sm font-medium text-gray-700 mb-1">Blood Group</label>
+                      <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Blood Group</label>
                       <select
                         value={form.bloodGroup}
                         onChange={(e) => setForm({ ...form, bloodGroup: e.target.value })}
-                        className="w-full px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent"
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                       >
                         <option value="">Select blood group</option>
                         {['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'].map((bg) => (
@@ -223,7 +223,7 @@ const FamilyMembers: React.FC = () => {
                     <button
                       type="button"
                       onClick={() => setShowForm(false)}
-                      className="px-6 py-2.5 border border-gray-300 rounded-lg font-medium text-gray-700 hover:bg-gray-50 transition-colors"
+                      className="px-6 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
                     >
                       Cancel
                     </button>
@@ -241,19 +241,19 @@ const FamilyMembers: React.FC = () => {
                 initial={{ opacity: 0, x: -20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: i * 0.05 }}
-                className="bg-white rounded-xl shadow-lg p-4 hover:shadow-xl transition-shadow"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 hover:shadow-xl transition-shadow"
               >
                 <div className="flex items-start justify-between">
                   <div className="flex items-start gap-6">
-                    <div className="w-12 h-12 bg-purple-100 rounded-full flex items-center justify-center shrink-0">
-                      <Users className="w-6 h-6 text-purple-600" />
+                    <div className="w-12 h-12 bg-purple-100 dark:bg-purple-900/30 rounded-full flex items-center justify-center shrink-0">
+                      <Users className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-lg">{member.name}</h4>
-                      <span className="inline-block px-2.5 py-0.5 bg-purple-100 text-purple-700 text-xs rounded-full font-medium mt-1">
+                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{member.name}</h4>
+                      <span className="inline-block px-2.5 py-0.5 bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400 text-xs rounded-full font-medium mt-1">
                         {member.relationship}
                       </span>
-                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-500">
+                      <div className="flex flex-wrap gap-x-4 gap-y-1 mt-3 text-sm text-gray-500 dark:text-gray-400">
                         {member.dateOfBirth && (
                           <span className="flex items-center">
                             <Calendar className="w-4 h-4 mr-1" />
@@ -268,7 +268,7 @@ const FamilyMembers: React.FC = () => {
                         )}
                         {member.bloodGroup && (
                           <span className="flex items-center">
-                            <Heart className="w-4 h-4 mr-1 text-red-500" />
+                            <Heart className="w-4 h-4 mr-1 text-red-500 dark:text-red-400" />
                             {member.bloodGroup}
                           </span>
                         )}
@@ -277,7 +277,7 @@ const FamilyMembers: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleRemove(member.id)}
-                    className="p-2 text-red-500 hover:bg-red-50 rounded-lg transition-colors"
+                    className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
                     aria-label={`Remove ${member.name}`}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -287,10 +287,10 @@ const FamilyMembers: React.FC = () => {
             ))}
 
             {members.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No family members yet</h3>
-                <p className="text-gray-600 mb-4">Add dependents to manage their health records.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No family members yet</h3>
+                <p className="text-gray-600 dark:text-gray-400 mb-4">Add dependents to manage their health records.</p>
                 <button
                   onClick={() => setShowForm(true)}
                   className="inline-flex items-center gap-2 px-5 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"

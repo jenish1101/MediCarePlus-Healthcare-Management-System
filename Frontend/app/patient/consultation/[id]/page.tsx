@@ -105,16 +105,16 @@ const VideoConsultation: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, scale: 0.95 }}
             animate={{ opacity: 1, scale: 1 }}
-            className="max-w-lg mx-auto bg-white rounded-xl shadow-xl p-10 text-center"
+            className="max-w-lg mx-auto bg-white dark:bg-gray-800 rounded-xl shadow-xl dark:shadow-none dark:border dark:border-gray-700 p-10 text-center"
           >
-            <div className="w-20 h-20 bg-green-100 rounded-full flex items-center justify-center mx-auto mb-6">
-              <PhoneOff className="w-10 h-10 text-green-600" />
+            <div className="w-20 h-20 bg-green-100 dark:bg-green-900/30 rounded-full flex items-center justify-center mx-auto mb-6">
+              <PhoneOff className="w-10 h-10 text-green-600 dark:text-green-400" />
             </div>
-            <h2 className="text-lg font-bold text-gray-900 mb-2">Consultation Ended</h2>
-            <p className="text-gray-600 mb-2">
+            <h2 className="text-lg font-bold text-gray-900 dark:text-gray-100 mb-2">Consultation Ended</h2>
+            <p className="text-gray-600 dark:text-gray-400 mb-2">
               Your video consultation with {doctor.name} has ended.
             </p>
-            <p className="text-sm text-gray-500 mb-6">
+            <p className="text-sm text-gray-500 dark:text-gray-400 mb-6">
               Duration: {formatDuration(callDuration)} · ID: {consultationId}
             </p>
             <div className="flex gap-3">
@@ -126,7 +126,7 @@ const VideoConsultation: React.FC = () => {
               </button>
               <button
                 onClick={() => router.push('/patient/dashboard')}
-                className="flex-1 py-3 border border-gray-300 rounded-lg font-semibold text-gray-700 hover:bg-gray-50 transition-colors"
+                className="flex-1 py-3 border border-gray-300 dark:border-gray-600 rounded-lg font-semibold text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
               >
                 Dashboard
               </button>
@@ -148,17 +148,17 @@ const VideoConsultation: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3"
           >
             <div>
-              <h1 className="text-lg font-bold text-gray-900">Video Consultation</h1>
-              <p className="text-gray-600 text-sm">
+              <h1 className="text-lg font-bold text-gray-900 dark:text-gray-100">Video Consultation</h1>
+              <p className="text-gray-600 dark:text-gray-400 text-sm">
                 Session {consultationId} · {appointment?.reason || 'General consultation'}
               </p>
             </div>
             <div className="flex items-center gap-3">
-              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 text-red-700 rounded-full text-sm font-medium">
+              <span className="inline-flex items-center gap-2 px-3 py-1.5 bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">
                 <span className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
                 Live
               </span>
-              <span className="inline-flex items-center gap-1 text-gray-600 text-sm">
+              <span className="inline-flex items-center gap-1 text-gray-600 dark:text-gray-400 text-sm">
                 <Clock className="w-4 h-4" />
                 {formatDuration(callDuration)}
               </span>
@@ -206,11 +206,11 @@ const VideoConsultation: React.FC = () => {
               </div>
 
               {/* Controls */}
-              <div className="bg-white rounded-xl shadow-lg p-4 flex items-center justify-center gap-6">
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 flex items-center justify-center gap-6">
                 <button
                   onClick={() => setMicEnabled(!micEnabled)}
                   className={`p-4 rounded-full transition-colors ${
-                    micEnabled ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : 'bg-red-100 text-red-600'
+                    micEnabled ? 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}
                   aria-label={micEnabled ? 'Mute microphone' : 'Unmute microphone'}
                 >
@@ -220,7 +220,7 @@ const VideoConsultation: React.FC = () => {
                 <button
                   onClick={() => setVideoEnabled(!videoEnabled)}
                   className={`p-4 rounded-full transition-colors ${
-                    videoEnabled ? 'bg-gray-100 hover:bg-gray-200 text-gray-700' : 'bg-red-100 text-red-600'
+                    videoEnabled ? 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300' : 'bg-red-100 dark:bg-red-900/30 text-red-600 dark:text-red-400'
                   }`}
                   aria-label={videoEnabled ? 'Turn off camera' : 'Turn on camera'}
                 >
@@ -238,7 +238,7 @@ const VideoConsultation: React.FC = () => {
                 <button
                   onClick={() => setChatOpen(!chatOpen)}
                   className={`p-4 rounded-full transition-colors lg:hidden ${
-                    chatOpen ? 'bg-blue-100 text-blue-600' : 'bg-gray-100 hover:bg-gray-200 text-gray-700'
+                    chatOpen ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400' : 'bg-gray-100 dark:bg-gray-700 hover:bg-gray-200 dark:hover:bg-gray-600 text-gray-700 dark:text-gray-300'
                   }`}
                   aria-label="Toggle chat"
                 >
@@ -253,16 +253,16 @@ const VideoConsultation: React.FC = () => {
                 initial={{ opacity: 0, x: 20 }}
                 animate={{ opacity: 1, x: 0 }}
                 transition={{ delay: 0.15 }}
-                className="bg-white rounded-xl shadow-lg flex flex-col h-[500px] lg:h-auto lg:min-h-[480px]"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex flex-col h-[500px] lg:h-auto lg:min-h-[480px]"
               >
-                <div className="px-4 py-3 border-b border-gray-100 flex items-center justify-between">
+                <div className="px-4 py-3 border-b border-gray-100 dark:border-gray-700 flex items-center justify-between">
                   <div className="flex items-center gap-2">
-                    <MessageCircle className="w-5 h-5 text-blue-600" />
-                    <h3 className="font-semibold">Chat</h3>
+                    <MessageCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+                    <h3 className="font-semibold text-gray-900 dark:text-gray-100">Chat</h3>
                   </div>
                   <button
                     onClick={() => setChatOpen(false)}
-                    className="text-sm text-gray-500 hover:text-gray-700 lg:hidden"
+                    className="text-sm text-gray-500 dark:text-gray-400 hover:text-gray-700 dark:hover:text-gray-300 lg:hidden"
                   >
                     Close
                   </button>
@@ -278,13 +278,13 @@ const VideoConsultation: React.FC = () => {
                         className={`max-w-[80%] rounded-xl px-4 py-2.5 ${
                           msg.sender === 'patient'
                             ? 'bg-blue-600 text-white rounded-br-md'
-                            : 'bg-gray-100 text-gray-800 rounded-bl-md'
+                            : 'bg-gray-100 dark:bg-gray-700 text-gray-800 dark:text-gray-200 rounded-bl-md'
                         }`}
                       >
                         <p className="text-sm">{msg.text}</p>
                         <p
                           className={`text-[10px] mt-1 ${
-                            msg.sender === 'patient' ? 'text-blue-200' : 'text-gray-400'
+                            msg.sender === 'patient' ? 'text-blue-200' : 'text-gray-400 dark:text-gray-500'
                           }`}
                         >
                           {msg.time}
@@ -295,12 +295,12 @@ const VideoConsultation: React.FC = () => {
                   <div ref={chatEndRef} />
                 </div>
 
-                <form onSubmit={sendMessage} className="p-6 border-t border-gray-100 flex gap-2">
+                <form onSubmit={sendMessage} className="p-6 border-t border-gray-100 dark:border-gray-700 flex gap-2">
                   <input
                     value={newMessage}
                     onChange={(e) => setNewMessage(e.target.value)}
                     placeholder="Type a message..."
-                    className="flex-1 px-4 py-2.5 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
+                    className="flex-1 px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
                   />
                   <button
                     type="submit"

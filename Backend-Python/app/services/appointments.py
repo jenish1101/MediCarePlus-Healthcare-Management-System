@@ -1,47 +1,13 @@
 from typing import List, Optional
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
 
-from app.core.enums import AppointmentStatus, AppointmentType, UserRole
-from app.core.exceptions import AppError, ForbiddenError, NotFoundError
+from app.core.enums import AppointmentStatus, UserRole
+from app.core.exceptions import BadRequestError, ForbiddenError, NotFoundError
 from app.core.utils import get_or_404
 from app.models.clinical import Appointment
 from app.models.user import User
-
-
-class AppointmentCreate(BaseModel):
-    doctor_id: PydanticObjectId
-    date: str
-    time: str
-    reason: str
-    appointment_type: AppointmentType = AppointmentType.IN_PERSON
-    patient_id: Optional[PydanticObjectId] = None
-
-
-class AppointmentUpdate(BaseModel):
-    date: Optional[str] = None
-    time: Optional[str] = None
-    status: Optional[AppointmentStatus] = None
-    reason: Optional[str] = None
-    appointment_type: Optional[AppointmentType] = None
-
-
-class AppointmentOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    patient_name: str
-    doctor_id: PydanticObjectId
-    doctor_name: str
-    doctor_specialization: str
-    date: str
-    time: str
-    status: AppointmentStatus
-    reason: str
-    appointment_type: AppointmentType
-    fees: float
-
-    model_config = {"from_attributes": True, "populate_by_name": True}
+from app.schemas.appointments import AppointmentCreate, AppointmentOut, AppointmentUpdate
 
 
 def _to_out(apt: Appointment) -> AppointmentOut:
@@ -83,7 +49,7 @@ async def book_appointment(body: AppointmentCreate, current_user: User) -> Appoi
         raise NotFoundError("Doctor not found")
     if current_user.role == UserRole.RECEPTIONIST:
         if not body.patient_id:
-            raise AppError("patient_id is required for receptionist booking", status_code=400)
+            raise BadRequestError("patient_id is required for receptionist booking")
         patient = await User.get(body.patient_id)
         if not patient or patient.role != UserRole.PATIENT:
             raise NotFoundError("Patient not found")

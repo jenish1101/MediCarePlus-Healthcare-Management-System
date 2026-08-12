@@ -104,10 +104,10 @@ const HealthTimeline: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Health Timeline</h1>
-              <p className="text-gray-600">Your complete medical history in one place</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Health Timeline</h1>
+              <p className="text-gray-600 dark:text-gray-400">Your complete medical history in one place</p>
             </div>
-            <Activity className="w-8 h-8 text-blue-600 hidden sm:block" />
+            <Activity className="w-8 h-8 text-blue-600 dark:text-blue-400 hidden sm:block" />
           </motion.div>
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
@@ -117,16 +117,16 @@ const HealthTimeline: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center"
               >
                 <p className={`text-xl font-bold text-${s.color}-600`}>{s.value}</p>
-                <p className="text-gray-600 text-sm mt-1">{s.label}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-sm mt-1">{s.label}</p>
               </motion.div>
             ))}
           </div>
 
           <div className="flex flex-wrap items-center gap-2">
-            <Filter className="w-4 h-4 text-gray-400" />
+            <Filter className="w-4 h-4 text-gray-400 dark:text-gray-500" />
             {(['all', 'appointment', 'prescription', 'lab'] as const).map((f) => (
               <button
                 key={f}
@@ -134,7 +134,7 @@ const HealthTimeline: React.FC = () => {
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
                   filter === f
                     ? 'bg-blue-600 text-white'
-                    : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                    : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                 }`}
               >
                 {f === 'all' ? 'All Events' : f === 'lab' ? 'Lab Reports' : `${f}s`}
@@ -143,7 +143,7 @@ const HealthTimeline: React.FC = () => {
           </div>
 
           <div className="relative">
-            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200 hidden sm:block" />
+            <div className="absolute left-6 top-0 bottom-0 w-0.5 bg-gray-200 dark:bg-gray-700 hidden sm:block" />
 
             <div className="space-y-6">
               {filtered.map((event, i) => {
@@ -159,12 +159,12 @@ const HealthTimeline: React.FC = () => {
                     className="relative flex gap-6 sm:gap-6"
                   >
                     <div
-                      className={`hidden sm:flex w-12 h-12 rounded-full bg-${event.color}-100 items-center justify-center shrink-0 z-10 border-4 border-gray-50`}
+                      className={`hidden sm:flex w-12 h-12 rounded-full bg-${event.color}-100 items-center justify-center shrink-0 z-10 border-4 border-gray-50 dark:border-gray-900`}
                     >
                       <Icon className={`w-5 h-5 text-${event.color}-600`} />
                     </div>
 
-                    <div className="flex-1 bg-white rounded-xl shadow-lg p-5 hover:shadow-xl transition-shadow">
+                    <div className="flex-1 bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-5 hover:shadow-xl dark:hover:bg-gray-700/30 transition-shadow">
                       <div className="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-2 mb-3">
                         <div>
                           <div className="flex items-center gap-2 mb-1">
@@ -172,23 +172,23 @@ const HealthTimeline: React.FC = () => {
                               {config.label}
                             </span>
                             {event.status && (
-                              <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 text-gray-600 capitalize">
+                              <span className="px-2.5 py-0.5 rounded-full text-xs font-medium bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 capitalize">
                                 {event.status}
                               </span>
                             )}
                           </div>
-                          <h4 className="font-semibold text-lg">{event.title}</h4>
-                          <p className="text-gray-600 text-sm">{event.subtitle}</p>
+                          <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{event.title}</h4>
+                          <p className="text-gray-600 dark:text-gray-400 text-sm">{event.subtitle}</p>
                         </div>
-                        <span className="text-sm text-gray-500 font-medium shrink-0">{event.date}</span>
+                        <span className="text-sm text-gray-500 dark:text-gray-400 font-medium shrink-0">{event.date}</span>
                       </div>
 
-                      <p className="text-gray-700 text-sm">{event.detail}</p>
+                      <p className="text-gray-700 dark:text-gray-300 text-sm">{event.detail}</p>
 
                       {event.type === 'prescription' && (
                         <button
                           onClick={() => router.push('/patient/prescriptions')}
-                          className="mt-3 flex items-center gap-2 text-sm text-purple-600 hover:text-purple-800"
+                          className="mt-3 flex items-center gap-2 text-sm text-purple-600 dark:text-purple-400 hover:text-purple-800 dark:hover:text-purple-300"
                         >
                           <Pill className="w-4 h-4" />
                           View full prescription details
@@ -198,7 +198,7 @@ const HealthTimeline: React.FC = () => {
                       {event.type === 'appointment' && (
                         <button
                           onClick={() => router.push('/patient/appointments')}
-                          className="mt-3 flex items-center gap-2 text-sm text-blue-600 hover:text-blue-800"
+                          className="mt-3 flex items-center gap-2 text-sm text-blue-600 dark:text-blue-400 hover:text-blue-800 dark:hover:text-blue-300"
                         >
                           <Stethoscope className="w-4 h-4" />
                           {event.status === 'scheduled' ? 'Upcoming visit' : 'Visit completed'}
@@ -208,7 +208,7 @@ const HealthTimeline: React.FC = () => {
                       {event.type === 'lab' && (
                         <button
                           onClick={() => router.push('/patient/lab-reports')}
-                          className="mt-3 flex items-center gap-2 text-sm text-green-600 hover:text-green-800"
+                          className="mt-3 flex items-center gap-2 text-sm text-green-600 dark:text-green-400 hover:text-green-800 dark:hover:text-green-300"
                         >
                           <TestTube className="w-4 h-4" />
                           View lab report
@@ -221,10 +221,10 @@ const HealthTimeline: React.FC = () => {
             </div>
 
             {filtered.length === 0 && (
-              <div className="bg-white rounded-xl shadow-lg p-8 text-center">
-                <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300" />
-                <h3 className="text-xl font-semibold text-gray-900 mb-2">No events found</h3>
-                <p className="text-gray-600">Try a different filter.</p>
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Activity className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No events found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different filter.</p>
               </div>
             )}
           </div>

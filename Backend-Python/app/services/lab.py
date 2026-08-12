@@ -2,123 +2,29 @@ import random
 from typing import List, Optional
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
 
-from app.core.enums import (
-    CatalogTestStatus,
-    EquipmentStatus,
-    LabReportStatus,
-    SampleStatus,
-    UserRole,
-)
-from app.core.exceptions import AppError, NotFoundError
+from app.core.enums import EquipmentStatus, SampleStatus, UserRole
+from app.core.exceptions import BadRequestError, NotFoundError
 from app.core.utils import get_or_404
 from app.models.lab import (
     LabCollectionAppointment,
     LabEquipment,
     LabReport,
-    LabResultRow,
     LabSample,
     LabTestCatalog,
 )
 from app.models.user import User
-
-
-class LabReportOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    test_name: str
-    date: str
-    status: LabReportStatus
-    results_summary: Optional[str] = None
-    result_rows: List[LabResultRow] = []
-    doctor_notes: Optional[str] = None
-
-    model_config = {"populate_by_name": True}
-
-
-class LabReportUpdate(BaseModel):
-    status: Optional[LabReportStatus] = None
-    results_summary: Optional[str] = None
-    result_rows: Optional[List[LabResultRow]] = None
-    doctor_notes: Optional[str] = None
-
-
-class CatalogOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    category: str
-    price: float
-    turnaround: str
-    sample_type: str
-    status: CatalogTestStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class CatalogCreate(BaseModel):
-    name: str
-    category: str
-    price: float
-    turnaround: str
-    sample_type: str
-    status: CatalogTestStatus = CatalogTestStatus.AVAILABLE
-
-
-class SampleOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    sample_id: str
-    patient_id: PydanticObjectId
-    patient_name: str
-    test_name: str
-    collected_at: str
-    status: SampleStatus
-    location: str
-
-    model_config = {"populate_by_name": True}
-
-
-class SampleAdvance(BaseModel):
-    sample_id: Optional[str] = None
-    status: Optional[SampleStatus] = None
-
-
-class EquipmentOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    model: str
-    location: str
-    last_calibration: str
-    next_calibration: str
-    status: EquipmentStatus
-    qc_score: Optional[int] = None
-
-    model_config = {"populate_by_name": True}
-
-
-class LabAppointmentOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    patient_name: str
-    test_name: str
-    date: str
-    time: str
-    status: str
-
-    model_config = {"populate_by_name": True}
-
-
-class LabTestOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    test_name: str
-    patient_name: str
-    requested_by: str
-    date: str
-    priority: str
-    status: str
-    results: Optional[str] = None
-
-    model_config = {"populate_by_name": True}
+from app.schemas.lab import (
+    CatalogCreate,
+    CatalogOut,
+    EquipmentOut,
+    LabAppointmentOut,
+    LabReportOut,
+    LabReportUpdate,
+    LabTestOut,
+    SampleAdvance,
+    SampleOut,
+)
 
 
 def _advance_sample_status(sample: LabSample) -> None:
@@ -172,7 +78,7 @@ async def advance_sample(sample_db_id: PydanticObjectId) -> SampleOut:
 
 async def scan_sample(body: SampleAdvance) -> SampleOut:
     if not body.sample_id:
-        raise AppError("sample_id required", status_code=400)
+        raise BadRequestError("sample_id required")
     sample = await LabSample.find_one(LabSample.sample_id == body.sample_id)
     if not sample:
         raise NotFoundError("Sample not found")

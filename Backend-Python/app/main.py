@@ -7,7 +7,7 @@ from fastapi.middleware.cors import CORSMiddleware
 from app.api.v1.router import api_router
 from app.core.config import get_settings
 from app.core.database import close_db, connect_db, get_motor_client
-from app.core.exceptions import AppError, app_error_handler, unhandled_error_handler
+from app.core.exceptions import register_exception_handlers
 from app.core.middleware import register_middleware
 from app.seed.seed_data import seed_database
 
@@ -68,9 +68,7 @@ def create_app() -> FastAPI:
         allow_headers=["*"],
     )
 
-    app.add_exception_handler(AppError, app_error_handler)
-    if not settings.debug:
-        app.add_exception_handler(Exception, unhandled_error_handler)
+    register_exception_handlers(app, debug=settings.debug)
 
     app.include_router(api_router, prefix=settings.api_v1_prefix)
 

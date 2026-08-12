@@ -79,8 +79,8 @@ const PatientHelp: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
           >
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Help & Support</h1>
-            <p className="text-gray-600">Find answers to common questions and get help when you need it</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Help & Support</h1>
+            <p className="text-gray-600 dark:text-gray-400">Find answers to common questions and get help when you need it</p>
           </motion.div>
 
           {/* Emergency Banner */}
@@ -88,15 +88,15 @@ const PatientHelp: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-red-50 border-2 border-red-200 rounded-xl p-6"
+            className="bg-red-50 dark:bg-red-900/20 border-2 border-red-200 dark:border-red-800 rounded-xl p-6"
           >
             <div className="flex items-start gap-6">
-              <div className="w-12 h-12 bg-red-100 rounded-full flex items-center justify-center shrink-0">
-                <AlertTriangle className="w-6 h-6 text-red-600" />
+              <div className="w-12 h-12 bg-red-100 dark:bg-red-900/40 rounded-full flex items-center justify-center shrink-0">
+                <AlertTriangle className="w-6 h-6 text-red-600 dark:text-red-400" />
               </div>
               <div>
-                <h3 className="text-lg font-bold text-red-800 mb-1">Medical Emergency?</h3>
-                <p className="text-red-700 text-sm mb-3">
+                <h3 className="text-lg font-bold text-red-800 dark:text-red-300 mb-1">Medical Emergency?</h3>
+                <p className="text-red-700 dark:text-red-400 text-sm mb-3">
                   If you are experiencing a life-threatening emergency, call 911 immediately. Do not use this app for emergency care.
                 </p>
                 <div className="flex flex-wrap gap-6">
@@ -109,7 +109,7 @@ const PatientHelp: React.FC = () => {
                   </a>
                   <a
                     href="tel:18005550199"
-                    className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-red-600 text-red-700 rounded-lg font-semibold hover:bg-red-100 transition-colors"
+                    className="inline-flex items-center gap-2 px-5 py-2.5 border-2 border-red-600 text-red-700 dark:text-red-400 rounded-lg font-semibold hover:bg-red-100 dark:hover:bg-red-900/30 transition-colors"
                   >
                     <Phone className="w-4 h-4" />
                     24/7 Nurse Hotline
@@ -131,14 +131,14 @@ const PatientHelp: React.FC = () => {
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.15 + i * 0.05 }}
-                className="bg-white rounded-xl shadow-lg p-5 text-center"
+                className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-5 text-center"
               >
                 <div className={`w-12 h-12 bg-${contact.color}-100 rounded-full flex items-center justify-center mx-auto mb-3`}>
                   <contact.icon className={`w-6 h-6 text-${contact.color}-600`} />
                 </div>
-                <p className="font-semibold text-gray-900">{contact.label}</p>
-                <p className="text-sm text-blue-600 font-medium mt-1">{contact.value}</p>
-                <p className="text-xs text-gray-500 mt-1">{contact.sub}</p>
+                <p className="font-semibold text-gray-900 dark:text-gray-100">{contact.label}</p>
+                <p className="text-sm text-blue-600 dark:text-blue-400 font-medium mt-1">{contact.value}</p>
+                <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">{contact.sub}</p>
               </motion.div>
             ))}
           </div>
@@ -148,23 +148,23 @@ const PatientHelp: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.25 }}
-            className="bg-white rounded-xl shadow-lg overflow-hidden"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden"
           >
-            <div className="px-6 py-4 border-b border-gray-100 flex items-center gap-2">
-              <HelpCircle className="w-5 h-5 text-blue-600" />
-              <h3 className="font-semibold text-lg">Frequently Asked Questions</h3>
+            <div className="px-6 py-4 border-b border-gray-100 dark:border-gray-700 flex items-center gap-2">
+              <HelpCircle className="w-5 h-5 text-blue-600 dark:text-blue-400" />
+              <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100">Frequently Asked Questions</h3>
             </div>
 
-            <div className="divide-y divide-gray-100">
+            <div className="divide-y divide-gray-100 dark:divide-gray-700">
               {faqItems.map((item, index) => (
                 <div key={index}>
                   <button
                     onClick={() => toggleFAQ(index)}
-                    className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-gray-50 transition-colors"
+                    className="w-full flex items-center justify-between px-4 py-4 text-left hover:bg-gray-50 dark:hover:bg-gray-700/50 transition-colors"
                   >
-                    <span className="font-medium text-gray-900 pr-4">{item.question}</span>
+                    <span className="font-medium text-gray-900 dark:text-gray-100 pr-4">{item.question}</span>
                     <ChevronDown
-                      className={`w-5 h-5 text-gray-400 shrink-0 transition-transform ${
+                      className={`w-5 h-5 text-gray-400 dark:text-gray-500 shrink-0 transition-transform ${
                         openIndex === index ? 'rotate-180' : ''
                       }`}
                     />
@@ -178,7 +178,7 @@ const PatientHelp: React.FC = () => {
                         transition={{ duration: 0.2 }}
                         className="overflow-hidden"
                       >
-                        <p className="px-6 pb-4 text-gray-600 text-sm leading-relaxed">{item.answer}</p>
+                        <p className="px-6 pb-4 text-gray-600 dark:text-gray-400 text-sm leading-relaxed">{item.answer}</p>
                       </motion.div>
                     )}
                   </AnimatePresence>

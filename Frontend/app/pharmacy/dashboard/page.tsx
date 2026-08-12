@@ -1,19 +1,27 @@
 'use client';
 
-import React from 'react';
+import React, { useMemo } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
 import { Package, DollarSign, AlertTriangle, Pill, FileText, ShoppingCart, RotateCcw } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { mockInventory, mockOrders } from '@/data/mockData';
+import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const PharmacyDashboard: React.FC = () => {
   const activeOrders = mockOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
   const lowStock = mockInventory.filter(i => i.quantity < 500);
-  const expiringSoon = mockInventory.filter(i => new Date(i.expiryDate) < new Date(Date.now() + 180 * 24 * 60 * 60 * 1000));
 
-  const stats = [
+  const sixMonthsFromNow = useMemo(() => {
+    const d = new Date();
+    d.setMonth(d.getMonth() + 6);
+    return d;
+  }, []);
+
+  const expiringSoon = mockInventory.filter(i => new Date(i.expiryDate) < sixMonthsFromNow);
+
+  const stats: Array<{ icon: typeof Package; label: string; value: string | number; color: ThemeColor }> = [
     { icon: Package, label: 'Total Medicines', value: mockInventory.length, color: 'blue' },
     { icon: DollarSign, label: 'Monthly Sales', value: '$45,230', color: 'green' },
     { icon: AlertTriangle, label: 'Low Stock Items', value: lowStock.length, color: 'orange' },
@@ -23,57 +31,60 @@ const PharmacyDashboard: React.FC = () => {
   return (
     <ProtectedRoute allowedRoles={['pharmacist']}>
       <DashboardLayout role="pharmacist">
-        <div className="space-y-6">
+        <div className="space-y-4 sm:space-y-6">
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-5 text-white"
+            className="bg-gradient-to-r from-green-600 to-emerald-600 rounded-xl p-4 sm:p-5 text-white"
           >
-            <h1 className="text-xl font-bold mb-2">Pharmacy Dashboard</h1>
-            <p className="text-white/90">Manage inventory, orders, and sales</p>
+            <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Pharmacy Dashboard</h1>
+            <p className="text-white/90 text-sm sm:text-base">Manage inventory, orders, and sales</p>
           </motion.div>
 
-          <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-6">
-            {stats.map((stat, i) => (
+          <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
+            {stats.map((stat, i) => {
+              const colors = colorClasses[stat.color];
+              return (
               <motion.div
                 key={i}
                 initial={{ opacity: 0, y: 20 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: i * 0.1 }}
-                className="bg-white rounded-xl p-6 shadow-lg"
+                className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 min-w-0"
               >
-                <div className={`p-3 rounded-lg bg-${stat.color}-100 inline-block mb-4`}>
-                  <stat.icon className={`w-6 h-6 text-${stat.color}-600`} />
+                <div className={`p-2 sm:p-3 rounded-lg ${colors.bg100} inline-block mb-2 sm:mb-4`}>
+                  <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text600}`} />
                 </div>
-                <p className="text-gray-600 text-sm mb-1">{stat.label}</p>
-                <p className="text-2xl font-bold text-gray-900">{stat.value}</p>
+                <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-0.5 sm:mb-1 truncate">{stat.label}</p>
+                <p className="text-lg sm:text-2xl font-bold text-gray-900 dark:text-gray-100 truncate">{stat.value}</p>
               </motion.div>
-            ))}
+              );
+            })}
           </div>
 
-          <div className="grid lg:grid-cols-2 gap-6">
+          <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
             {/* Low Stock Alerts */}
             <motion.div
               initial={{ opacity: 0, x: -20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold">Low Stock Alerts</h3>
-                <Link href="/pharmacy/expiry-alerts" className="text-sm text-orange-700 hover:text-orange-900 font-medium">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                <h3 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Low Stock Alerts</h3>
+                <Link href="/pharmacy/expiry-alerts" className="text-xs sm:text-sm text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 font-medium shrink-0">
                   View all
                 </Link>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {lowStock.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-orange-50 rounded-lg border border-orange-200">
-                    <div>
-                      <p className="font-medium text-orange-900">{item.medicineName}</p>
-                      <p className="text-sm text-orange-700">Batch: {item.batchNumber}</p>
+                  <div key={item.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-orange-50 dark:bg-orange-900/20 rounded-lg border border-orange-200 dark:border-orange-800">
+                    <div className="min-w-0">
+                      <p className="font-medium text-orange-900 dark:text-orange-300 text-sm sm:text-base truncate">{item.medicineName}</p>
+                      <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-400">Batch: {item.batchNumber}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-lg font-bold text-orange-900">{item.quantity}</p>
-                      <Link href="/pharmacy/purchase-orders" className="text-sm text-orange-700 hover:text-orange-900 font-medium">
+                    <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right gap-2">
+                      <p className="text-base sm:text-lg font-bold text-orange-900 dark:text-orange-300">{item.quantity}</p>
+                      <Link href="/pharmacy/purchase-orders" className="text-xs sm:text-sm text-orange-700 dark:text-orange-400 hover:text-orange-900 dark:hover:text-orange-300 font-medium">
                         Reorder
                       </Link>
                     </div>
@@ -86,23 +97,23 @@ const PharmacyDashboard: React.FC = () => {
             <motion.div
               initial={{ opacity: 0, x: 20 }}
               animate={{ opacity: 1, x: 0 }}
-              className="bg-white rounded-xl shadow-lg p-6"
+              className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
             >
-              <div className="flex items-center justify-between mb-4">
-                <h3 className="text-xl font-semibold">Expiring Soon (6 months)</h3>
-                <Link href="/pharmacy/expiry-alerts" className="text-sm text-red-700 hover:text-red-900 font-medium">
+              <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+                <h3 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Expiring Soon (6 months)</h3>
+                <Link href="/pharmacy/expiry-alerts" className="text-xs sm:text-sm text-red-700 dark:text-red-400 hover:text-red-900 dark:hover:text-red-300 font-medium shrink-0">
                   View all
                 </Link>
               </div>
-              <div className="space-y-3">
+              <div className="space-y-2 sm:space-y-3">
                 {expiringSoon.map((item) => (
-                  <div key={item.id} className="flex items-center justify-between p-4 bg-red-50 rounded-lg border border-red-200">
-                    <div>
-                      <p className="font-medium text-red-900">{item.medicineName}</p>
-                      <p className="text-sm text-red-700">Expires: {item.expiryDate}</p>
+                  <div key={item.id} className="flex items-center justify-between gap-3 p-3 sm:p-4 bg-red-50 dark:bg-red-900/20 rounded-lg border border-red-200 dark:border-red-800">
+                    <div className="min-w-0">
+                      <p className="font-medium text-red-900 dark:text-red-300 text-sm sm:text-base truncate">{item.medicineName}</p>
+                      <p className="text-xs sm:text-sm text-red-700 dark:text-red-400">Expires: {item.expiryDate}</p>
                     </div>
-                    <div className="text-right">
-                      <p className="text-sm font-semibold text-red-900">{item.quantity} units</p>
+                    <div className="text-right shrink-0">
+                      <p className="text-xs sm:text-sm font-semibold text-red-900 dark:text-red-300">{item.quantity} units</p>
                     </div>
                   </div>
                 ))}
@@ -114,7 +125,7 @@ const PharmacyDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6"
+            className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6"
           >
             {[
               { href: '/pharmacy/prescriptions', icon: FileText, label: 'Prescriptions', desc: 'Fulfill doctor orders' },
@@ -125,11 +136,11 @@ const PharmacyDashboard: React.FC = () => {
               <Link
                 key={action.href}
                 href={action.href}
-                className="bg-white rounded-xl p-6 shadow-lg hover:shadow-xl transition-shadow border border-gray-100"
+                className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none hover:shadow-xl dark:hover:bg-gray-700/70 transition-shadow border border-gray-100 dark:border-gray-700 min-w-0"
               >
-                <action.icon className="w-8 h-8 text-green-600 mb-3" />
-                <p className="font-semibold text-gray-900">{action.label}</p>
-                <p className="text-sm text-gray-500">{action.desc}</p>
+                <action.icon className="w-6 h-6 sm:w-8 sm:h-8 text-green-600 dark:text-green-400 mb-2 sm:mb-3" />
+                <p className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base">{action.label}</p>
+                <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 mt-0.5">{action.desc}</p>
               </Link>
             ))}
           </motion.div>
@@ -138,28 +149,28 @@ const PharmacyDashboard: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
           >
-            <div className="flex items-center justify-between mb-4">
-              <h3 className="text-xl font-semibold">Recent Orders</h3>
-              <Link href="/pharmacy/orders" className="text-sm text-green-700 hover:text-green-900 font-medium">
+            <div className="flex items-center justify-between mb-3 sm:mb-4 gap-2">
+              <h3 className="text-base sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Recent Orders</h3>
+              <Link href="/pharmacy/orders" className="text-xs sm:text-sm text-green-700 dark:text-green-400 hover:text-green-900 dark:hover:text-green-300 font-medium shrink-0">
                 View all
               </Link>
             </div>
-            <div className="space-y-3">
+            <div className="space-y-2 sm:space-y-3">
               {mockOrders.map((order) => (
-                <div key={order.id} className="flex items-center justify-between p-4 bg-gray-50 rounded-lg">
-                  <div>
-                    <p className="font-medium">Order #{order.id}</p>
-                    <p className="text-sm text-gray-600">{order.date}</p>
-                    <p className="text-xs text-gray-500 mt-1">{order.medicines.length} items</p>
+                <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
+                  <div className="min-w-0">
+                    <p className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">Order #{order.id}</p>
+                    <p className="text-xs sm:text-sm text-gray-600 dark:text-gray-400">{order.date}</p>
+                    <p className="text-xs text-gray-500 dark:text-gray-400 mt-0.5">{order.medicines.length} items</p>
                   </div>
-                  <div className="text-right">
-                    <p className="text-lg font-bold text-green-600">${order.total}</p>
-                    <span className={`px-3 py-1 rounded-full text-xs font-medium ${
-                      order.status === 'delivered' ? 'bg-green-100 text-green-700' :
-                      order.status === 'shipped' ? 'bg-blue-100 text-blue-700' :
-                      'bg-yellow-100 text-yellow-700'
+                  <div className="flex items-center justify-between sm:flex-col sm:items-end sm:text-right gap-2">
+                    <p className="text-base sm:text-lg font-bold text-green-600 dark:text-green-400">${order.total}</p>
+                    <span className={`px-2.5 sm:px-3 py-0.5 sm:py-1 rounded-full text-xs font-medium capitalize ${
+                      order.status === 'delivered' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' :
+                      order.status === 'shipped' ? 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400' :
+                      'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'
                     }`}>
                       {order.status}
                     </span>

@@ -2,19 +2,13 @@ from datetime import date
 from typing import List, Optional
 
 from beanie import PydanticObjectId
-from pydantic import BaseModel, Field
 
 from app.core.enums import (
     AnnouncementStatus,
-    AuditCategory,
     BedStatus,
-    BedType,
-    DepartmentStatus,
     InvoiceStatus,
     NurseTaskStatus,
-    NurseTaskType,
     OnboardingStatus,
-    ProductStatus,
     UserRole,
 )
 from app.core.exceptions import NotFoundError
@@ -33,141 +27,22 @@ from app.models.admin import (
 )
 from app.models.clinical import Appointment
 from app.models.user import User
+from app.schemas.admin import (
+    AnnouncementCreate,
+    AnnouncementOut,
+    AuditOut,
+    BedOut,
+    BedUpdate,
+    DepartmentCreate,
+    DepartmentOut,
+    InvoiceOut,
+    NotificationOut,
+    NurseTaskOut,
+    OnboardingOut,
+    ProductOut,
+    SupplierOrderOut,
+)
 from app.services.audit import log_audit
-
-
-class BedOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    room_number: str
-    bed_type: BedType
-    status: BedStatus
-    patient_id: Optional[PydanticObjectId] = None
-    patient_name: Optional[str] = None
-
-    model_config = {"populate_by_name": True}
-
-
-class BedUpdate(BaseModel):
-    status: Optional[BedStatus] = None
-    patient_id: Optional[PydanticObjectId] = None
-    patient_name: Optional[str] = None
-
-
-class DepartmentOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    head: str
-    staff_count: int
-    beds: int
-    status: DepartmentStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class DepartmentCreate(BaseModel):
-    name: str
-    head: str
-    staff_count: int = 0
-    beds: int = 0
-    status: DepartmentStatus = DepartmentStatus.ACTIVE
-
-
-class InvoiceOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_id: PydanticObjectId
-    patient_name: str
-    service: str
-    date: str
-    amount: float
-    status: InvoiceStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class AuditOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    user_name: str
-    role: str
-    action: str
-    target: str
-    timestamp: str
-    category: AuditCategory
-
-    model_config = {"populate_by_name": True}
-
-
-class AnnouncementCreate(BaseModel):
-    title: str
-    message: str
-    target_roles: List[str]
-
-
-class AnnouncementOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    title: str
-    message: str
-    target_roles: List[str]
-    created_at: str
-    status: AnnouncementStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class OnboardingOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    email: str
-    specialization: str
-    onboarding_status: OnboardingStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class NotificationOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    icon: str
-    color: str
-    title: str
-    message: str
-    time_label: str
-    unread: bool
-    category: Optional[str] = None
-
-    model_config = {"populate_by_name": True}
-
-
-class NurseTaskOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    patient_name: str
-    room: str
-    task_type: NurseTaskType
-    description: str
-    scheduled: str
-    status: NurseTaskStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class ProductOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    name: str
-    category: str
-    sku: str
-    stock: int
-    unit_price: float
-    status: ProductStatus
-
-    model_config = {"populate_by_name": True}
-
-
-class SupplierOrderOut(BaseModel):
-    id: PydanticObjectId = Field(alias="_id")
-    total: float
-    status: str
-    order_date: str
-    items: list
-
-    model_config = {"populate_by_name": True}
 
 
 async def list_beds() -> List[BedOut]:

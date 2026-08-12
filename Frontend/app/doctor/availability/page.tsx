@@ -59,12 +59,12 @@ const DoctorAvailability: React.FC = () => {
             className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6"
           >
             <div>
-              <h1 className="text-2xl font-bold text-gray-900 mb-1">Availability</h1>
-              <p className="text-gray-600">Set your working days and consultation hours</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Availability</h1>
+              <p className="text-gray-600 dark:text-gray-400">Set your working days and consultation hours</p>
             </div>
             <button
               onClick={handleSave}
-              className={`inline-flex items-center justify-center gap-2 px-5 py-3 rounded-lg font-semibold transition-all ${
+              className={`w-full sm:w-auto inline-flex items-center justify-center gap-2 px-5 py-2.5 sm:py-3 rounded-lg font-semibold transition-all text-sm sm:text-base ${
                 saved ? 'bg-green-600 text-white' : 'bg-blue-600 text-white hover:bg-blue-700'
               }`}
             >
@@ -77,18 +77,18 @@ const DoctorAvailability: React.FC = () => {
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
           >
-            <h3 className="text-xl font-semibold mb-4">Working Days</h3>
-            <div className="grid grid-cols-2 sm:grid-cols-4 lg:grid-cols-7 gap-3">
+            <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">Working Days</h3>
+            <div className="grid grid-cols-4 sm:grid-cols-7 gap-2 sm:gap-3">
               {days.map((day) => (
                 <button
                   key={day}
                   onClick={() => toggleDay(day)}
                   className={`py-3 rounded-lg text-sm font-medium border-2 transition-colors ${
                     activeDays[day]
-                      ? 'bg-blue-50 border-blue-500 text-blue-700'
-                      : 'bg-gray-50 border-transparent text-gray-500 hover:bg-gray-100'
+                      ? 'bg-blue-50 dark:bg-blue-900/30 border-blue-500 text-blue-700 dark:text-blue-400'
+                      : 'bg-gray-50 dark:bg-gray-900/40 border-transparent text-gray-500 dark:text-gray-400 hover:bg-gray-100 dark:hover:bg-gray-700'
                   }`}
                 >
                   {day.slice(0, 3)}
@@ -102,20 +102,20 @@ const DoctorAvailability: React.FC = () => {
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ delay: 0.1 }}
-            className="bg-white rounded-xl shadow-lg p-6"
+            className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
           >
-            <div className="flex items-center gap-2 mb-4">
-              <Clock className="w-5 h-5 text-purple-600" />
-              <h3 className="text-xl font-semibold">Time Slots</h3>
+            <div className="flex items-center gap-2 mb-3 sm:mb-4">
+              <Clock className="w-5 h-5 text-purple-600 dark:text-purple-400" />
+              <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Time Slots</h3>
             </div>
 
-            <div className="flex flex-wrap gap-2 mb-6">
+            <div className="flex flex-wrap gap-2 mb-4 sm:mb-6 overflow-x-auto scrollbar-hide pb-1">
               {days.filter((d) => activeDays[d]).map((day) => (
                 <button
                   key={day}
                   onClick={() => setSelectedDay(day)}
                   className={`px-4 py-2 rounded-lg text-sm font-medium transition-colors ${
-                    selectedDay === day ? 'bg-purple-600 text-white' : 'bg-gray-100 text-gray-600 hover:bg-gray-200'
+                    selectedDay === day ? 'bg-purple-600 text-white' : 'bg-gray-100 dark:bg-gray-700 text-gray-600 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600'
                   }`}
                 >
                   {day}
@@ -124,7 +124,7 @@ const DoctorAvailability: React.FC = () => {
             </div>
 
             {activeDays[selectedDay] ? (
-              <div className="grid grid-cols-2 sm:grid-cols-4 gap-3">
+              <div className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-2 sm:gap-3">
                 {timeSlots.map((slot) => {
                   const selected = (slots[selectedDay] || []).includes(slot);
                   return (
@@ -133,8 +133,8 @@ const DoctorAvailability: React.FC = () => {
                       onClick={() => toggleSlot(slot)}
                       className={`py-3 rounded-lg text-sm font-medium border-2 transition-colors flex items-center justify-center gap-1 ${
                         selected
-                          ? 'bg-green-50 border-green-500 text-green-700'
-                          : 'bg-gray-50 border-gray-200 text-gray-500 hover:border-gray-300'
+                          ? 'bg-green-50 dark:bg-green-900/30 border-green-500 text-green-700 dark:text-green-400'
+                          : 'bg-gray-50 dark:bg-gray-900/40 border-gray-200 dark:border-gray-700 text-gray-500 dark:text-gray-400 hover:border-gray-300 dark:hover:border-gray-600'
                       }`}
                     >
                       {selected && <Check className="w-4 h-4" />}
@@ -144,7 +144,7 @@ const DoctorAvailability: React.FC = () => {
                 })}
               </div>
             ) : (
-              <p className="text-gray-500 text-sm">Enable {selectedDay} in Working Days to set time slots.</p>
+              <p className="text-gray-500 dark:text-gray-400 text-sm">Enable {selectedDay} in Working Days to set time slots.</p>
             )}
           </motion.div>
         </div>

@@ -55,8 +55,8 @@ const SupplierOrders: React.FC = () => {
       <DashboardLayout role="supplier">
         <div className="space-y-6">
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-            <h1 className="text-2xl font-bold text-gray-900 mb-1">Pharmacy Orders</h1>
-            <p className="text-gray-600">Fulfill purchase orders from hospital pharmacy</p>
+            <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Pharmacy Orders</h1>
+            <p className="text-gray-600 dark:text-gray-400">Fulfill purchase orders from hospital pharmacy</p>
           </motion.div>
 
           <div className="flex flex-wrap gap-2">
@@ -65,7 +65,7 @@ const SupplierOrders: React.FC = () => {
                 key={f}
                 onClick={() => setFilter(f)}
                 className={`px-4 py-2 rounded-lg text-sm font-medium capitalize transition-colors ${
-                  filter === f ? 'bg-amber-600 text-white' : 'bg-white text-gray-600 hover:bg-gray-50 shadow-sm'
+                  filter === f ? 'bg-amber-600 text-white' : 'bg-white dark:bg-gray-800 text-gray-600 dark:text-gray-400 hover:bg-gray-50 dark:hover:bg-gray-700 shadow-sm'
                 }`}
               >
                 {f === 'all' ? 'All Orders' : statusLabel[f]}
@@ -82,26 +82,26 @@ const SupplierOrders: React.FC = () => {
                   initial={{ opacity: 0, y: 20 }}
                   animate={{ opacity: 1, y: 0 }}
                   transition={{ delay: i * 0.05 }}
-                  className="bg-white rounded-xl shadow-lg p-6"
+                  className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-6"
                 >
                   <div className="flex flex-col lg:flex-row lg:items-start justify-between gap-6 mb-5">
                     <div>
                       <div className="flex items-center gap-2 flex-wrap">
-                        <h3 className="font-bold text-gray-900">{order.poNumber}</h3>
-                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 text-amber-800 capitalize">
+                        <h3 className="font-bold text-gray-900 dark:text-gray-100">{order.poNumber}</h3>
+                        <span className="text-xs font-medium px-2 py-0.5 rounded-full bg-amber-100 dark:bg-amber-900/30 text-amber-800 dark:text-amber-400 capitalize">
                           {statusLabel[order.status]}
                         </span>
                       </div>
-                      <p className="text-sm text-gray-600 mt-1">{order.hospital}</p>
-                      <p className="text-sm text-gray-700 mt-2 flex items-center gap-1">
-                        <Package className="w-4 h-4 text-gray-400" /> {order.items}
+                      <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{order.hospital}</p>
+                      <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 flex items-center gap-1">
+                        <Package className="w-4 h-4 text-gray-400 dark:text-gray-500" /> {order.items}
                       </p>
-                      <p className="text-xs text-gray-400 mt-1 flex items-center gap-1">
+                      <p className="text-xs text-gray-400 dark:text-gray-500 mt-1 flex items-center gap-1">
                         <Clock className="w-3.5 h-3.5" /> Ordered {order.ordered} · Due {order.due}
                       </p>
                     </div>
                     <div className="text-right shrink-0">
-                      <p className="text-lg font-bold text-gray-900">${order.total.toLocaleString()}</p>
+                      <p className="text-lg font-bold text-gray-900 dark:text-gray-100">${order.total.toLocaleString()}</p>
                       {order.status !== 'delivered' && (
                         <button
                           onClick={() => advanceOrder(order.id)}
@@ -112,7 +112,7 @@ const SupplierOrders: React.FC = () => {
                         </button>
                       )}
                       {order.status === 'delivered' && (
-                        <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-green-600">
+                        <span className="mt-2 inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400">
                           <CheckCircle2 className="w-4 h-4" /> Fulfilled
                         </span>
                       )}
@@ -122,14 +122,14 @@ const SupplierOrders: React.FC = () => {
                   <div className="flex items-center gap-1">
                     {steps.map((step, j) => (
                       <React.Fragment key={step}>
-                        <div className={`flex items-center gap-1.5 ${j <= stepIdx ? 'text-amber-600' : 'text-gray-300'}`}>
-                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${j <= stepIdx ? 'bg-amber-600 text-white' : 'bg-gray-200 text-gray-500'}`}>
+                        <div className={`flex items-center gap-1.5 ${j <= stepIdx ? 'text-amber-600 dark:text-amber-400' : 'text-gray-300 dark:text-gray-600'}`}>
+                          <div className={`w-7 h-7 rounded-full flex items-center justify-center text-xs font-bold ${j <= stepIdx ? 'bg-amber-600 text-white' : 'bg-gray-200 dark:bg-gray-700 text-gray-500 dark:text-gray-400'}`}>
                             {j + 1}
                           </div>
                           <span className="text-xs font-medium hidden sm:inline capitalize">{statusLabel[step]}</span>
                         </div>
                         {j < steps.length - 1 && (
-                          <div className={`flex-1 h-0.5 mx-1 ${j < stepIdx ? 'bg-amber-500' : 'bg-gray-200'}`} />
+                          <div className={`flex-1 h-0.5 mx-1 ${j < stepIdx ? 'bg-amber-500' : 'bg-gray-200 dark:bg-gray-700'}`} />
                         )}
                       </React.Fragment>
                     ))}
