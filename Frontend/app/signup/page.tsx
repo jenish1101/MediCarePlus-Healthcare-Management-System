@@ -51,10 +51,10 @@ const SignupPage: React.FC = () => {
 
     setLoading(true);
     try {
-      await signup({ name: form.name, email: form.email, phone: form.phone });
+      await signup({ name: form.name, email: form.email, password: form.password, phone: form.phone });
       router.push('/patient/dashboard');
-    } catch {
-      setError('Something went wrong. Please try again.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Something went wrong. Please try again.');
     } finally {
       setLoading(false);
     }

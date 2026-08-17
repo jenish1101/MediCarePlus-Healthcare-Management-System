@@ -1,23 +1,55 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Users, Calendar, DollarSign, Bed, TrendingUp, Stethoscope, Megaphone, Package, ScrollText } from 'lucide-react';
+import { Users, Calendar, DollarSign, Bed as BedIcon, TrendingUp, Stethoscope, Megaphone, Package, ScrollText, Loader2 } from 'lucide-react';
 import { BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, LineChart, Line } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockAppointments, mockBeds, mockInventory } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listAppointments, mapAppointment } from '@/api/appointments';
+import { listBeds, mapBed } from '@/api/beds';
+import { listInventory, mapInventory } from '@/api/pharmacy';
+import { Appointment, Bed, Inventory } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const AdminDashboard: React.FC = () => {
   const router = useRouter();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [beds, setBeds] = useState<Bed[]>([]);
+  const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [aData, bData, iData] = await Promise.all([
+        listAppointments(),
+        listBeds(),
+        listInventory()
+      ]);
+      setAppointments(aData.map(mapAppointment));
+      setBeds(bData.map(mapBed));
+      setInventory(iData.map(mapInventory));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
 
   const stats: Array<{ icon: typeof Users; label: string; value: string | number; change: string; color: ThemeColor }> = [
     { icon: Users, label: 'Total Patients', value: '2,543', change: '+12%', color: 'blue' },
     { icon: Calendar, label: 'Appointments Today', value: '48', change: '+8%', color: 'green' },
     { icon: DollarSign, label: 'Monthly Revenue', value: '$124,500', change: '+15%', color: 'purple' },
-    { icon: Bed, label: 'Available Beds', value: mockBeds.filter(b => b.status === 'available').length, change: '-2', color: 'orange' }
+    { icon: BedIcon, label: 'Available Beds', value: beds.filter(b => b.status === 'available').length, change: '-2', color: 'orange' }
   ];
 
   const quickActions: Array<{ label: string; icon: typeof Stethoscope; path: string; color: ThemeColor }> = [
@@ -58,6 +90,20 @@ const AdminDashboard: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Manage your hospital operations</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading dashboard...
+            </div>
+          )}
+
+          {!loading && (
+          <>
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -163,7 +209,7 @@ const AdminDashboard: React.FC = () => {
             <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">Bed Management</h3>
             <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4 sm:gap-6">
               {['ICU', 'Private', 'General'].map((type) => {
-                const typeBeds = mockBeds.filter(b => b.type === type);
+                const typeBeds = beds.filter(b => b.type === type);
                 const available = typeBeds.filter(b => b.status === 'available').length;
                 const occupied = typeBeds.filter(b => b.status === 'occupied').length;
                 const total = typeBeds.length;
@@ -207,7 +253,7 @@ const AdminDashboard: React.FC = () => {
             >
               <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">Recent Appointments</h3>
               <div className="space-y-2 sm:space-y-3">
-                {mockAppointments.slice(0, 5).map((apt) => (
+                {appointments.slice(0, 5).map((apt) => (
                   <div key={apt.id} className="flex flex-col gap-1 sm:flex-row sm:items-center sm:justify-between p-3 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                     <div className="min-w-0">
                       <p className="font-medium text-sm sm:text-base truncate text-gray-900 dark:text-gray-100">{apt.patientName}</p>
@@ -234,7 +280,7 @@ const AdminDashboard: React.FC = () => {
                 </button>
               </h3>
               <div className="space-y-2 sm:space-y-3">
-                {mockInventory.filter(item => item.quantity < 500).map((item) => (
+                {inventory.filter(item => item.quantity < 500).map((item) => (
                   <div key={item.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 bg-yellow-50 dark:bg-yellow-900/20 rounded-lg border border-yellow-200 dark:border-yellow-800">
                     <div className="min-w-0">
                       <p className="font-medium text-yellow-900 dark:text-yellow-300 text-sm truncate">{item.medicineName}</p>
@@ -254,6 +300,8 @@ const AdminDashboard: React.FC = () => {
               </div>
             </motion.div>
           </div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

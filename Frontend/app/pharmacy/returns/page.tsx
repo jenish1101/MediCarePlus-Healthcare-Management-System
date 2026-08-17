@@ -1,28 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { RotateCcw, Search, DollarSign, Package, CheckCircle, Clock } from 'lucide-react';
+import { RotateCcw, Search, DollarSign, Package, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface ReturnRequest {
-  id: string;
-  orderId: string;
-  patientName: string;
-  medicines: string[];
-  amount: number;
-  reason: string;
-  requestDate: string;
-  status: 'pending' | 'approved' | 'refunded' | 'rejected';
-}
-
-const initialReturns: ReturnRequest[] = [
-  { id: 'RET-001', orderId: 'ord2', patientName: 'John Patient', medicines: ['Paracetamol 500mg'], amount: 28, reason: 'Wrong dosage ordered', requestDate: '2024-02-13', status: 'pending' },
-  { id: 'RET-002', orderId: 'ord3', patientName: 'Emma Thompson', medicines: ['Amoxicillin 500mg'], amount: 17, reason: 'Order cancelled before shipping', requestDate: '2024-02-12', status: 'approved' },
-  { id: 'RET-003', orderId: 'ord1', patientName: 'John Patient', medicines: ['Ibuprofen 400mg', 'Vitamin B Complex'], amount: 65, reason: 'Duplicate order', requestDate: '2024-02-08', status: 'refunded' },
-  { id: 'RET-004', orderId: 'ord4', patientName: 'Michael Brown', medicines: ['Aspirin 75mg'], amount: 9, reason: 'Patient no longer needs medication', requestDate: '2024-02-06', status: 'rejected' }
-];
+import { ApiError } from '@/lib/api';
+import { listReturns, updateReturnStatus, mapReturn, ReturnRequest } from '@/api/pharmacy';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -35,12 +19,41 @@ const statusColor = (status: string) => {
 };
 
 const PharmacyReturns: React.FC = () => {
-  const [returns, setReturns] = useState<ReturnRequest[]>(initialReturns);
+  const [returns, setReturns] = useState<ReturnRequest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [actingId, setActingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const handleAction = (id: string, action: 'approved' | 'refunded' | 'rejected') => {
-    setReturns((prev) => prev.map((r) => (r.id === id ? { ...r, status: action } : r)));
+  const loadReturns = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listReturns();
+      setReturns(data.map(mapReturn));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load returns.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReturns();
+  }, [loadReturns]);
+
+  const handleAction = async (id: string, action: 'approved' | 'refunded' | 'rejected') => {
+    setActingId(id);
+    setError('');
+    try {
+      const updated = await updateReturnStatus(id, action);
+      setReturns((prev) => prev.map((r) => (r.id === id ? mapReturn(updated) : r)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update return status.');
+    } finally {
+      setActingId(null);
+    }
   };
 
   const filtered = returns.filter(
@@ -61,6 +74,12 @@ const PharmacyReturns: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Returns & Refunds</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Handle cancelled orders and medicine returns</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
@@ -117,6 +136,11 @@ const PharmacyReturns: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading returns...
+            </div>
+          ) : (
           <div className="space-y-3 sm:space-y-4">
             {filtered.map((ret, i) => (
               <motion.div
@@ -157,13 +181,15 @@ const PharmacyReturns: React.FC = () => {
                       <div className="flex gap-2">
                         <button
                           onClick={() => handleAction(ret.id, 'approved')}
-                          className="flex-1 sm:flex-none px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm"
+                          disabled={actingId === ret.id}
+                          className="flex-1 sm:flex-none px-3 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
                         >
                           Approve
                         </button>
                         <button
                           onClick={() => handleAction(ret.id, 'rejected')}
-                          className="flex-1 sm:flex-none px-3 py-2 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm"
+                          disabled={actingId === ret.id}
+                          className="flex-1 sm:flex-none px-3 py-2 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm disabled:opacity-50"
                         >
                           Reject
                         </button>
@@ -172,7 +198,8 @@ const PharmacyReturns: React.FC = () => {
                     {ret.status === 'approved' && (
                       <button
                         onClick={() => handleAction(ret.id, 'refunded')}
-                        className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        disabled={actingId === ret.id}
+                        className="w-full sm:w-auto px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <DollarSign className="w-4 h-4" /> Process Refund
                       </button>
@@ -190,6 +217,7 @@ const PharmacyReturns: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

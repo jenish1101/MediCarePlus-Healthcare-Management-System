@@ -1,68 +1,86 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Plus, Pill, X, Stethoscope } from 'lucide-react';
+import { FileText, Plus, Pill, X, Stethoscope, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ApiError } from '@/lib/api';
+import { listPrescriptions, createPrescription, mapPrescription } from '@/api/prescriptions';
+import { listPatients } from '@/api/users';
+import { Prescription } from '@/types';
 
-interface DoctorPrescription {
+interface PatientOption {
   id: string;
-  patientName: string;
-  date: string;
-  diagnosis: string;
-  medicines: { name: string; dosage: string; frequency: string }[];
+  name: string;
 }
 
-const initialPrescriptions: DoctorPrescription[] = [
-  {
-    id: 'rx1',
-    patientName: 'John Patient',
-    date: '2024-02-12',
-    diagnosis: 'Hypertension',
-    medicines: [
-      { name: 'Amlodipine 5mg', dosage: '1 tablet', frequency: 'Once daily' },
-      { name: 'Aspirin 75mg', dosage: '1 tablet', frequency: 'Once daily' }
-    ]
-  },
-  {
-    id: 'rx2',
-    patientName: 'Emma Thompson',
-    date: '2024-02-08',
-    diagnosis: 'Arrhythmia',
-    medicines: [{ name: 'Metoprolol 25mg', dosage: '1 tablet', frequency: 'Twice daily' }]
-  },
-  {
-    id: 'rx3',
-    patientName: 'Sophia Davis',
-    date: '2024-01-30',
-    diagnosis: 'High cholesterol',
-    medicines: [{ name: 'Atorvastatin 10mg', dosage: '1 tablet', frequency: 'At night' }]
-  }
-];
-
 const DoctorPrescriptions: React.FC = () => {
-  const [prescriptions, setPrescriptions] = useState(initialPrescriptions);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [patients, setPatients] = useState<PatientOption[]>([]);
+  const [patientNames, setPatientNames] = useState<Record<string, string>>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
   const [showModal, setShowModal] = useState(false);
-  const [form, setForm] = useState({ patientName: '', diagnosis: '', medicine: '', dosage: '', frequency: '' });
+  const [form, setForm] = useState({ patientId: '', diagnosis: '', medicine: '', dosage: '', frequency: '', duration: '' });
 
-  const handleCreate = (e: React.FormEvent) => {
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [prescriptionsData, patientsData] = await Promise.all([
+        listPrescriptions(),
+        listPatients()
+      ]);
+      const nameMap: Record<string, string> = {};
+      patientsData.forEach((p) => {
+        nameMap[p.id] = p.name;
+      });
+      setPatients(patientsData.map((p) => ({ id: p.id, name: p.name })));
+      setPatientNames(nameMap);
+      setPrescriptions(
+        prescriptionsData.map(mapPrescription).sort((a, b) => (a.date < b.date ? 1 : -1))
+      );
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load prescriptions.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.patientName || !form.diagnosis) return;
-    setPrescriptions((prev) => [
-      {
-        id: `rx${Date.now()}`,
-        patientName: form.patientName,
-        date: new Date().toISOString().slice(0, 10),
+    if (!form.patientId || !form.diagnosis) return;
+    setSaving(true);
+    setError('');
+    try {
+      const created = await createPrescription({
+        patient_id: form.patientId,
         diagnosis: form.diagnosis,
         medicines: form.medicine
-          ? [{ name: form.medicine, dosage: form.dosage || '1 tablet', frequency: form.frequency || 'Once daily' }]
+          ? [
+              {
+                name: form.medicine,
+                dosage: form.dosage || '1 tablet',
+                frequency: form.frequency || 'Once daily',
+                duration: form.duration || '7 days'
+              }
+            ]
           : []
-      },
-      ...prev
-    ]);
-    setForm({ patientName: '', diagnosis: '', medicine: '', dosage: '', frequency: '' });
-    setShowModal(false);
+      });
+      setPrescriptions((prev) => [mapPrescription(created), ...prev]);
+      setForm({ patientId: '', diagnosis: '', medicine: '', dosage: '', frequency: '', duration: '' });
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create prescription.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -86,6 +104,17 @@ const DoctorPrescriptions: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading prescriptions...
+            </div>
+          ) : (
           <div className="space-y-6">
             {prescriptions.map((rx, idx) => (
               <motion.div
@@ -101,7 +130,7 @@ const DoctorPrescriptions: React.FC = () => {
                       <FileText className="w-6 h-6 text-purple-600 dark:text-purple-400" />
                     </div>
                     <div>
-                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{rx.patientName}</h4>
+                      <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{patientNames[rx.patientId] || 'Unknown patient'}</h4>
                       <p className="text-sm text-gray-500 dark:text-gray-400">Date: {rx.date}</p>
                       <p className="text-sm text-gray-600 dark:text-gray-400 flex items-center mt-1">
                         <Stethoscope className="w-4 h-4 mr-1 text-blue-600 dark:text-blue-400" /> {rx.diagnosis}
@@ -125,7 +154,16 @@ const DoctorPrescriptions: React.FC = () => {
                 </div>
               </motion.div>
             ))}
+
+            {prescriptions.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No prescriptions yet</h3>
+                <p className="text-gray-600 dark:text-gray-400">Prescriptions you issue will appear here.</p>
+              </div>
+            )}
           </div>
+          )}
         </div>
 
         {/* New Prescription Modal */}
@@ -153,14 +191,18 @@ const DoctorPrescriptions: React.FC = () => {
                 </div>
                 <form onSubmit={handleCreate} className="space-y-6">
                   <div>
-                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Patient Name</label>
-                    <input
-                      value={form.patientName}
-                      onChange={(e) => setForm({ ...form, patientName: e.target.value })}
-                      placeholder="e.g. John Patient"
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Patient</label>
+                    <select
+                      value={form.patientId}
+                      onChange={(e) => setForm({ ...form, patientId: e.target.value })}
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                       required
-                    />
+                    >
+                      <option value="">Select patient...</option>
+                      {patients.map((p) => (
+                        <option key={p.id} value={p.id}>{p.name}</option>
+                      ))}
+                    </select>
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Diagnosis</label>
@@ -201,6 +243,15 @@ const DoctorPrescriptions: React.FC = () => {
                       />
                     </div>
                   </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Duration</label>
+                    <input
+                      value={form.duration}
+                      onChange={(e) => setForm({ ...form, duration: e.target.value })}
+                      placeholder="7 days"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                    />
+                  </div>
                   <div className="flex gap-3 pt-2">
                     <button
                       type="button"
@@ -211,9 +262,10 @@ const DoctorPrescriptions: React.FC = () => {
                     </button>
                     <button
                       type="submit"
-                      className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors"
+                      disabled={saving}
+                      className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                     >
-                      Create
+                      {saving ? 'Creating...' : 'Create'}
                     </button>
                   </div>
                 </form>

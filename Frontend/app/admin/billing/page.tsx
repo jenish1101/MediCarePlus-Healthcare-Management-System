@@ -1,29 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, Search, Download, FileText, TrendingUp, Clock } from 'lucide-react';
+import { DollarSign, Search, Download, FileText, TrendingUp, Clock, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { exportCsv, exportPdfReport } from '@/lib/exportReport';
-
-interface Invoice {
-  id: string;
-  patient: string;
-  service: string;
-  date: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-}
-
-const invoices: Invoice[] = [
-  { id: 'INV-2041', patient: 'John Patient', service: 'Cardiology Consultation', date: '2024-02-14', amount: 500, status: 'paid' },
-  { id: 'INV-2042', patient: 'Emma Thompson', service: 'Video Consultation', date: '2024-02-13', amount: 400, status: 'pending' },
-  { id: 'INV-2043', patient: 'Michael Brown', service: 'Orthopedic Surgery', date: '2024-02-10', amount: 4500, status: 'paid' },
-  { id: 'INV-2044', patient: 'Sophia Davis', service: 'Lab Tests - Lipid Panel', date: '2024-02-08', amount: 180, status: 'overdue' },
-  { id: 'INV-2045', patient: 'James Wilson', service: 'Post-surgery Follow-up', date: '2024-02-06', amount: 250, status: 'paid' },
-  { id: 'INV-2046', patient: 'Olivia Martin', service: 'ECG + Consultation', date: '2024-02-04', amount: 320, status: 'pending' }
-];
+import { ApiError } from '@/lib/api';
+import { listInvoices, mapInvoice, Invoice } from '@/api/billing';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -38,11 +22,31 @@ const AdminBilling: React.FC = () => {
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [exportMsg, setExportMsg] = useState('');
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadInvoices = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listInvoices();
+      setInvoices(data.map(mapInvoice));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load invoices.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInvoices();
+  }, [loadInvoices]);
 
   const filtered = invoices.filter(
     (inv) =>
       (filter === 'all' || inv.status === filter) &&
-      (inv.patient.toLowerCase().includes(search.toLowerCase()) ||
+      (inv.patientName.toLowerCase().includes(search.toLowerCase()) ||
         inv.id.toLowerCase().includes(search.toLowerCase()))
   );
 
@@ -61,7 +65,7 @@ const AdminBilling: React.FC = () => {
     exportCsv(
       'billing-invoices.csv',
       ['Invoice ID', 'Patient', 'Service', 'Date', 'Amount', 'Status'],
-      invoices.map((inv) => [inv.id, inv.patient, inv.service, inv.date, inv.amount, inv.status])
+      invoices.map((inv) => [inv.id, inv.patientName, inv.service, inv.date, inv.amount, inv.status])
     );
     setExportMsg('CSV export downloaded.');
     setTimeout(() => setExportMsg(''), 3000);
@@ -76,7 +80,7 @@ const AdminBilling: React.FC = () => {
         `Pending: $${pending.toLocaleString()}`,
         `Overdue: $${overdue.toLocaleString()}`,
         `Total Invoices: ${invoices.length}`,
-        ...invoices.slice(0, 5).map((i) => `${i.id} — ${i.patient} — $${i.amount} (${i.status})`)
+        ...invoices.slice(0, 5).map((i) => `${i.id} — ${i.patientName} — $${i.amount} (${i.status})`)
       ]
     );
     setExportMsg('PDF export downloaded.');
@@ -116,6 +120,12 @@ const AdminBilling: React.FC = () => {
             <motion.p initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="text-sm text-green-600 dark:text-green-400 font-medium">
               {exportMsg}
             </motion.p>
+          )}
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
           )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
@@ -161,6 +171,11 @@ const AdminBilling: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading invoices...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -182,7 +197,7 @@ const AdminBilling: React.FC = () => {
                   {filtered.map((inv) => (
                     <tr key={inv.id} className="text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50">
                       <td className="py-3 px-4 font-medium text-blue-600 dark:text-blue-400">{inv.id}</td>
-                      <td className="py-3 px-4 text-gray-900 dark:text-gray-100">{inv.patient}</td>
+                      <td className="py-3 px-4 text-gray-900 dark:text-gray-100">{inv.patientName}</td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{inv.service}</td>
                       <td className="py-3 px-4 text-gray-600 dark:text-gray-400">{inv.date}</td>
                       <td className="py-3 px-4">
@@ -205,6 +220,7 @@ const AdminBilling: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

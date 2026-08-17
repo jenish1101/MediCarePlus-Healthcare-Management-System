@@ -53,6 +53,10 @@ PharmacistOrAdminUser = Annotated[
     User,
     Depends(require_roles(UserRole.PHARMACIST, UserRole.ADMIN)),
 ]
+InventoryViewerUser = Annotated[
+    User,
+    Depends(require_roles(UserRole.PATIENT, UserRole.PHARMACIST, UserRole.ADMIN)),
+]
 LabTechOrAdminUser = Annotated[
     User,
     Depends(require_roles(UserRole.LAB_TECH, UserRole.ADMIN)),

@@ -70,8 +70,8 @@ const LoginForm: React.FC<{ initialRole: UserRole }> = ({ initialRole }) => {
       };
 
       router.push(roleRoutes[selectedRole] || '/');
-    } catch {
-      setError('Invalid credentials. Please use the demo credentials.');
+    } catch (err) {
+      setError(err instanceof Error ? err.message : 'Invalid credentials. Please use the demo credentials.');
     } finally {
       setLoading(false);
     }

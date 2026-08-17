@@ -1,30 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Wrench, CheckCircle, AlertTriangle, XCircle, Calendar, Activity } from 'lucide-react';
+import { Wrench, CheckCircle, AlertTriangle, XCircle, Calendar, Activity, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface Equipment {
-  id: string;
-  name: string;
-  model: string;
-  location: string;
-  lastCalibration: string;
-  nextCalibration: string;
-  status: 'operational' | 'maintenance' | 'qc-pending' | 'offline';
-  qcScore?: number;
-}
-
-const initialEquipment: Equipment[] = [
-  { id: 'eq1', name: 'Automated Hematology Analyzer', model: 'Sysmex XN-1000', location: 'Hematology Lab', lastCalibration: '2024-01-15', nextCalibration: '2024-04-15', status: 'operational', qcScore: 98 },
-  { id: 'eq2', name: 'Chemistry Analyzer', model: 'Cobas c311', location: 'Biochemistry Lab', lastCalibration: '2024-02-01', nextCalibration: '2024-05-01', status: 'operational', qcScore: 96 },
-  { id: 'eq3', name: 'Centrifuge', model: 'Eppendorf 5810', location: 'Sample Prep', lastCalibration: '2023-12-10', nextCalibration: '2024-03-10', status: 'qc-pending', qcScore: 88 },
-  { id: 'eq4', name: 'Immunoassay System', model: 'Architect i2000', location: 'Immunology Lab', lastCalibration: '2024-01-28', nextCalibration: '2024-04-28', status: 'maintenance' },
-  { id: 'eq5', name: 'Microscope', model: 'Olympus CX43', location: 'Pathology', lastCalibration: '2024-02-10', nextCalibration: '2024-08-10', status: 'operational', qcScore: 99 },
-  { id: 'eq6', name: 'Refrigerated Storage', model: 'Thermo TSX400', location: 'Specimen Storage', lastCalibration: '2023-11-20', nextCalibration: '2024-02-20', status: 'offline' }
-];
+import { ApiError } from '@/lib/api';
+import { listLabEquipment, runEquipmentQc, mapEquipment, Equipment } from '@/api/lab';
 
 const statusConfig = {
   operational: { icon: CheckCircle, color: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400', label: 'Operational' },
@@ -34,15 +16,39 @@ const statusConfig = {
 };
 
 const LabEquipment: React.FC = () => {
-  const [equipment, setEquipment] = useState<Equipment[]>(initialEquipment);
+  const [equipment, setEquipment] = useState<Equipment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
+  const [runningQcId, setRunningQcId] = useState<string | null>(null);
 
-  const runQc = (id: string) => {
-    setEquipment((prev) =>
-      prev.map((e) =>
-        e.id === id ? { ...e, status: 'operational' as const, qcScore: 95 + Math.floor(Math.random() * 5) } : e
-      )
-    );
+  const loadEquipment = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabEquipment();
+      setEquipment(data.map(mapEquipment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load equipment.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEquipment();
+  }, [loadEquipment]);
+
+  const runQc = async (id: string) => {
+    setRunningQcId(id);
+    try {
+      const updated = await runEquipmentQc(id);
+      setEquipment((prev) => prev.map((e) => (e.id === id ? mapEquipment(updated) : e)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not run QC check.');
+    } finally {
+      setRunningQcId(null);
+    }
   };
 
   const filtered = filter === 'all' ? equipment : equipment.filter((e) => e.status === filter);
@@ -57,6 +63,12 @@ const LabEquipment: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Equipment & QC</h1>
             <p className="text-gray-600 dark:text-gray-400">Lab equipment status and quality control</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6">
             {[
@@ -86,6 +98,11 @@ const LabEquipment: React.FC = () => {
             ))}
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading equipment...
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {filtered.map((item, i) => {
               const cfg = statusConfig[item.status];
@@ -130,14 +147,19 @@ const LabEquipment: React.FC = () => {
                     </div>
                   )}
                   {item.status === 'qc-pending' && (
-                    <button onClick={() => runQc(item.id)} className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700">
-                      Run QC Check
+                    <button
+                      onClick={() => runQc(item.id)}
+                      disabled={runningQcId === item.id}
+                      className="w-full py-2 bg-purple-600 text-white rounded-lg text-sm font-medium hover:bg-purple-700 disabled:opacity-50"
+                    >
+                      {runningQcId === item.id ? 'Running QC...' : 'Run QC Check'}
                     </button>
                   )}
                 </motion.div>
               );
             })}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

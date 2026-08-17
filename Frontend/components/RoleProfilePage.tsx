@@ -30,6 +30,8 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
   const [form, setForm] = useState<Record<string, string>>(initialForm);
   const [editing, setEditing] = useState(false);
   const [saved, setSaved] = useState(false);
+  const [saving, setSaving] = useState(false);
+  const [saveError, setSaveError] = useState('');
 
   useEffect(() => {
     setForm(initialForm);
@@ -39,15 +41,23 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
     setForm((prev) => ({ ...prev, [key]: value }));
   };
 
-  const handleSave = () => {
-    updateProfile({
-      name: form.name,
-      email: form.email,
-      phone: form.phone
-    });
-    setEditing(false);
-    setSaved(true);
-    window.setTimeout(() => setSaved(false), 2500);
+  const handleSave = async () => {
+    setSaving(true);
+    setSaveError('');
+    try {
+      await updateProfile({
+        name: form.name,
+        email: form.email,
+        phone: form.phone
+      });
+      setEditing(false);
+      setSaved(true);
+      window.setTimeout(() => setSaved(false), 2500);
+    } catch {
+      setSaveError('Could not save changes. Please try again.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   const handleCancel = () => {
@@ -189,20 +199,24 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                   </p>
                 </div>
 
-                <div className="flex flex-wrap gap-2 lg:pb-1">
+                <div className="flex flex-col items-end gap-2 lg:pb-1">
+                  {saveError && <p className="text-xs text-red-600 dark:text-red-400">{saveError}</p>}
+                  <div className="flex flex-wrap gap-2">
                   {editing ? (
                     <>
                       <button
                         onClick={handleCancel}
-                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 px-4 py-2.5 rounded-xl border border-gray-200 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50"
                       >
                         <X className="w-4 h-4" /> Cancel
                       </button>
                       <button
                         onClick={handleSave}
-                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 shadow-sm transition-colors"
+                        disabled={saving}
+                        className="inline-flex items-center gap-2 px-5 py-2.5 rounded-xl bg-green-600 text-white text-sm font-semibold hover:bg-green-700 shadow-sm transition-colors disabled:opacity-50"
                       >
-                        <Check className="w-4 h-4" /> Save Changes
+                        <Check className="w-4 h-4" /> {saving ? 'Saving...' : 'Save Changes'}
                       </button>
                     </>
                   ) : (
@@ -213,6 +227,7 @@ const RoleProfilePage: React.FC<RoleProfilePageProps> = ({ role }) => {
                       <Pencil className="w-4 h-4" /> Edit Profile
                     </button>
                   )}
+                  </div>
                 </div>
               </div>
 

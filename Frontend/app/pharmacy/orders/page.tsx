@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Pill, Search, Truck, CheckCircle, Clock, MapPin, ChevronRight } from 'lucide-react';
+import { Package, Pill, Search, Truck, CheckCircle, Clock, MapPin, ChevronRight, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockOrders } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listOrders, updateOrderStatus, mapOrder } from '@/api/pharmacy';
 import { Order } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
@@ -21,11 +22,6 @@ const statusBadge = (status: string) => {
   };
   return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
-
-const extraOrders: Order[] = [
-  { id: 'ord3', patientId: 'p2', medicines: [{ name: 'Amoxicillin 500mg', quantity: 14, price: 1.2 }], total: 17, status: 'pending', date: '2024-02-15', address: '88 Park Ave, New York, NY' },
-  { id: 'ord4', patientId: 'p3', medicines: [{ name: 'Aspirin 75mg', quantity: 30, price: 0.3 }, { name: 'Vitamin B Complex', quantity: 30, price: 0.6 }], total: 27, status: 'confirmed', date: '2024-02-14', address: '12 Elm St, Brooklyn, NY' }
-];
 
 const nextStatus: Record<string, Order['status']> = {
   pending: 'confirmed',
@@ -64,14 +60,45 @@ const StatusStepper: React.FC<{ status: Order['status'] }> = ({ status }) => {
 };
 
 const PharmacyOrders: React.FC = () => {
-  const [orders, setOrders] = useState<Order[]>([...extraOrders, ...mockOrders]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const advance = (id: string) =>
-    setOrders((prev) =>
-      prev.map((o) => (o.id === id && nextStatus[o.status] ? { ...o, status: nextStatus[o.status] } : o))
-    );
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listOrders();
+      setOrders(data.map(mapOrder));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load orders.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  const advance = async (id: string) => {
+    const order = orders.find((o) => o.id === id);
+    const next = order && nextStatus[order.status];
+    if (!next) return;
+    setAdvancingId(id);
+    setError('');
+    try {
+      const updated = await updateOrderStatus(id, next);
+      setOrders((prev) => prev.map((o) => (o.id === id ? mapOrder(updated) : o)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update order status.');
+    } finally {
+      setAdvancingId(null);
+    }
+  };
 
   const filtered = orders.filter(
     (o) => (filter === 'all' || o.status === filter) && o.id.toLowerCase().includes(search.toLowerCase())
@@ -94,6 +121,12 @@ const PharmacyOrders: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Orders</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Process and fulfill medicine orders</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
@@ -143,6 +176,12 @@ const PharmacyOrders: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading orders...
+            </div>
+          ) : (
+          <>
           <div className="grid lg:grid-cols-2 gap-3 sm:gap-4 lg:gap-5">
             {filtered.map((order, i) => {
               const itemCount = order.medicines.reduce((sum, m) => sum + m.quantity, 0);
@@ -205,9 +244,10 @@ const PharmacyOrders: React.FC = () => {
                     {nextStatus[order.status] ? (
                       <button
                         onClick={() => advance(order.id)}
-                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium"
+                        disabled={advancingId === order.id}
+                        className="w-full sm:w-auto inline-flex items-center justify-center gap-1.5 px-4 py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm font-medium disabled:opacity-50"
                       >
-                        Mark as {nextStatus[order.status]}
+                        {advancingId === order.id ? 'Updating...' : `Mark as ${nextStatus[order.status]}`}
                         <ChevronRight className="w-4 h-4" />
                       </button>
                     ) : (
@@ -227,6 +267,8 @@ const PharmacyOrders: React.FC = () => {
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No orders found</h3>
               <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Try a different search or filter.</p>
             </div>
+          )}
+          </>
           )}
         </div>
       </DashboardLayout>

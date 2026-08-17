@@ -1,71 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { FileText, Pill, Search, CheckCircle, Clock, Package } from 'lucide-react';
+import { FileText, Pill, Search, CheckCircle, Clock, Package, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockPrescriptions } from '@/data/mockData';
-
-interface FulfillmentRx {
-  id: string;
-  rxId: string;
-  patientName: string;
-  doctorName: string;
-  date: string;
-  medicines: string[];
-  status: 'pending' | 'dispensing' | 'dispensed';
-}
-
-const doctorNames: Record<string, string> = {
-  d1: 'Dr. Sarah Wilson',
-  d2: 'Dr. Michael Chen',
-  d3: 'Dr. Emily Rodriguez'
-};
-
-const patientNames: Record<string, string> = {
-  p1: 'John Patient',
-  p2: 'Emma Thompson'
-};
-
-const initialRx: FulfillmentRx[] = [
-  {
-    id: 'frx1',
-    rxId: 'rx1',
-    patientName: patientNames.p1,
-    doctorName: doctorNames.d2,
-    date: '2024-01-28',
-    medicines: ['Ibuprofen 400mg', 'Vitamin B Complex'],
-    status: 'pending'
-  },
-  {
-    id: 'frx2',
-    rxId: 'rx2',
-    patientName: 'Emma Thompson',
-    doctorName: doctorNames.d1,
-    date: '2024-02-14',
-    medicines: ['Amoxicillin 500mg', 'Paracetamol 500mg'],
-    status: 'pending'
-  },
-  {
-    id: 'frx3',
-    rxId: 'rx3',
-    patientName: 'Michael Brown',
-    doctorName: doctorNames.d3,
-    date: '2024-02-13',
-    medicines: ['Aspirin 75mg'],
-    status: 'dispensing'
-  },
-  {
-    id: 'frx4',
-    rxId: 'rx4',
-    patientName: 'Sophia Davis',
-    doctorName: doctorNames.d1,
-    date: '2024-02-10',
-    medicines: ['Vitamin B Complex', 'Ibuprofen 400mg'],
-    status: 'dispensed'
-  }
-];
+import { ApiError } from '@/lib/api';
+import { listFulfillment, advanceFulfillment as advanceFulfillmentApi, mapFulfillment, FulfillmentRx } from '@/api/pharmacy';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -76,24 +17,42 @@ const statusColor = (status: string) => {
   return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
-const nextStatus: Record<string, FulfillmentRx['status']> = {
-  pending: 'dispensing',
-  dispensing: 'dispensed'
-};
-
 const PharmacyPrescriptions: React.FC = () => {
-  const [prescriptions, setPrescriptions] = useState<FulfillmentRx[]>(initialRx);
+  const [prescriptions, setPrescriptions] = useState<FulfillmentRx[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
-  const advance = (id: string) => {
-    setPrescriptions((prev) =>
-      prev.map((rx) => {
-        if (rx.id !== id) return rx;
-        const next = nextStatus[rx.status];
-        return next ? { ...rx, status: next } : rx;
-      })
-    );
+  const loadPrescriptions = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listFulfillment();
+      setPrescriptions(data.map(mapFulfillment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load prescriptions.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPrescriptions();
+  }, [loadPrescriptions]);
+
+  const advance = async (id: string) => {
+    setAdvancingId(id);
+    setError('');
+    try {
+      const updated = await advanceFulfillmentApi(id);
+      setPrescriptions((prev) => prev.map((rx) => (rx.id === id ? mapFulfillment(updated) : rx)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not advance prescription.');
+    } finally {
+      setAdvancingId(null);
+    }
   };
 
   const filtered = prescriptions.filter(
@@ -113,6 +72,12 @@ const PharmacyPrescriptions: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Prescription Fulfillment</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Link doctor prescriptions to dispense orders</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
@@ -169,6 +134,11 @@ const PharmacyPrescriptions: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading prescriptions...
+            </div>
+          ) : (
           <div className="space-y-3 sm:space-y-4">
             {filtered.map((rx, i) => (
               <motion.div
@@ -206,9 +176,10 @@ const PharmacyPrescriptions: React.FC = () => {
                   {rx.status !== 'dispensed' && (
                     <button
                       onClick={() => advance(rx.id)}
-                      className="w-full sm:w-auto sm:self-end px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium"
+                      disabled={advancingId === rx.id}
+                      className="w-full sm:w-auto sm:self-end px-5 py-2.5 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm font-medium disabled:opacity-50"
                     >
-                      {rx.status === 'pending' ? 'Start Dispensing' : 'Mark Dispensed'}
+                      {advancingId === rx.id ? 'Updating...' : rx.status === 'pending' ? 'Start Dispensing' : 'Mark Dispensed'}
                     </button>
                   )}
                 </div>
@@ -223,11 +194,6 @@ const PharmacyPrescriptions: React.FC = () => {
               </div>
             )}
           </div>
-
-          {mockPrescriptions.length > 0 && (
-            <p className="text-xs text-gray-400 dark:text-gray-500 text-center">
-              Linked to {mockPrescriptions.length} doctor prescription(s) in system
-            </p>
           )}
         </div>
       </DashboardLayout>

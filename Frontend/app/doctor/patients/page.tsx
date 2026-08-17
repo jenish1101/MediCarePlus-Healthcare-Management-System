@@ -1,51 +1,64 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Search, Phone, Mail, Calendar, FileText, Users } from 'lucide-react';
+import { Search, Phone, Mail, Calendar, FileText, Users, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ApiError } from '@/lib/api';
+import { listPatients, BackendPatientSummary } from '@/api/users';
 
 interface PatientRecord {
   id: string;
   name: string;
-  age: number;
-  gender: string;
-  phone: string;
   email: string;
-  condition: string;
-  lastVisit: string;
-  status: 'active' | 'follow-up' | 'new';
+  phone: string;
+  dateOfBirth?: string;
+  bloodGroup?: string;
+  lastVisit?: string;
 }
 
-const patients: PatientRecord[] = [
-  { id: 'p1', name: 'John Patient', age: 34, gender: 'Male', phone: '+1 555-0101', email: 'john@demo.com', condition: 'Hypertension', lastVisit: '2024-02-12', status: 'active' },
-  { id: 'p2', name: 'Emma Thompson', age: 28, gender: 'Female', phone: '+1 555-0102', email: 'emma@demo.com', condition: 'Arrhythmia', lastVisit: '2024-02-08', status: 'follow-up' },
-  { id: 'p3', name: 'Michael Brown', age: 45, gender: 'Male', phone: '+1 555-0103', email: 'michael@demo.com', condition: 'Coronary check', lastVisit: '2024-02-14', status: 'new' },
-  { id: 'p4', name: 'Sophia Davis', age: 52, gender: 'Female', phone: '+1 555-0104', email: 'sophia@demo.com', condition: 'High cholesterol', lastVisit: '2024-01-30', status: 'follow-up' },
-  { id: 'p5', name: 'James Wilson', age: 61, gender: 'Male', phone: '+1 555-0105', email: 'james@demo.com', condition: 'Post bypass', lastVisit: '2024-02-12', status: 'active' },
-  { id: 'p6', name: 'Olivia Martin', age: 39, gender: 'Female', phone: '+1 555-0106', email: 'olivia@demo.com', condition: 'Palpitations', lastVisit: '2024-02-10', status: 'active' }
-];
-
-const statusColor = (status: string) => {
-  const colors: Record<string, string> = {
-    active: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
-    'follow-up': 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400',
-    new: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'
+function mapPatient(p: BackendPatientSummary): PatientRecord {
+  return {
+    id: p.id,
+    name: p.name,
+    email: p.email,
+    phone: p.phone || '—',
+    dateOfBirth: p.date_of_birth ?? undefined,
+    bloodGroup: p.blood_group ?? undefined,
+    lastVisit: p.last_visit ?? undefined
   };
-  return colors[status] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
-};
+}
 
 const DoctorPatients: React.FC = () => {
   const router = useRouter();
   const [search, setSearch] = useState('');
+  const [patients, setPatients] = useState<PatientRecord[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const filtered = patients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.condition.toLowerCase().includes(search.toLowerCase())
-  );
+  const loadPatients = useCallback(async (query?: string) => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listPatients(query);
+      setPatients(data.map(mapPatient));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load patients.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    const t = setTimeout(() => {
+      loadPatients(search || undefined);
+    }, 300);
+    return () => clearTimeout(t);
+  }, [search, loadPatients]);
+
+  const filtered = patients;
 
   return (
     <ProtectedRoute allowedRoles={['doctor']}>
@@ -65,12 +78,23 @@ const DoctorPatients: React.FC = () => {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search by name or condition..."
+                placeholder="Search by name..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading patients...
+            </div>
+          ) : (
           <div className="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-6">
             {filtered.map((p, i) => (
               <motion.div
@@ -90,17 +114,16 @@ const DoctorPatients: React.FC = () => {
                     />
                     <div className="min-w-0">
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 truncate">{p.name}</h4>
-                      <p className="text-sm text-gray-500 dark:text-gray-400">{p.age} yrs · {p.gender}</p>
+                      {p.bloodGroup && <p className="text-sm text-gray-500 dark:text-gray-400">Blood group: {p.bloodGroup}</p>}
                     </div>
                   </div>
-                  <span className={`px-2 py-1 rounded-full text-[10px] sm:text-xs font-medium capitalize shrink-0 ${statusColor(p.status)}`}>
-                    {p.status}
-                  </span>
                 </div>
 
                 <div className="space-y-2 text-xs sm:text-sm text-gray-600 dark:text-gray-400 mb-4">
-                  <p className="flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" /><span className="truncate">{p.condition}</span></p>
-                  <p className="flex items-center gap-2"><Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />Last visit: {p.lastVisit}</p>
+                  {p.dateOfBirth && (
+                    <p className="flex items-center gap-2"><FileText className="w-4 h-4 text-blue-600 dark:text-blue-400 shrink-0" />DOB: {p.dateOfBirth}</p>
+                  )}
+                  <p className="flex items-center gap-2"><Calendar className="w-4 h-4 text-purple-600 dark:text-purple-400 shrink-0" />Last visit: {p.lastVisit || 'N/A'}</p>
                   <p className="flex items-center gap-2"><Phone className="w-4 h-4 text-green-600 dark:text-green-400 shrink-0" />{p.phone}</p>
                   <p className="flex items-center gap-2 truncate"><Mail className="w-4 h-4 text-orange-600 dark:text-orange-400 shrink-0" />{p.email}</p>
                 </div>
@@ -122,8 +145,9 @@ const DoctorPatients: React.FC = () => {
               </motion.div>
             ))}
           </div>
+          )}
 
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
               <Users className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No patients found</h3>

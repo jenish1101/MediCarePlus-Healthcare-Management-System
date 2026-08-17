@@ -1,7 +1,7 @@
 'use client';
 
-import React, { Suspense, useState, useEffect } from 'react';
-import { useSearchParams } from 'next/navigation';
+import React, { Suspense, useState, useEffect, useCallback } from 'react';
+import { useRouter, useSearchParams } from 'next/navigation';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
   Calendar,
@@ -14,11 +14,14 @@ import {
   DollarSign,
   Stethoscope,
   Video,
-  User
+  User,
+  Loader2
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockDoctors } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listDoctors, mapDoctor } from '@/api/doctors';
+import { createAppointment } from '@/api/appointments';
 import { Doctor } from '@/types';
 
 const STEPS = ['Select Doctor', 'Date', 'Time', 'Confirm'] as const;
@@ -45,22 +48,48 @@ const getAvailableDates = () => {
 };
 
 const BookAppointmentForm: React.FC = () => {
+  const router = useRouter();
   const searchParams = useSearchParams();
   const [step, setStep] = useState(0);
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [doctorsLoading, setDoctorsLoading] = useState(true);
+  const [doctorsError, setDoctorsError] = useState('');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [selectedDate, setSelectedDate] = useState('');
   const [selectedTime, setSelectedTime] = useState('');
   const [appointmentType, setAppointmentType] = useState<'in-person' | 'video'>('in-person');
   const [reason, setReason] = useState('');
   const [confirmed, setConfirmed] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+
+  const loadDoctors = useCallback(async () => {
+    setDoctorsLoading(true);
+    setDoctorsError('');
+    try {
+      const data = await listDoctors();
+      const mapped = data.map(mapDoctor);
+      setDoctors(mapped);
+
+      const doctorId = searchParams.get('doctor');
+      if (doctorId) {
+        const doctor = mapped.find((d) => d.id === doctorId);
+        if (doctor) setSelectedDoctor(doctor);
+      }
+    } catch (err) {
+      setDoctorsError(err instanceof ApiError ? err.message : 'Could not load doctors.');
+    } finally {
+      setDoctorsLoading(false);
+    }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []);
 
   useEffect(() => {
-    const doctorId = searchParams.get('doctor');
+    loadDoctors();
+  }, [loadDoctors]);
+
+  useEffect(() => {
     const type = searchParams.get('type');
-    if (doctorId) {
-      const doctor = mockDoctors.find((d) => d.id === doctorId);
-      if (doctor) setSelectedDoctor(doctor);
-    }
     if (type === 'video') setAppointmentType('video');
   }, [searchParams]);
 
@@ -73,9 +102,28 @@ const BookAppointmentForm: React.FC = () => {
     return true;
   };
 
-  const handleNext = () => {
-    if (step < 3) setStep((s) => s + 1);
-    else setConfirmed(true);
+  const handleNext = async () => {
+    if (step < 3) {
+      setStep((s) => s + 1);
+      return;
+    }
+    if (!selectedDoctor) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      await createAppointment({
+        doctor_id: selectedDoctor.id,
+        date: selectedDate,
+        time: selectedTime,
+        reason,
+        appointment_type: appointmentType
+      });
+      setConfirmed(true);
+    } catch (err) {
+      setSubmitError(err instanceof ApiError ? err.message : 'Could not book appointment.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const handleBack = () => {
@@ -120,19 +168,27 @@ const BookAppointmentForm: React.FC = () => {
                 <span className="font-bold text-blue-600 dark:text-blue-400">${selectedDoctor.fees}</span>
               </div>
             </div>
-            <button
-              onClick={() => {
-                setConfirmed(false);
-                setStep(0);
-                setSelectedDoctor(null);
-                setSelectedDate('');
-                setSelectedTime('');
-                setReason('');
-              }}
-              className="w-full py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
-            >
-              Book Another Appointment
-            </button>
+            <div className="flex flex-col sm:flex-row gap-3">
+              <button
+                onClick={() => {
+                  setConfirmed(false);
+                  setStep(0);
+                  setSelectedDoctor(null);
+                  setSelectedDate('');
+                  setSelectedTime('');
+                  setReason('');
+                }}
+                className="flex-1 py-3 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg font-semibold hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors"
+              >
+                Book Another Appointment
+              </button>
+              <button
+                onClick={() => router.push('/patient/appointments')}
+                className="flex-1 py-3 bg-blue-600 text-white rounded-lg font-semibold hover:bg-blue-700 transition-colors"
+              >
+                View My Appointments
+              </button>
+            </div>
           </motion.div>
         </DashboardLayout>
       </ProtectedRoute>
@@ -206,8 +262,18 @@ const BookAppointmentForm: React.FC = () => {
                     <Stethoscope className="w-5 h-5 text-blue-600 dark:text-blue-400" />
                     Select a Doctor
                   </h3>
+                  {doctorsError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                      {doctorsError}
+                    </div>
+                  )}
+                  {doctorsLoading ? (
+                    <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+                      <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading doctors...
+                    </div>
+                  ) : (
                   <div className="grid sm:grid-cols-2 gap-6 max-h-[420px] overflow-y-auto pr-1">
-                    {mockDoctors.map((doctor) => (
+                    {doctors.map((doctor) => (
                       <button
                         key={doctor.id}
                         onClick={() => setSelectedDoctor(doctor)}
@@ -242,6 +308,7 @@ const BookAppointmentForm: React.FC = () => {
                       </button>
                     ))}
                   </div>
+                  )}
                 </div>
               )}
 
@@ -398,6 +465,12 @@ const BookAppointmentForm: React.FC = () => {
                       <p className="text-gray-800 dark:text-gray-200">{reason}</p>
                     </div>
                   )}
+
+                  {submitError && (
+                    <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                      {submitError}
+                    </div>
+                  )}
                 </div>
               )}
             </motion.div>
@@ -415,10 +488,10 @@ const BookAppointmentForm: React.FC = () => {
             </button>
             <button
               onClick={handleNext}
-              disabled={!canProceed()}
+              disabled={!canProceed() || submitting}
               className="inline-flex items-center gap-2 px-4 py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all disabled:opacity-40 disabled:cursor-not-allowed"
             >
-              {step === 3 ? 'Confirm Booking' : 'Continue'}
+              {step === 3 ? (submitting ? 'Booking...' : 'Confirm Booking') : 'Continue'}
               {step < 3 && <ChevronRight className="w-5 h-5" />}
             </button>
           </div>

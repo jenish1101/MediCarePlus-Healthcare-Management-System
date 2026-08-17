@@ -1,24 +1,50 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useEffect, useCallback, useMemo, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Search, MapPin, SlidersHorizontal, Stethoscope, Users, X } from 'lucide-react';
+import { Search, MapPin, SlidersHorizontal, Stethoscope, Users, X, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import DoctorCard from '@/components/DoctorCard';
-import { mockDoctors, specializations } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listDoctors, mapDoctor } from '@/api/doctors';
 import { Doctor } from '@/types';
 
 type SortOption = 'rating' | 'experience' | 'fees-asc' | 'fees-desc';
 
 const FindDoctors: React.FC = () => {
+  const [doctors, setDoctors] = useState<Doctor[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [searchTerm, setSearchTerm] = useState('');
   const [selectedSpecialization, setSelectedSpecialization] = useState('');
   const [selectedLocation, setSelectedLocation] = useState('');
   const [sortBy, setSortBy] = useState<SortOption>('rating');
 
+  const loadDoctors = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listDoctors();
+      setDoctors(data.map(mapDoctor));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load doctors.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDoctors();
+  }, [loadDoctors]);
+
+  const specializations = useMemo(
+    () => [...new Set(doctors.map((d) => d.specialization))].sort(),
+    [doctors]
+  );
+
   const filteredDoctors = useMemo(() => {
-    let list = mockDoctors.filter((doctor) => {
+    let list = doctors.filter((doctor) => {
       const q = searchTerm.toLowerCase();
       const matchesSearch =
         !q ||
@@ -38,7 +64,7 @@ const FindDoctors: React.FC = () => {
     });
 
     return list;
-  }, [searchTerm, selectedSpecialization, selectedLocation, sortBy]);
+  }, [doctors, searchTerm, selectedSpecialization, selectedLocation, sortBy]);
 
   const hasFilters = searchTerm || selectedSpecialization || selectedLocation;
 
@@ -48,7 +74,9 @@ const FindDoctors: React.FC = () => {
     setSelectedLocation('');
   };
 
-  const avgRating = (mockDoctors.reduce((s, d) => s + d.rating, 0) / mockDoctors.length).toFixed(1);
+  const avgRating = doctors.length
+    ? (doctors.reduce((s, d) => s + d.rating, 0) / doctors.length).toFixed(1)
+    : '0.0';
 
   return (
     <ProtectedRoute allowedRoles={['patient']}>
@@ -68,7 +96,7 @@ const FindDoctors: React.FC = () => {
             className="grid grid-cols-2 sm:grid-cols-4 gap-3"
           >
             {[
-              { label: 'Specialists', value: String(mockDoctors.length), icon: Stethoscope },
+              { label: 'Specialists', value: String(doctors.length), icon: Stethoscope },
               { label: 'Specializations', value: String(specializations.length), icon: Users },
               { label: 'Avg. Rating', value: avgRating, icon: Search },
               { label: 'Showing', value: String(filteredDoctors.length), icon: MapPin }
@@ -183,8 +211,18 @@ const FindDoctors: React.FC = () => {
             </div>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           {/* Doctor grid */}
-          {filteredDoctors.length > 0 ? (
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading doctors...
+            </div>
+          ) : filteredDoctors.length > 0 ? (
             <div className="grid gap-6 md:grid-cols-2">
               {filteredDoctors.map((doctor: Doctor, i) => (
                 <DoctorCard key={doctor.id} doctor={doctor} index={i} />

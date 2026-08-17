@@ -1,35 +1,36 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { BookOpen, Search, DollarSign, Clock, TestTube } from 'lucide-react';
+import { BookOpen, Search, DollarSign, Clock, TestTube, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface CatalogTest {
-  id: string;
-  name: string;
-  category: string;
-  price: number;
-  turnaround: string;
-  sampleType: string;
-  status: 'available' | 'limited';
-}
-
-const catalogTests: CatalogTest[] = [
-  { id: 't1', name: 'Complete Blood Count (CBC)', category: 'Hematology', price: 45, turnaround: '4 hrs', sampleType: 'Blood', status: 'available' },
-  { id: 't2', name: 'Lipid Profile', category: 'Biochemistry', price: 65, turnaround: '6 hrs', sampleType: 'Blood', status: 'available' },
-  { id: 't3', name: 'Liver Function Test', category: 'Biochemistry', price: 55, turnaround: '6 hrs', sampleType: 'Blood', status: 'available' },
-  { id: 't4', name: 'Thyroid Panel (T3, T4, TSH)', category: 'Endocrinology', price: 80, turnaround: '24 hrs', sampleType: 'Blood', status: 'available' },
-  { id: 't5', name: 'Blood Glucose (Fasting)', category: 'Biochemistry', price: 25, turnaround: '2 hrs', sampleType: 'Blood', status: 'available' },
-  { id: 't6', name: 'Urinalysis', category: 'Clinical Pathology', price: 30, turnaround: '3 hrs', sampleType: 'Urine', status: 'available' },
-  { id: 't7', name: 'HbA1c', category: 'Diabetes', price: 50, turnaround: '24 hrs', sampleType: 'Blood', status: 'limited' },
-  { id: 't8', name: 'Vitamin D', category: 'Biochemistry', price: 95, turnaround: '48 hrs', sampleType: 'Blood', status: 'available' }
-];
+import { ApiError } from '@/lib/api';
+import { listLabCatalog, mapCatalogTest, CatalogTest } from '@/api/lab';
 
 const LabCatalog: React.FC = () => {
+  const [catalogTests, setCatalogTests] = useState<CatalogTest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+
+  const loadCatalog = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabCatalog();
+      setCatalogTests(data.map(mapCatalogTest));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load test catalog.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadCatalog();
+  }, [loadCatalog]);
 
   const categories = ['all', ...Array.from(new Set(catalogTests.map((t) => t.category)))];
   const filtered = catalogTests.filter(
@@ -47,6 +48,12 @@ const LabCatalog: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400">Available tests and pricing</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-6 max-w-2xl">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
               <p className="text-lg font-bold text-purple-600">{catalogTests.length}</p>
@@ -57,7 +64,9 @@ const LabCatalog: React.FC = () => {
               <p className="text-gray-600 dark:text-gray-400 text-sm">Categories</p>
             </div>
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
-              <p className="text-lg font-bold text-blue-600">${Math.round(catalogTests.reduce((s, t) => s + t.price, 0) / catalogTests.length)}</p>
+              <p className="text-lg font-bold text-blue-600">
+                ${catalogTests.length ? Math.round(catalogTests.reduce((s, t) => s + t.price, 0) / catalogTests.length) : 0}
+              </p>
               <p className="text-gray-600 dark:text-gray-400 text-sm">Avg. Price</p>
             </div>
           </div>
@@ -87,6 +96,11 @@ const LabCatalog: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading catalog...
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 gap-6">
             {filtered.map((test, i) => (
               <motion.div
@@ -123,8 +137,9 @@ const LabCatalog: React.FC = () => {
               </motion.div>
             ))}
           </div>
+          )}
 
-          {filtered.length === 0 && (
+          {!loading && filtered.length === 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
               <BookOpen className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No tests found</h3>

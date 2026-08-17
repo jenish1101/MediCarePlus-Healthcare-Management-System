@@ -1,8 +1,9 @@
 'use client';
 
-import React, { useMemo, useState } from 'react';
+import React, { useMemo, useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import {
+  Loader2,
   Package,
   Pill,
   Search,
@@ -16,7 +17,9 @@ import ProtectedRoute from '@/components/ProtectedRoute';
 import MedicineCard from '@/components/MedicineCard';
 import CartItemRow from '@/components/CartItemRow';
 import { getMedicineCategory } from '@/components/medicineUtils';
-import { mockOrders, mockInventory } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listInventory, listOrders, createOrder, mapInventory, mapOrder } from '@/api/pharmacy';
+import { Inventory, Order } from '@/types';
 
 type Tab = 'browse' | 'orders' | 'cart';
 type CategoryFilter = 'all' | 'pain' | 'antibiotic' | 'vitamin';
@@ -46,27 +49,84 @@ const PatientPharmacy: React.FC = () => {
   const [cart, setCart] = useState<Record<string, number>>({});
   const [showCartToast, setShowCartToast] = useState(false);
 
+  const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [address, setAddress] = useState('');
+  const [placingOrder, setPlacingOrder] = useState(false);
+  const [orderError, setOrderError] = useState('');
+
+  const loadData = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [inv, ords] = await Promise.all([
+        listInventory(),
+        listOrders()
+      ]);
+      setInventory(inv.map(mapInventory));
+      setOrders(ords.map(mapOrder));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load pharmacy data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadData();
+  }, [loadData]);
+
   const cartTotal = useMemo(() => {
     return Object.entries(cart).reduce((sum, [id, qty]) => {
-      const med = mockInventory.find((m) => m.id === id);
+      const med = inventory.find((m) => m.id === id);
       return sum + (med ? med.price * qty : 0);
     }, 0);
-  }, [cart]);
+  }, [cart, inventory]);
 
   const cartCount = useMemo(() => Object.values(cart).reduce((a, b) => a + b, 0), [cart]);
 
   const cartItems = useMemo(() => {
     return Object.entries(cart)
       .map(([id, qty]) => {
-        const medicine = mockInventory.find((m) => m.id === id);
+        const medicine = inventory.find((m) => m.id === id);
         if (!medicine) return null;
         return { medicine, quantity: qty, lineTotal: medicine.price * qty };
       })
       .filter((item): item is NonNullable<typeof item> => item !== null);
-  }, [cart]);
+  }, [cart, inventory]);
+
+  const placeOrder = async () => {
+    if (cartItems.length === 0 || !address.trim()) {
+      setOrderError('Please enter a delivery address.');
+      return;
+    }
+    setPlacingOrder(true);
+    setOrderError('');
+    try {
+      await createOrder({
+        medicines: cartItems.map(({ medicine, quantity }) => ({
+          name: medicine.medicineName,
+          quantity,
+          price: medicine.price
+        })),
+        address: address.trim()
+      });
+      setCart({});
+      setAddress('');
+      setTab('orders');
+      const ords = await listOrders();
+      setOrders(ords.map(mapOrder));
+    } catch (err) {
+      setOrderError(err instanceof ApiError ? err.message : 'Could not place order.');
+    } finally {
+      setPlacingOrder(false);
+    }
+  };
 
   const medicines = useMemo(() => {
-    let list = mockInventory.filter((m) => {
+    let list = inventory.filter((m) => {
       const q = search.toLowerCase();
       const matchesSearch =
         !q ||
@@ -85,7 +145,7 @@ const PatientPharmacy: React.FC = () => {
     });
 
     return list;
-  }, [search, category, sortBy]);
+  }, [inventory, search, category, sortBy]);
 
   const addToCart = (id: string) => {
     setCart((prev) => ({ ...prev, [id]: (prev[id] ?? 0) + 1 }));
@@ -171,8 +231,8 @@ const PatientPharmacy: React.FC = () => {
             className="grid grid-cols-2 gap-3 sm:grid-cols-4"
           >
             {[
-              { label: 'Medicines', value: String(mockInventory.length), icon: Pill },
-              { label: 'Your Orders', value: String(mockOrders.length), icon: Package },
+              { label: 'Medicines', value: String(inventory.length), icon: Pill },
+              { label: 'Your Orders', value: String(orders.length), icon: Package },
               { label: 'In Cart', value: String(cartCount), icon: ShoppingCart },
               { label: 'Cart Total', value: `$${cartTotal.toFixed(2)}`, icon: Truck }
             ].map((item) => (
@@ -191,7 +251,19 @@ const PatientPharmacy: React.FC = () => {
             ))}
           </motion.div>
 
-          {tab === 'browse' && (
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading pharmacy data...
+            </div>
+          )}
+
+          {!loading && tab === 'browse' && (
             <div className="space-y-5">
               {/* Filters */}
               <div className="space-y-4 rounded-2xl border border-gray-100 dark:border-gray-700 bg-white dark:bg-gray-800 p-5 shadow-sm dark:shadow-none">
@@ -265,7 +337,7 @@ const PatientPharmacy: React.FC = () => {
             </div>
           )}
 
-          {tab === 'cart' && (
+          {!loading && tab === 'cart' && (
             <div>
               {cartItems.length > 0 ? (
                 <div className="grid gap-6 lg:grid-cols-3">
@@ -339,11 +411,27 @@ const PatientPharmacy: React.FC = () => {
                         <span className="text-2xl font-bold text-emerald-600 dark:text-emerald-400">${cartTotal.toFixed(2)}</span>
                       </div>
 
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">Delivery Address</label>
+                        <input
+                          value={address}
+                          onChange={(e) => setAddress(e.target.value)}
+                          placeholder="Enter delivery address"
+                          className="w-full rounded-lg border border-gray-300 dark:border-gray-600 px-3 py-2.5 text-sm focus:ring-2 focus:ring-emerald-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                        />
+                      </div>
+
+                      {orderError && (
+                        <p className="text-sm text-red-600 dark:text-red-400">{orderError}</p>
+                      )}
+
                       <button
                         type="button"
-                        className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700"
+                        onClick={placeOrder}
+                        disabled={placingOrder}
+                        className="w-full rounded-xl bg-emerald-600 py-3.5 text-sm font-semibold text-white transition-colors hover:bg-emerald-700 disabled:opacity-50"
                       >
-                        Proceed to Checkout
+                        {placingOrder ? 'Placing Order...' : 'Proceed to Checkout'}
                       </button>
 
                       <p className="text-center text-xs text-gray-400 dark:text-gray-500">
@@ -374,9 +462,9 @@ const PatientPharmacy: React.FC = () => {
             </div>
           )}
 
-          {tab === 'orders' && (
+          {!loading && tab === 'orders' && (
             <div className="space-y-4">
-              {mockOrders.map((order, i) => (
+              {orders.map((order, i) => (
                 <motion.div
                   key={order.id}
                   initial={{ opacity: 0, y: 16 }}

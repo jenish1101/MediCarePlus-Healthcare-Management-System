@@ -1,11 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Search, Pill, AlertTriangle, Package, Building2 } from 'lucide-react';
+import { Search, Pill, AlertTriangle, Package, Building2, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockInventory } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listInventory, mapInventory } from '@/api/pharmacy';
+import { Inventory } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const LOW_STOCK = 500;
@@ -13,21 +15,41 @@ const LOW_STOCK = 500;
 const AdminInventory: React.FC = () => {
   const [search, setSearch] = useState('');
   const [supplierFilter, setSupplierFilter] = useState<string>('all');
+  const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const suppliers = ['all', ...Array.from(new Set(mockInventory.map((i) => i.supplier)))];
+  const loadInventory = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listInventory();
+      setInventory(data.map(mapInventory));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load inventory.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const filtered = mockInventory.filter(
+  useEffect(() => {
+    loadInventory();
+  }, [loadInventory]);
+
+  const suppliers = ['all', ...Array.from(new Set(inventory.map((i) => i.supplier)))];
+
+  const filtered = inventory.filter(
     (i) =>
       (supplierFilter === 'all' || i.supplier === supplierFilter) &&
       i.medicineName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const lowStock = mockInventory.filter((i) => i.quantity < LOW_STOCK).length;
-  const totalValue = mockInventory.reduce((s, i) => s + i.quantity * i.price, 0);
-  const expiringSoon = mockInventory.filter((i) => new Date(i.expiryDate) < new Date('2024-12-31')).length;
+  const lowStock = inventory.filter((i) => i.quantity < LOW_STOCK).length;
+  const totalValue = inventory.reduce((s, i) => s + i.quantity * i.price, 0);
+  const expiringSoon = inventory.filter((i) => new Date(i.expiryDate) < new Date('2024-12-31')).length;
 
   const stats: Array<{ label: string; value: string | number; color: ThemeColor }> = [
-    { label: 'Total Items', value: mockInventory.length, color: 'blue' },
+    { label: 'Total Items', value: inventory.length, color: 'blue' },
     { label: 'Low Stock', value: lowStock, color: 'red' },
     { label: 'Expiring Soon', value: expiringSoon, color: 'orange' },
     { label: 'Stock Value', value: `$${totalValue.toLocaleString(undefined, { maximumFractionDigits: 0 })}`, color: 'green' }
@@ -41,6 +63,12 @@ const AdminInventory: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Hospital Inventory</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Hospital-wide pharmacy stock overview</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
@@ -85,6 +113,11 @@ const AdminInventory: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading inventory...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -178,6 +211,7 @@ const AdminInventory: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

@@ -1,20 +1,17 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Send, UserPlus, Clock, CheckCircle, AlertCircle } from 'lucide-react';
+import { Send, UserPlus, Clock, CheckCircle, AlertCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ApiError } from '@/lib/api';
+import { listReferrals, createReferral, mapReferral, Referral } from '@/api/referrals';
+import { listPatients } from '@/api/users';
 
-interface Referral {
+interface PatientOption {
   id: string;
-  patientName: string;
-  specialist: string;
-  specialty: string;
-  reason: string;
-  urgency: 'routine' | 'urgent';
-  status: 'pending' | 'accepted' | 'completed';
-  date: string;
+  name: string;
 }
 
 const specialists = [
@@ -25,39 +22,6 @@ const specialists = [
   { name: 'Dr. Anna Rivera', specialty: 'Pulmonology' }
 ];
 
-const initialReferrals: Referral[] = [
-  {
-    id: 'ref1',
-    patientName: 'Michael Brown',
-    specialist: 'Dr. Sarah Chen',
-    specialty: 'Cardiology',
-    reason: 'Stress test evaluation for atypical chest pain',
-    urgency: 'urgent',
-    status: 'pending',
-    date: '2024-02-14'
-  },
-  {
-    id: 'ref2',
-    patientName: 'Olivia Martin',
-    specialist: 'Dr. Sarah Chen',
-    specialty: 'Cardiology',
-    reason: 'Echocardiogram for palpitations workup',
-    urgency: 'routine',
-    status: 'accepted',
-    date: '2024-02-10'
-  },
-  {
-    id: 'ref3',
-    patientName: 'James Wilson',
-    specialist: 'Dr. Mark Johnson',
-    specialty: 'Orthopedics',
-    reason: 'Post-CABG rehabilitation assessment',
-    urgency: 'routine',
-    status: 'completed',
-    date: '2024-01-20'
-  }
-];
-
 const statusConfig = {
   pending: { icon: Clock, color: 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400', label: 'Pending' },
   accepted: { icon: AlertCircle, color: 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400', label: 'Accepted' },
@@ -65,37 +29,71 @@ const statusConfig = {
 };
 
 const DoctorReferrals: React.FC = () => {
-  const [referrals, setReferrals] = useState(initialReferrals);
+  const [referrals, setReferrals] = useState<Referral[]>([]);
+  const [patients, setPatients] = useState<PatientOption[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [form, setForm] = useState({
-    patientName: '',
+    patientId: '',
     specialist: '',
     specialty: '',
     reason: '',
     urgency: 'routine' as 'routine' | 'urgent'
   });
 
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [referralsData, patientsData] = await Promise.all([
+        listReferrals(),
+        listPatients()
+      ]);
+      setPatients(patientsData.map((p) => ({ id: p.id, name: p.name })));
+      setReferrals(
+        referralsData.map(mapReferral).sort((a, b) => (a.date < b.date ? 1 : -1))
+      );
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load referrals.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
   const handleSpecialistChange = (name: string) => {
     const spec = specialists.find((s) => s.name === name);
     setForm({ ...form, specialist: name, specialty: spec?.specialty || '' });
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!form.patientName || !form.specialist || !form.reason) return;
-    setReferrals((prev) => [
-      {
-        id: `ref${Date.now()}`,
-        patientName: form.patientName,
+    if (!form.patientId || !form.specialist || !form.reason) return;
+    const patient = patients.find((p) => p.id === form.patientId);
+    if (!patient) return;
+    setSubmitting(true);
+    setError('');
+    try {
+      const created = await createReferral({
+        patient_id: form.patientId,
+        patient_name: patient.name,
         specialist: form.specialist,
         specialty: form.specialty,
         reason: form.reason,
         urgency: form.urgency,
-        status: 'pending',
         date: new Date().toISOString().slice(0, 10)
-      },
-      ...prev
-    ]);
-    setForm({ patientName: '', specialist: '', specialty: '', reason: '', urgency: 'routine' });
+      });
+      setReferrals((prev) => [mapReferral(created), ...prev]);
+      setForm({ patientId: '', specialist: '', specialty: '', reason: '', urgency: 'routine' });
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not submit referral.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   return (
@@ -106,6 +104,12 @@ const DoctorReferrals: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Referrals</h1>
             <p className="text-gray-600 dark:text-gray-400">Refer patients to specialists and track referral status</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 sm:gap-6">
             <motion.div
@@ -119,14 +123,18 @@ const DoctorReferrals: React.FC = () => {
               </div>
               <form onSubmit={handleSubmit} className="space-y-6">
                 <div>
-                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Patient Name</label>
-                  <input
-                    value={form.patientName}
-                    onChange={(e) => setForm({ ...form, patientName: e.target.value })}
-                    placeholder="e.g. John Patient"
-                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                  <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Patient</label>
+                  <select
+                    value={form.patientId}
+                    onChange={(e) => setForm({ ...form, patientId: e.target.value })}
+                    className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
                     required
-                  />
+                  >
+                    <option value="">Select patient...</option>
+                    {patients.map((p) => (
+                      <option key={p.id} value={p.id}>{p.name}</option>
+                    ))}
+                  </select>
                 </div>
                 <div>
                   <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Specialist</label>
@@ -174,16 +182,29 @@ const DoctorReferrals: React.FC = () => {
                 </div>
                 <button
                   type="submit"
-                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2"
+                  disabled={submitting}
+                  className="w-full py-3 bg-gradient-to-r from-blue-600 to-purple-600 text-white rounded-lg font-semibold hover:shadow-lg transition-all flex items-center justify-center gap-2 disabled:opacity-50"
                 >
-                  <Send className="w-5 h-5" /> Submit Referral
+                  <Send className="w-5 h-5" /> {submitting ? 'Submitting...' : 'Submit Referral'}
                 </button>
               </form>
             </motion.div>
 
             <div className="lg:col-span-2 space-y-4 sm:space-y-6 order-1 lg:order-2">
               <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">Referral History</h3>
-              {referrals.map((ref, i) => {
+              {loading && (
+                <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+                  <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading referrals...
+                </div>
+              )}
+              {!loading && referrals.length === 0 && (
+                <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                  <UserPlus className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No referrals yet</h3>
+                  <p className="text-gray-600 dark:text-gray-400">Referrals you submit will appear here.</p>
+                </div>
+              )}
+              {!loading && referrals.map((ref, i) => {
                 const cfg = statusConfig[ref.status];
                 const StatusIcon = cfg.icon;
                 return (

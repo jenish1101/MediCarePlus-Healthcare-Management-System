@@ -1,7 +1,10 @@
 'use client';
 
-import React, { createContext, useContext, useState, useCallback, ReactNode } from 'react';
+import React, { createContext, useContext, useState, useCallback, useEffect, ReactNode } from 'react';
 import { NotificationIconKey } from '@/lib/notificationIcons';
+import { useAuth } from '@/contexts/AuthContext';
+import * as notificationsApi from '@/api/notifications';
+import { BackendNotification } from '@/api/notifications';
 
 export type NotificationCategory = 'appointment' | 'prescription' | 'lab' | 'pharmacy' | 'billing';
 
@@ -16,6 +19,19 @@ export interface AppNotification {
   category?: NotificationCategory;
 }
 
+function mapNotification(n: BackendNotification): AppNotification {
+  return {
+    id: n.id,
+    icon: n.icon as NotificationIconKey,
+    color: n.color as AppNotification['color'],
+    title: n.title,
+    message: n.message,
+    time: n.time_label,
+    unread: n.unread,
+    category: n.category as NotificationCategory | undefined
+  };
+}
+
 interface NotificationContextType {
   notifications: AppNotification[];
   unreadCount: number;
@@ -25,80 +41,31 @@ interface NotificationContextType {
 
 const NotificationContext = createContext<NotificationContextType | undefined>(undefined);
 
-const initialNotifications: AppNotification[] = [
-  {
-    id: 'n1',
-    icon: 'calendar',
-    color: 'blue',
-    title: 'Appointment Confirmed',
-    message: 'Your appointment with Dr. Sarah Wilson is confirmed for tomorrow at 10:00 AM.',
-    time: '5 min ago',
-    unread: true,
-    category: 'appointment'
-  },
-  {
-    id: 'n2',
-    icon: 'fileText',
-    color: 'purple',
-    title: 'New Prescription',
-    message: 'A new prescription has been added to your records.',
-    time: '1 hour ago',
-    unread: true,
-    category: 'prescription'
-  },
-  {
-    id: 'n3',
-    icon: 'testTube',
-    color: 'green',
-    title: 'Lab Report Ready',
-    message: 'Your Complete Blood Count (CBC) report is now available.',
-    time: '3 hours ago',
-    unread: true,
-    category: 'lab'
-  },
-  {
-    id: 'n4',
-    icon: 'pill',
-    color: 'orange',
-    title: 'Order Shipped',
-    message: 'Your medicine order #ORD-1024 has been shipped.',
-    time: 'Yesterday',
-    unread: false,
-    category: 'pharmacy'
-  },
-  {
-    id: 'n5',
-    icon: 'dollarSign',
-    color: 'red',
-    title: 'Invoice Due',
-    message: 'Your consultation invoice #INV-2041 of $120 is due in 3 days.',
-    time: '2 days ago',
-    unread: true,
-    category: 'billing'
-  },
-  {
-    id: 'n6',
-    icon: 'bell',
-    color: 'blue',
-    title: 'Reminder',
-    message: 'Annual health check-up recommended. Book an appointment with your primary doctor.',
-    time: '3 days ago',
-    unread: false,
-    category: 'appointment'
-  }
-];
-
 export function NotificationProvider({ children }: { children: ReactNode }) {
-  const [notifications, setNotifications] = useState<AppNotification[]>(initialNotifications);
+  const { isAuthenticated } = useAuth();
+  const [notifications, setNotifications] = useState<AppNotification[]>([]);
+
+  useEffect(() => {
+    if (!isAuthenticated) {
+      // Clears state left over from a just-ended session (e.g. after logout).
+      // eslint-disable-next-line react-hooks/set-state-in-effect
+      setNotifications([]);
+      return;
+    }
+    notificationsApi
+      .listNotifications()
+      .then((data) => setNotifications(data.map(mapNotification)))
+      .catch(() => setNotifications([]));
+  }, [isAuthenticated]);
 
   const markAsRead = useCallback((id: string) => {
-    setNotifications((prev) =>
-      prev.map((n) => (n.id === id ? { ...n, unread: false } : n))
-    );
+    setNotifications((prev) => prev.map((n) => (n.id === id ? { ...n, unread: false } : n)));
+    notificationsApi.markNotificationRead(id).catch(() => {});
   }, []);
 
   const markAllAsRead = useCallback(() => {
     setNotifications((prev) => prev.map((n) => ({ ...n, unread: false })));
+    notificationsApi.markAllNotificationsRead().catch(() => {});
   }, []);
 
   const unreadCount = notifications.filter((n) => n.unread).length;

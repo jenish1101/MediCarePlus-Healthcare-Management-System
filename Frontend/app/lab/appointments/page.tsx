@@ -1,28 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Search, MapPin, Home, Building, CheckCircle } from 'lucide-react';
+import { Calendar, Clock, Search, Building, CheckCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface LabAppointment {
-  id: string;
-  patientName: string;
-  testName: string;
-  date: string;
-  time: string;
-  mode: 'in-lab' | 'home-collection';
-  status: 'scheduled' | 'collected' | 'completed';
-}
-
-const initialAppointments: LabAppointment[] = [
-  { id: 'la1', patientName: 'John Patient', testName: 'Complete Blood Count (CBC)', date: '2024-02-16', time: '09:00 AM', mode: 'in-lab', status: 'scheduled' },
-  { id: 'la2', patientName: 'Emma Thompson', testName: 'Lipid Profile', date: '2024-02-16', time: '10:30 AM', mode: 'home-collection', status: 'scheduled' },
-  { id: 'la3', patientName: 'Sophia Davis', testName: 'Thyroid Panel', date: '2024-02-15', time: '11:00 AM', mode: 'in-lab', status: 'collected' },
-  { id: 'la4', patientName: 'James Wilson', testName: 'Blood Glucose (Fasting)', date: '2024-02-14', time: '08:00 AM', mode: 'home-collection', status: 'completed' },
-  { id: 'la5', patientName: 'Michael Brown', testName: 'Liver Function Test', date: '2024-02-17', time: '02:00 PM', mode: 'in-lab', status: 'scheduled' }
-];
+import { ApiError } from '@/lib/api';
+import { listLabAppointments, mapLabAppointment, LabAppointment } from '@/api/lab';
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
@@ -34,10 +18,31 @@ const statusBadge = (status: string) => {
 };
 
 const LabAppointments: React.FC = () => {
-  const [appointments, setAppointments] = useState<LabAppointment[]>(initialAppointments);
+  const [appointments, setAppointments] = useState<LabAppointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
 
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabAppointments();
+      setAppointments(data.map(mapLabAppointment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load appointments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  // No backend endpoint exists to persist a "collected" status change for lab
+  // appointments, so this only updates local state (see report for details).
   const markCollected = (id: string) =>
     setAppointments((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'collected' } : a)));
 
@@ -64,6 +69,12 @@ const LabAppointments: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Appointments</h1>
             <p className="text-gray-600 dark:text-gray-400">Sample collection schedule</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
@@ -105,6 +116,11 @@ const LabAppointments: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading appointments...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((apt, i) => (
               <motion.div
@@ -129,8 +145,7 @@ const LabAppointments: React.FC = () => {
                         <span className="flex items-center"><Calendar className="w-4 h-4 mr-1" />{apt.date}</span>
                         <span className="flex items-center"><Clock className="w-4 h-4 mr-1" />{apt.time}</span>
                         <span className="flex items-center gap-1">
-                          {apt.mode === 'home-collection' ? <Home className="w-4 h-4" /> : <Building className="w-4 h-4" />}
-                          {apt.mode === 'home-collection' ? 'Home Collection' : 'In-Lab'}
+                          <Building className="w-4 h-4" /> In-Lab
                         </span>
                       </div>
                     </div>
@@ -144,7 +159,7 @@ const LabAppointments: React.FC = () => {
                         onClick={() => markCollected(apt.id)}
                         className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center gap-2"
                       >
-                        <MapPin className="w-4 h-4" /> Mark Collected
+                        Mark Collected
                       </button>
                     )}
                     {apt.status !== 'scheduled' && (
@@ -165,6 +180,7 @@ const LabAppointments: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

@@ -1,27 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, FileText, Clock, TrendingUp, CreditCard, Download, CheckCircle } from 'lucide-react';
+import { DollarSign, FileText, Clock, TrendingUp, CreditCard, Download, CheckCircle, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface Invoice {
-  id: string;
-  service: string;
-  date: string;
-  amount: number;
-  status: 'paid' | 'pending' | 'overdue';
-}
-
-const initialInvoices: Invoice[] = [
-  { id: 'INV-2041', service: 'Cardiology Consultation', date: '2024-02-14', amount: 500, status: 'paid' },
-  { id: 'INV-2047', service: 'Neurology Consultation', date: '2024-01-28', amount: 600, status: 'paid' },
-  { id: 'INV-2048', service: 'Complete Blood Count (CBC)', date: '2024-01-25', amount: 120, status: 'paid' },
-  { id: 'INV-2049', service: 'Pediatrics Video Consultation', date: '2024-02-20', amount: 400, status: 'pending' },
-  { id: 'INV-2050', service: 'Lipid Profile Lab Test', date: '2024-02-10', amount: 180, status: 'overdue' },
-  { id: 'INV-2051', service: 'Medicine Order #ord2', date: '2024-02-12', amount: 28, status: 'paid' }
-];
+import { ApiError } from '@/lib/api';
+import { listInvoices, payInvoice, mapInvoice, Invoice } from '@/api/billing';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -33,10 +18,29 @@ const statusColor = (status: string) => {
 };
 
 const PatientBilling: React.FC = () => {
-  const [invoices, setInvoices] = useState(initialInvoices);
+  const [invoices, setInvoices] = useState<Invoice[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState<'all' | 'paid' | 'pending' | 'overdue'>('all');
   const [payingId, setPayingId] = useState<string | null>(null);
   const [paidSuccess, setPaidSuccess] = useState<string | null>(null);
+
+  const loadInvoices = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listInvoices();
+      setInvoices(data.map(mapInvoice));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load invoices.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInvoices();
+  }, [loadInvoices]);
 
   const filtered = invoices.filter((inv) => filter === 'all' || inv.status === filter);
 
@@ -51,16 +55,19 @@ const PatientBilling: React.FC = () => {
     { icon: FileText, label: 'Invoices', value: invoices.length, color: 'blue' }
   ];
 
-  const handlePay = (id: string) => {
+  const handlePay = async (id: string) => {
     setPayingId(id);
-    setTimeout(() => {
-      setInvoices((prev) =>
-        prev.map((inv) => (inv.id === id ? { ...inv, status: 'paid' as const } : inv))
-      );
-      setPayingId(null);
+    setError('');
+    try {
+      const updated = await payInvoice(id);
+      setInvoices((prev) => prev.map((inv) => (inv.id === id ? mapInvoice(updated) : inv)));
       setPaidSuccess(id);
       setTimeout(() => setPaidSuccess(null), 3000);
-    }, 1500);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not process payment.');
+    } finally {
+      setPayingId(null);
+    }
   };
 
   return (
@@ -81,6 +88,12 @@ const PatientBilling: React.FC = () => {
               Download Statements
             </button>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
@@ -116,6 +129,11 @@ const PatientBilling: React.FC = () => {
             ))}
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading invoices...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((inv, i) => (
               <motion.div
@@ -191,6 +209,7 @@ const PatientBilling: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

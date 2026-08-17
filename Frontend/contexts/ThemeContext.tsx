@@ -20,16 +20,19 @@ function applyTheme(theme: Theme) {
   root.style.colorScheme = theme;
 }
 
+function readInitialTheme(): Theme {
+  if (typeof window === 'undefined') return 'light';
+  const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
+  return stored ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
+}
+
 export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
-  const [theme, setThemeState] = useState<Theme>('light');
+  const [theme, setThemeState] = useState<Theme>(readInitialTheme);
 
   useEffect(() => {
-    const stored = localStorage.getItem(STORAGE_KEY) as Theme | null;
-    const initial = stored ?? (window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light');
-    setThemeState(initial);
-    applyTheme(initial);
+    applyTheme(theme);
 
-    if (!stored) {
+    if (!localStorage.getItem(STORAGE_KEY)) {
       const mq = window.matchMedia('(prefers-color-scheme: dark)');
       const onChange = (e: MediaQueryListEvent) => {
         const next = e.matches ? 'dark' : 'light';
@@ -39,6 +42,7 @@ export const ThemeProvider: React.FC<{ children: ReactNode }> = ({ children }) =
       mq.addEventListener('change', onChange);
       return () => mq.removeEventListener('change', onChange);
     }
+    // eslint-disable-next-line react-hooks/exhaustive-deps
   }, []);
 
   const setTheme = useCallback((next: Theme) => {

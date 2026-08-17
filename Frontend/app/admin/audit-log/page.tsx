@@ -1,31 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ScrollText, Search, User, Settings, Shield, FileText } from 'lucide-react';
+import { ScrollText, Search, User, Settings, Shield, FileText, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface AuditEntry {
-  id: string;
-  user: string;
-  role: string;
-  action: string;
-  target: string;
-  timestamp: string;
-  category: 'user' | 'settings' | 'security' | 'billing';
-}
-
-const auditEntries: AuditEntry[] = [
-  { id: 'a1', user: 'Admin User', role: 'admin', action: 'Approved doctor registration', target: 'Dr. Anita Kapoor', timestamp: '2024-02-15 09:32', category: 'user' },
-  { id: 'a2', user: 'Admin User', role: 'admin', action: 'Updated user role', target: 'Mark Lab Tech → lab_tech', timestamp: '2024-02-15 08:15', category: 'user' },
-  { id: 'a3', user: 'Lisa Pharmacist', role: 'pharmacist', action: 'Adjusted inventory quantity', target: 'Amoxicillin 500mg (-50 units)', timestamp: '2024-02-14 16:45', category: 'settings' },
-  { id: 'a4', user: 'Admin User', role: 'admin', action: 'Exported billing report', target: 'February 2024 invoices', timestamp: '2024-02-14 14:20', category: 'billing' },
-  { id: 'a5', user: 'System', role: 'system', action: 'Failed login attempt blocked', target: 'unknown@email.com', timestamp: '2024-02-14 11:08', category: 'security' },
-  { id: 'a6', user: 'Admin User', role: 'admin', action: 'Created announcement', target: 'System maintenance Feb 20', timestamp: '2024-02-13 17:30', category: 'settings' },
-  { id: 'a7', user: 'Dr. Sarah Wilson', role: 'doctor', action: 'Updated patient prescription', target: 'John Patient - rx1', timestamp: '2024-02-13 10:22', category: 'user' },
-  { id: 'a8', user: 'Admin User', role: 'admin', action: 'Deactivated user account', target: 'Mark Lab Tech', timestamp: '2024-02-12 15:55', category: 'security' }
-];
+import { ApiError } from '@/lib/api';
+import { listAuditLog, mapAuditEntry, AuditEntry } from '@/api/auditLog';
 
 const categoryIcon = (cat: string) => {
   const icons: Record<string, React.ElementType> = {
@@ -50,6 +31,26 @@ const categoryColor = (cat: string) => {
 const AdminAuditLog: React.FC = () => {
   const [search, setSearch] = useState('');
   const [categoryFilter, setCategoryFilter] = useState<string>('all');
+  const [auditEntries, setAuditEntries] = useState<AuditEntry[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadAuditLog = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAuditLog();
+      setAuditEntries(data.map(mapAuditEntry));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load audit log.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAuditLog();
+  }, [loadAuditLog]);
 
   const categories = ['all', 'user', 'settings', 'security', 'billing'];
 
@@ -69,6 +70,12 @@ const AdminAuditLog: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Audit Log</h1>
             <p className="text-gray-600 dark:text-gray-400">Track who changed what across the system</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -95,6 +102,11 @@ const AdminAuditLog: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading audit log...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -146,6 +158,7 @@ const AdminAuditLog: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

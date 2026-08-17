@@ -13,7 +13,7 @@ import { AppNotification } from '@/contexts/NotificationContext';
 type FilterType = 'all' | 'unread' | NonNullable<AppNotification['category']>;
 
 const PatientNotifications: React.FC = () => {
-  const { notifications, unreadCount, markAsRead, markAllAsRead } = useNotifications();
+  const { notifications, markAsRead, markAllAsRead } = useNotifications();
   const [filter, setFilter] = useState<FilterType>('all');
   const [deletedIds, setDeletedIds] = useState<string[]>([]);
 

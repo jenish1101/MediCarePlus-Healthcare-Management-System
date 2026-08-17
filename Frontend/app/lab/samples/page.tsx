@@ -1,10 +1,11 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { ScanBarcode, Search, CheckCircle, Clock, Package, ArrowRight } from 'lucide-react';
+import { ScanBarcode, Search, CheckCircle, Clock, Package, ArrowRight, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { api, ApiError } from '@/lib/api';
 
 interface Sample {
   id: string;
@@ -16,13 +17,27 @@ interface Sample {
   location: string;
 }
 
-const initialSamples: Sample[] = [
-  { id: 's1', sampleId: 'SMP-2024-0841', patientName: 'John Patient', testName: 'Complete Blood Count (CBC)', collectedAt: '2024-02-15 09:15', status: 'processing', location: 'Hematology Lab' },
-  { id: 's2', sampleId: 'SMP-2024-0842', patientName: 'Emma Thompson', testName: 'Lipid Profile', collectedAt: '2024-02-15 10:30', status: 'received', location: 'Biochemistry Lab' },
-  { id: 's3', sampleId: 'SMP-2024-0843', patientName: 'Michael Brown', testName: 'Liver Function Test', collectedAt: '2024-02-15 11:00', status: 'in-transit', location: 'Collection → Lab' },
-  { id: 's4', sampleId: 'SMP-2024-0840', patientName: 'Sophia Davis', testName: 'Thyroid Panel', collectedAt: '2024-02-14 14:20', status: 'completed', location: 'Endocrinology Lab' },
-  { id: 's5', sampleId: 'SMP-2024-0839', patientName: 'James Wilson', testName: 'Blood Glucose', collectedAt: '2024-02-14 08:45', status: 'completed', location: 'Biochemistry Lab' }
-];
+interface BackendSample {
+  id: string;
+  sample_id: string;
+  patient_name: string;
+  test_name: string;
+  collected_at: string;
+  status: Sample['status'];
+  location: string;
+}
+
+function mapSample(s: BackendSample): Sample {
+  return {
+    id: s.id,
+    sampleId: s.sample_id,
+    patientName: s.patient_name,
+    testName: s.test_name,
+    collectedAt: s.collected_at,
+    status: s.status,
+    location: s.location
+  };
+}
 
 const statusSteps: Sample['status'][] = ['collected', 'in-transit', 'received', 'processing', 'completed'];
 
@@ -43,10 +58,31 @@ const statusColor: Record<Sample['status'], string> = {
 };
 
 const LabSamples: React.FC = () => {
-  const [samples, setSamples] = useState<Sample[]>(initialSamples);
+  const [samples, setSamples] = useState<Sample[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [advancingId, setAdvancingId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [scanInput, setScanInput] = useState('');
   const [scanMsg, setScanMsg] = useState('');
+  const [scanning, setScanning] = useState(false);
+
+  const loadSamples = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get<BackendSample[]>('/lab/samples');
+      setSamples(data.map(mapSample));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load samples.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSamples();
+  }, [loadSamples]);
 
   const filtered = samples.filter(
     (s) =>
@@ -55,30 +91,38 @@ const LabSamples: React.FC = () => {
       s.testName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const advanceSample = (id: string) => {
-    setSamples((prev) =>
-      prev.map((s) => {
-        if (s.id !== id) return s;
-        const idx = statusSteps.indexOf(s.status);
-        if (idx < statusSteps.length - 1) return { ...s, status: statusSteps[idx + 1] };
-        return s;
-      })
-    );
+  const advanceSample = async (id: string) => {
+    setAdvancingId(id);
+    try {
+      const updated = await api.post<BackendSample>(`/lab/samples/${id}/advance`);
+      setSamples((prev) => prev.map((s) => (s.id === id ? mapSample(updated) : s)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not advance sample.');
+    } finally {
+      setAdvancingId(null);
+    }
   };
 
-  const handleScan = (e: React.FormEvent) => {
+  const handleScan = async (e: React.FormEvent) => {
     e.preventDefault();
     const code = scanInput.trim().toUpperCase();
     if (!code) return;
-    const match = samples.find((s) => s.sampleId === code);
-    if (match) {
-      advanceSample(match.id);
-      setScanMsg(`Sample ${code} advanced to next stage.`);
-    } else {
-      setScanMsg(`Sample ${code} not found.`);
+    setScanning(true);
+    try {
+      const updated = await api.post<BackendSample>('/lab/samples/scan', { sample_id: code });
+      const mapped = mapSample(updated);
+      setSamples((prev) => {
+        const exists = prev.some((s) => s.id === mapped.id);
+        return exists ? prev.map((s) => (s.id === mapped.id ? mapped : s)) : [mapped, ...prev];
+      });
+      setScanMsg(`Sample ${code} advanced to "${mapped.status}".`);
+    } catch (err) {
+      setScanMsg(err instanceof ApiError ? err.message : `Sample ${code} not found.`);
+    } finally {
+      setScanning(false);
+      setScanInput('');
+      setTimeout(() => setScanMsg(''), 3000);
     }
-    setScanInput('');
-    setTimeout(() => setScanMsg(''), 3000);
   };
 
   const active = samples.filter((s) => s.status !== 'completed').length;
@@ -108,12 +152,22 @@ const LabSamples: React.FC = () => {
                 placeholder="Enter or scan sample ID (e.g. SMP-2024-0841)"
                 className="flex-1 min-w-0 px-4 py-3 rounded-lg text-gray-900 focus:ring-2 focus:ring-white/50 focus:outline-none"
               />
-              <button type="submit" className="w-full sm:w-auto px-6 py-3 bg-white text-purple-700 rounded-lg font-semibold hover:bg-purple-50 transition-colors flex items-center justify-center gap-2 shrink-0">
-                <ScanBarcode className="w-5 h-5" /> Scan
+              <button
+                type="submit"
+                disabled={scanning}
+                className="w-full sm:w-auto px-6 py-3 bg-white text-purple-700 rounded-lg font-semibold hover:bg-purple-50 transition-colors flex items-center justify-center gap-2 shrink-0 disabled:opacity-50"
+              >
+                <ScanBarcode className="w-5 h-5" /> {scanning ? 'Scanning...' : 'Scan'}
               </button>
             </form>
             {scanMsg && <p className="text-sm text-white/90 mt-3">{scanMsg}</p>}
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-3 sm:gap-6 max-w-md">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-3 sm:gap-6">
@@ -142,6 +196,11 @@ const LabSamples: React.FC = () => {
             />
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading samples...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((sample, i) => {
               const stepIdx = statusSteps.indexOf(sample.status);
@@ -170,9 +229,10 @@ const LabSamples: React.FC = () => {
                     {sample.status !== 'completed' && (
                       <button
                         onClick={() => advanceSample(sample.id)}
-                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium flex items-center gap-2 shrink-0"
+                        disabled={advancingId === sample.id}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 text-sm font-medium flex items-center gap-2 shrink-0 disabled:opacity-50"
                       >
-                        Advance <ArrowRight className="w-4 h-4" />
+                        {advancingId === sample.id ? 'Advancing...' : 'Advance'} <ArrowRight className="w-4 h-4" />
                       </button>
                     )}
                   </div>
@@ -194,7 +254,15 @@ const LabSamples: React.FC = () => {
                 </motion.div>
               );
             })}
+            {filtered.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No samples</h3>
+                <p className="text-gray-600 dark:text-gray-400">No samples match your search.</p>
+              </div>
+            )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

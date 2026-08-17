@@ -1,17 +1,45 @@
 'use client';
 
-import React, { useMemo } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import Link from 'next/link';
 import { motion } from 'framer-motion';
-import { Package, DollarSign, AlertTriangle, Pill, FileText, ShoppingCart, RotateCcw } from 'lucide-react';
+import { Package, DollarSign, AlertTriangle, Pill, FileText, ShoppingCart, RotateCcw, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockInventory, mockOrders } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listInventory, listOrders, mapInventory, mapOrder } from '@/api/pharmacy';
+import { Inventory, Order } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const PharmacyDashboard: React.FC = () => {
-  const activeOrders = mockOrders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
-  const lowStock = mockInventory.filter(i => i.quantity < 500);
+  const [inventory, setInventory] = useState<Inventory[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const load = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [inventoryData, ordersData] = await Promise.all([
+        listInventory(),
+        listOrders()
+      ]);
+      setInventory(inventoryData.map(mapInventory));
+      setOrders(ordersData.map(mapOrder));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    load();
+  }, [load]);
+
+  const activeOrders = orders.filter(o => o.status !== 'delivered' && o.status !== 'cancelled');
+  const lowStock = inventory.filter(i => i.quantity < 500);
 
   const sixMonthsFromNow = useMemo(() => {
     const d = new Date();
@@ -19,10 +47,10 @@ const PharmacyDashboard: React.FC = () => {
     return d;
   }, []);
 
-  const expiringSoon = mockInventory.filter(i => new Date(i.expiryDate) < sixMonthsFromNow);
+  const expiringSoon = inventory.filter(i => new Date(i.expiryDate) < sixMonthsFromNow);
 
   const stats: Array<{ icon: typeof Package; label: string; value: string | number; color: ThemeColor }> = [
-    { icon: Package, label: 'Total Medicines', value: mockInventory.length, color: 'blue' },
+    { icon: Package, label: 'Total Medicines', value: inventory.length, color: 'blue' },
     { icon: DollarSign, label: 'Monthly Sales', value: '$45,230', color: 'green' },
     { icon: AlertTriangle, label: 'Low Stock Items', value: lowStock.length, color: 'orange' },
     { icon: Pill, label: 'Active Orders', value: activeOrders.length, color: 'purple' }
@@ -41,6 +69,18 @@ const PharmacyDashboard: React.FC = () => {
             <p className="text-white/90 text-sm sm:text-base">Manage inventory, orders, and sales</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading dashboard...
+            </div>
+          ) : (
+          <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((stat, i) => {
               const colors = colorClasses[stat.color];
@@ -158,7 +198,7 @@ const PharmacyDashboard: React.FC = () => {
               </Link>
             </div>
             <div className="space-y-2 sm:space-y-3">
-              {mockOrders.map((order) => (
+              {orders.map((order) => (
                 <div key={order.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2 sm:gap-4 p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                   <div className="min-w-0">
                     <p className="font-medium text-sm sm:text-base text-gray-900 dark:text-gray-100">Order #{order.id}</p>
@@ -179,6 +219,8 @@ const PharmacyDashboard: React.FC = () => {
               ))}
             </div>
           </motion.div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

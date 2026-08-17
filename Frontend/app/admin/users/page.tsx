@@ -1,31 +1,13 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, UserPlus, Users, Trash2, Pencil, Shield, X } from 'lucide-react';
+import { Search, UserPlus, Users, Trash2, Pencil, Shield, X, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-type UserRole = 'patient' | 'doctor' | 'pharmacist' | 'lab_tech' | 'admin';
-
-interface SystemUser {
-  id: string;
-  name: string;
-  email: string;
-  role: UserRole;
-  status: 'active' | 'inactive';
-  joined: string;
-}
-
-const initialUsers: SystemUser[] = [
-  { id: 'u1', name: 'John Patient', email: 'john@demo.com', role: 'patient', status: 'active', joined: '2023-11-02' },
-  { id: 'u2', name: 'Dr. Sarah Wilson', email: 'sarah.wilson@hospital.com', role: 'doctor', status: 'active', joined: '2022-06-15' },
-  { id: 'u3', name: 'Dr. Michael Chen', email: 'michael.chen@hospital.com', role: 'doctor', status: 'active', joined: '2022-09-20' },
-  { id: 'u4', name: 'Lisa Pharmacist', email: 'lisa@hospital.com', role: 'pharmacist', status: 'active', joined: '2023-01-10' },
-  { id: 'u5', name: 'Mark Lab Tech', email: 'mark@hospital.com', role: 'lab_tech', status: 'inactive', joined: '2023-03-05' },
-  { id: 'u6', name: 'Admin User', email: 'admin@demo.com', role: 'admin', status: 'active', joined: '2021-12-01' },
-  { id: 'u7', name: 'Emma Thompson', email: 'emma@demo.com', role: 'patient', status: 'active', joined: '2024-01-18' }
-];
+import { ApiError } from '@/lib/api';
+import { listUsers, createUser as createUserApi, updateUser as updateUserApi, deleteUser as deleteUserApi, mapSystemUser as mapUser, SystemUser } from '@/api/users';
+import { UserRole } from '@/types';
 
 const roleColor = (role: string) => {
   const colors: Record<string, string> = {
@@ -33,21 +15,44 @@ const roleColor = (role: string) => {
     doctor: 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
     pharmacist: 'bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-400',
     lab_tech: 'bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-400',
-    admin: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400'
+    admin: 'bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400',
+    receptionist: 'bg-cyan-100 dark:bg-cyan-900/30 text-cyan-700 dark:text-cyan-400',
+    nurse: 'bg-pink-100 dark:bg-pink-900/30 text-pink-700 dark:text-pink-400',
+    supplier: 'bg-indigo-100 dark:bg-indigo-900/30 text-indigo-700 dark:text-indigo-400'
   };
   return colors[role] || 'bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300';
 };
 
-const emptyForm = { name: '', email: '', role: 'patient' as UserRole, status: 'active' as 'active' | 'inactive' };
+const emptyForm = { name: '', email: '', password: '', role: 'patient' as UserRole, status: 'active' as 'active' | 'inactive' };
 
 const AdminUsers: React.FC = () => {
-  const [users, setUsers] = useState<SystemUser[]>(initialUsers);
+  const [users, setUsers] = useState<SystemUser[]>([]);
   const [search, setSearch] = useState('');
   const [roleFilter, setRoleFilter] = useState<string>('all');
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState(emptyForm);
   const [deleteConfirm, setDeleteConfirm] = useState<string | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+
+  const loadUsers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listUsers();
+      setUsers(data.map(mapUser));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load users.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadUsers();
+  }, [loadUsers]);
 
   const filtered = users.filter(
     (u) =>
@@ -56,7 +61,7 @@ const AdminUsers: React.FC = () => {
         u.email.toLowerCase().includes(search.toLowerCase()))
   );
 
-  const roles: UserRole[] = ['patient', 'doctor', 'pharmacist', 'lab_tech', 'admin'];
+  const roles: UserRole[] = ['patient', 'doctor', 'pharmacist', 'lab_tech', 'admin', 'receptionist', 'nurse', 'supplier'];
   const roleFilters = ['all', ...roles];
 
   const openCreate = () => {
@@ -67,47 +72,60 @@ const AdminUsers: React.FC = () => {
 
   const openEdit = (user: SystemUser) => {
     setEditingId(user.id);
-    setForm({ name: user.name, email: user.email, role: user.role, status: user.status });
+    setForm({ name: user.name, email: user.email, password: '', role: user.role, status: user.status });
     setShowModal(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.email) return;
+    setSaving(true);
+    setError('');
 
-    if (editingId) {
-      setUsers((prev) =>
-        prev.map((u) =>
-          u.id === editingId ? { ...u, name: form.name, email: form.email, role: form.role, status: form.status } : u
-        )
-      );
-    } else {
-      setUsers((prev) => [
-        {
-          id: `u${Date.now()}`,
+    try {
+      if (editingId) {
+        const updated = await updateUserApi(editingId, {
           name: form.name,
+          is_active: form.status === 'active'
+        });
+        setUsers((prev) => prev.map((u) => (u.id === editingId ? mapUser(updated) : u)));
+      } else {
+        const created = await createUserApi({
           email: form.email,
-          role: form.role,
-          status: form.status,
-          joined: new Date().toISOString().split('T')[0]
-        },
-        ...prev
-      ]);
+          password: form.password,
+          name: form.name,
+          role: form.role
+        });
+        setUsers((prev) => [mapUser(created), ...prev]);
+      }
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not save user.');
+    } finally {
+      setSaving(false);
     }
-    setShowModal(false);
   };
 
-  const toggleStatus = (id: string) => {
-    setUsers((prev) =>
-      prev.map((u) =>
-        u.id === id ? { ...u, status: u.status === 'active' ? 'inactive' : 'active' } : u
-      )
-    );
+  const toggleStatus = async (id: string) => {
+    const user = users.find((u) => u.id === id);
+    if (!user) return;
+    try {
+      const updated = await updateUserApi(id, { is_active: user.status !== 'active' });
+      setUsers((prev) => prev.map((u) => (u.id === id ? mapUser(updated) : u)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update user status.');
+    }
   };
 
-  const removeUser = (id: string) => {
-    setUsers((prev) => prev.filter((u) => u.id !== id));
-    setDeleteConfirm(null);
+  const removeUser = async (id: string) => {
+    try {
+      await deleteUserApi(id);
+      setUsers((prev) => prev.filter((u) => u.id !== id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not delete user.');
+    } finally {
+      setDeleteConfirm(null);
+    }
   };
 
   return (
@@ -130,6 +148,12 @@ const AdminUsers: React.FC = () => {
               <UserPlus className="w-5 h-5" /> Add User
             </button>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -156,6 +180,11 @@ const AdminUsers: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading users...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -169,7 +198,7 @@ const AdminUsers: React.FC = () => {
                     <div className="flex items-center gap-3 min-w-0">
                       {/* eslint-disable-next-line @next/next/no-img-element */}
                       <img
-                        src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`}
+                        src={u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`}
                         alt={u.name}
                         className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700 shrink-0"
                       />
@@ -221,7 +250,7 @@ const AdminUsers: React.FC = () => {
                         <div className="flex items-center gap-3">
                           {/* eslint-disable-next-line @next/next/no-img-element */}
                           <img
-                            src={`https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`}
+                            src={u.avatar || `https://api.dicebear.com/7.x/avataaars/svg?seed=${u.name}`}
                             alt={u.name}
                             className="w-9 h-9 rounded-full bg-gray-100 dark:bg-gray-700"
                           />
@@ -273,6 +302,7 @@ const AdminUsers: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
 
         <AnimatePresence>
@@ -312,22 +342,38 @@ const AdminUsers: React.FC = () => {
                     <input
                       type="email"
                       required
+                      disabled={!!editingId}
                       value={form.email}
                       onChange={(e) => setForm({ ...form, email: e.target.value })}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500 disabled:opacity-60"
                     />
+                    {editingId && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Email cannot be changed after creation.</p>}
                   </div>
+                  {!editingId && (
+                    <div>
+                      <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Password</label>
+                      <input
+                        type="password"
+                        required
+                        value={form.password}
+                        onChange={(e) => setForm({ ...form, password: e.target.value })}
+                        className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                      />
+                    </div>
+                  )}
                   <div>
                     <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Role</label>
                     <select
                       value={form.role}
+                      disabled={!!editingId}
                       onChange={(e) => setForm({ ...form, role: e.target.value as UserRole })}
-                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 disabled:opacity-60"
                     >
                       {roles.map((r) => (
                         <option key={r} value={r}>{r.replace('_', ' ')}</option>
                       ))}
                     </select>
+                    {editingId && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Role cannot be changed after creation.</p>}
                   </div>
                   <div>
                     <label className="block text-sm font-medium text-gray-600 dark:text-gray-400 mb-1">Status</label>
@@ -344,8 +390,8 @@ const AdminUsers: React.FC = () => {
                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
-                      {editingId ? 'Save Changes' : 'Create User'}
+                    <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
+                      {saving ? 'Saving...' : editingId ? 'Save Changes' : 'Create User'}
                     </button>
                   </div>
                 </form>
@@ -371,7 +417,7 @@ const AdminUsers: React.FC = () => {
                 className="w-full max-w-sm bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-4 text-center"
               >
                 <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">Delete user?</h3>
-                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">This action cannot be undone in the demo.</p>
+                <p className="text-sm text-gray-600 dark:text-gray-400 mb-6">This action cannot be undone.</p>
                 <div className="flex gap-3">
                   <button onClick={() => setDeleteConfirm(null)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700">
                     Cancel

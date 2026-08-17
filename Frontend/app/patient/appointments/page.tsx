@@ -1,12 +1,14 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Video, CheckCircle, Plus, Stethoscope } from 'lucide-react';
+import { Calendar, Clock, Video, CheckCircle, Plus, Stethoscope, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockAppointments } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listAppointments, cancelAppointment as cancelAppointmentApi, mapAppointment } from '@/api/appointments';
+import { Appointment } from '@/types';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -21,17 +23,50 @@ const statusColor = (status: string) => {
 const PatientAppointments: React.FC = () => {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'completed'>('all');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [cancellingId, setCancellingId] = useState<string | null>(null);
 
-  const upcoming = mockAppointments.filter(a => a.status === 'scheduled');
-  const past = mockAppointments.filter(a => a.status === 'completed');
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAppointments();
+      setAppointments(data.map(mapAppointment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load appointments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  const cancelAppointment = async (id: string) => {
+    setCancellingId(id);
+    try {
+      await cancelAppointmentApi(id);
+      setAppointments((prev) => prev.filter((a) => a.id !== id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not cancel appointment.');
+    } finally {
+      setCancellingId(null);
+    }
+  };
+
+  const upcoming = appointments.filter(a => a.status === 'scheduled');
+  const past = appointments.filter(a => a.status === 'completed');
 
   const filtered =
-    filter === 'all' ? mockAppointments : mockAppointments.filter(a => a.status === filter);
+    filter === 'all' ? appointments : appointments.filter(a => a.status === filter);
 
   const stats = [
     { label: 'Upcoming', value: upcoming.length, color: 'blue' },
     { label: 'Completed', value: past.length, color: 'green' },
-    { label: 'Total', value: mockAppointments.length, color: 'purple' }
+    { label: 'Total', value: appointments.length, color: 'purple' }
   ];
 
   return (
@@ -55,6 +90,12 @@ const PatientAppointments: React.FC = () => {
               Book Appointment
             </button>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           {/* Stats */}
           <div className="grid grid-cols-3 gap-6 sm:gap-6">
@@ -90,6 +131,11 @@ const PatientAppointments: React.FC = () => {
           </div>
 
           {/* List */}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading appointments...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((apt, i) => (
               <motion.div
@@ -136,8 +182,12 @@ const PatientAppointments: React.FC = () => {
                     <button className="flex-1 min-w-[120px] py-2 border border-blue-600 text-blue-600 dark:text-blue-400 rounded-lg hover:bg-blue-50 dark:hover:bg-blue-900/20 transition-colors">
                       Reschedule
                     </button>
-                    <button className="flex-1 min-w-[120px] py-2 border border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors">
-                      Cancel
+                    <button
+                      onClick={() => cancelAppointment(apt.id)}
+                      disabled={cancellingId === apt.id}
+                      className="flex-1 min-w-[120px] py-2 border border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
+                    >
+                      {cancellingId === apt.id ? 'Cancelling...' : 'Cancel'}
                     </button>
                     {apt.type === 'video' && (
                       <button
@@ -166,6 +216,7 @@ const PatientAppointments: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

@@ -1,15 +1,38 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { TestTube, Download, Clock, CheckCircle, Plus } from 'lucide-react';
+import { TestTube, Download, Clock, CheckCircle, Plus, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockLabReports } from '@/data/mockData';
+import { api, ApiError } from '@/lib/api';
+import { mapLabReport, BackendLabReport } from '@/lib/mappers';
+import { LabReport } from '@/types';
 
 const PatientLabReports: React.FC = () => {
-  const completed = mockLabReports.filter(r => r.status === 'completed').length;
-  const pending = mockLabReports.filter(r => r.status === 'pending').length;
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadLabReports = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await api.get<BackendLabReport[]>('/lab/reports');
+      setLabReports(data.map(mapLabReport));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load lab reports.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadLabReports();
+  }, [loadLabReports]);
+
+  const completed = labReports.filter(r => r.status === 'completed').length;
+  const pending = labReports.filter(r => r.status === 'pending').length;
 
   return (
     <ProtectedRoute allowedRoles={['patient']}>
@@ -29,6 +52,12 @@ const PatientLabReports: React.FC = () => {
               Book Lab Test
             </button>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 gap-6 sm:gap-6 max-w-md">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-6">
@@ -51,8 +80,13 @@ const PatientLabReports: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading lab reports...
+            </div>
+          ) : (
           <div className="space-y-6">
-            {mockLabReports.map((report, i) => (
+            {labReports.map((report, i) => (
               <motion.div
                 key={report.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -97,6 +131,7 @@ const PatientLabReports: React.FC = () => {
               </motion.div>
             ))}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

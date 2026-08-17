@@ -1,82 +1,41 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { MessageSquare, Send, Search, Circle, ArrowLeft } from 'lucide-react';
+import { MessageSquare, Send, Search, Circle, ArrowLeft, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface ChatMessage {
-  id: string;
-  sender: 'doctor' | 'patient';
-  text: string;
-  time: string;
-}
-
-interface Conversation {
-  id: string;
-  patientName: string;
-  lastMessage: string;
-  lastTime: string;
-  unread: number;
-  messages: ChatMessage[];
-}
-
-const conversations: Conversation[] = [
-  {
-    id: 'c1',
-    patientName: 'John Patient',
-    lastMessage: 'Thank you, doctor. I will take the medication as prescribed.',
-    lastTime: '10:32 AM',
-    unread: 0,
-    messages: [
-      { id: 'm1', sender: 'patient', text: 'Hello Dr. Wilson, I have a question about my blood pressure medication.', time: '10:15 AM' },
-      { id: 'm2', sender: 'doctor', text: 'Hello John. Of course — what would you like to know?', time: '10:18 AM' },
-      { id: 'm3', sender: 'patient', text: 'Should I take it in the morning or evening?', time: '10:22 AM' },
-      { id: 'm4', sender: 'doctor', text: 'Take Amlodipine in the morning with breakfast for best results.', time: '10:28 AM' },
-      { id: 'm5', sender: 'patient', text: 'Thank you, doctor. I will take the medication as prescribed.', time: '10:32 AM' }
-    ]
-  },
-  {
-    id: 'c2',
-    patientName: 'Emma Thompson',
-    lastMessage: 'The palpitations have reduced since starting the new medication.',
-    lastTime: 'Yesterday',
-    unread: 1,
-    messages: [
-      { id: 'm1', sender: 'patient', text: 'Dr. Wilson, I wanted to update you on my symptoms.', time: 'Yesterday 3:00 PM' },
-      { id: 'm2', sender: 'patient', text: 'The palpitations have reduced since starting the new medication.', time: 'Yesterday 3:01 PM' }
-    ]
-  },
-  {
-    id: 'c3',
-    patientName: 'Sophia Davis',
-    lastMessage: 'When should I schedule my follow-up lipid panel?',
-    lastTime: 'Feb 12',
-    unread: 1,
-    messages: [
-      { id: 'm1', sender: 'patient', text: 'When should I schedule my follow-up lipid panel?', time: 'Feb 12 9:45 AM' }
-    ]
-  },
-  {
-    id: 'c4',
-    patientName: 'James Wilson',
-    lastMessage: 'Cardiac rehab is going well. See you at the next appointment.',
-    lastTime: 'Feb 10',
-    unread: 0,
-    messages: [
-      { id: 'm1', sender: 'doctor', text: 'How is your recovery progressing after surgery?', time: 'Feb 10 11:00 AM' },
-      { id: 'm2', sender: 'patient', text: 'Cardiac rehab is going well. See you at the next appointment.', time: 'Feb 10 11:15 AM' }
-    ]
-  }
-];
+import { ApiError } from '@/lib/api';
+import { listMessageThreads, sendMessage as sendMessageApi, mapThread, Conversation } from '@/api/messages';
 
 const DoctorMessages: React.FC = () => {
-  const [activeId, setActiveId] = useState(conversations[0].id);
+  const [activeId, setActiveId] = useState<string | null>(null);
   const [search, setSearch] = useState('');
   const [draft, setDraft] = useState('');
-  const [chatData, setChatData] = useState(conversations);
+  const [chatData, setChatData] = useState<Conversation[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [sending, setSending] = useState(false);
   const [mobileShowChat, setMobileShowChat] = useState(false);
+
+  const loadThreads = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listMessageThreads();
+      const mapped = data.map(mapThread);
+      setChatData(mapped);
+      setActiveId((prev) => prev ?? mapped[0]?.id ?? null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load messages.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadThreads();
+  }, [loadThreads]);
 
   const active = chatData.find((c) => c.id === activeId) || chatData[0];
 
@@ -89,27 +48,21 @@ const DoctorMessages: React.FC = () => {
     setMobileShowChat(true);
   };
 
-  const handleSend = (e: React.FormEvent) => {
+  const handleSend = async (e: React.FormEvent) => {
     e.preventDefault();
-    if (!draft.trim()) return;
-    const now = new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
-    setChatData((prev) =>
-      prev.map((c) =>
-        c.id === activeId
-          ? {
-              ...c,
-              lastMessage: draft.trim(),
-              lastTime: now,
-              unread: 0,
-              messages: [
-                ...c.messages,
-                { id: `m${Date.now()}`, sender: 'doctor' as const, text: draft.trim(), time: now }
-              ]
-            }
-          : c
-      )
-    );
+    if (!draft.trim() || !active) return;
+    const text = draft.trim();
     setDraft('');
+    setSending(true);
+    try {
+      const updated = await sendMessageApi(active.id, text);
+      const mapped = mapThread(updated);
+      setChatData((prev) => prev.map((c) => (c.id === mapped.id ? mapped : c)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not send message.');
+    } finally {
+      setSending(false);
+    }
   };
 
   return (
@@ -121,6 +74,23 @@ const DoctorMessages: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Secure messaging with your patients</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading messages...
+            </div>
+          ) : !active ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+              <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No conversations yet</h3>
+              <p className="text-gray-600 dark:text-gray-400">Patient conversations will appear here.</p>
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -235,7 +205,7 @@ const DoctorMessages: React.FC = () => {
                 />
                 <button
                   type="submit"
-                  disabled={!draft.trim()}
+                  disabled={!draft.trim() || sending}
                   className="px-3 sm:px-4 py-2 sm:py-2.5 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors disabled:opacity-50 disabled:cursor-not-allowed shrink-0"
                 >
                   <Send className="w-5 h-5" />
@@ -243,8 +213,9 @@ const DoctorMessages: React.FC = () => {
               </form>
             </div>
           </motion.div>
+          )}
 
-          {filtered.length === 0 && (
+          {!loading && active && filtered.length === 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
               <MessageSquare className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No conversations found</h3>
