@@ -2,10 +2,15 @@
 
 import React, { createContext, useContext, useState, useEffect, ReactNode } from 'react';
 import { User, UserRole } from '@/types';
+import { getAccessToken, setTokens, clearTokens } from '@/lib/authToken';
+import * as authApi from '@/api/auth';
+import * as usersApi from '@/api/users';
+import { mapCurrentUser } from '@/api/auth';
 
 interface SignupData {
   name: string;
   email: string;
+  password: string;
   phone?: string;
 }
 
@@ -14,142 +19,59 @@ interface AuthContextType {
   login: (email: string, password: string, role: UserRole) => Promise<void>;
   signup: (data: SignupData) => Promise<void>;
   logout: () => void;
-  updateProfile: (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => void;
+  updateProfile: (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => Promise<void>;
   isAuthenticated: boolean;
   isLoading: boolean;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
 
-// Mock users for demo
-const mockUsers: Record<string, User> = {
-  'patient@demo.com': {
-    id: 'p1',
-    name: 'John Patient',
-    email: 'patient@demo.com',
-    role: 'patient',
-    phone: '+1234567890',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=John'
-  },
-  'doctor@demo.com': {
-    id: 'd1',
-    name: 'Dr. Sarah Wilson',
-    email: 'doctor@demo.com',
-    role: 'doctor',
-    phone: '+1234567891',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah'
-  },
-  'admin@demo.com': {
-    id: 'a1',
-    name: 'Admin User',
-    email: 'admin@demo.com',
-    role: 'admin',
-    phone: '+1234567892',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Admin'
-  },
-  'pharmacist@demo.com': {
-    id: 'ph1',
-    name: 'Mike Pharmacist',
-    email: 'pharmacist@demo.com',
-    role: 'pharmacist',
-    phone: '+1234567893',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike'
-  },
-  'lab@demo.com': {
-    id: 'l1',
-    name: 'Lab Technician',
-    email: 'lab@demo.com',
-    role: 'lab_tech',
-    phone: '+1234567894',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lab'
-  },
-  'receptionist@demo.com': {
-    id: 'r1',
-    name: 'Emma Reception',
-    email: 'receptionist@demo.com',
-    role: 'receptionist',
-    phone: '+1234567895',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma'
-  },
-  'nurse@demo.com': {
-    id: 'n1',
-    name: 'Lisa Nurse',
-    email: 'nurse@demo.com',
-    role: 'nurse',
-    phone: '+1234567896',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Lisa'
-  },
-  'supplier@demo.com': {
-    id: 's1',
-    name: 'Supply Co.',
-    email: 'supplier@demo.com',
-    role: 'supplier',
-    phone: '+1234567897',
-    avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Supply'
-  }
-};
-
 export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) => {
   const [user, setUser] = useState<User | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
+  const [isLoading, setIsLoading] = useState(() => !!getAccessToken());
 
-  // Hydrate from localStorage on the client only (avoids SSR mismatch).
+  // On mount, if we have a stored access token, validate it against the API
+  // and hydrate the current user. Tokens (not the user object) are the
+  // source of truth for persisted auth state across reloads.
   useEffect(() => {
-    try {
-      const savedUser = localStorage.getItem('user');
-      if (savedUser) {
-        setUser(JSON.parse(savedUser));
-      }
-    } catch {
-      // ignore malformed storage
-    } finally {
-      setIsLoading(false);
-    }
+    const token = getAccessToken();
+    if (!token) return;
+
+    authApi
+      .getMe()
+      .then((me) => setUser(mapCurrentUser(me)))
+      .catch(() => {
+        clearTokens();
+        setUser(null);
+      })
+      .finally(() => setIsLoading(false));
   }, []);
 
-  const login = async (email: string, _password: string, role: UserRole) => {
-    // Mock login - in production, this would be an API call
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const mockUser = mockUsers[email];
-    if (mockUser && mockUser.role === role) {
-      setUser(mockUser);
-      localStorage.setItem('user', JSON.stringify(mockUser));
-    } else {
-      throw new Error('Invalid credentials');
-    }
+  const login = async (email: string, password: string, role: UserRole) => {
+    const tokens = await authApi.login(email, password, role);
+    setTokens(tokens.access_token, tokens.refresh_token);
+    const me = await authApi.getMe();
+    setUser(mapCurrentUser(me));
   };
 
-  // Mock signup - patients only. In production this would POST to an API.
-  // New patients are created locally and signed in immediately for the demo.
   const signup = async (data: SignupData) => {
-    await new Promise(resolve => setTimeout(resolve, 800));
-
-    const newUser: User = {
-      id: `p-${Date.now()}`,
-      name: data.name,
-      email: data.email,
-      role: 'patient',
-      phone: data.phone || '',
-      avatar: `https://api.dicebear.com/7.x/avataaars/svg?seed=${encodeURIComponent(data.name || data.email)}`
-    };
-
-    setUser(newUser);
-    localStorage.setItem('user', JSON.stringify(newUser));
+    const tokens = await authApi.signup(data);
+    setTokens(tokens.access_token, tokens.refresh_token);
+    const me = await authApi.getMe();
+    setUser(mapCurrentUser(me));
   };
 
   const logout = () => {
+    authApi.logout().catch(() => {
+      // best-effort — the backend doesn't invalidate tokens server-side anyway
+    });
+    clearTokens();
     setUser(null);
-    localStorage.removeItem('user');
   };
 
-  const updateProfile = (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => {
-    setUser((current) => {
-      if (!current) return current;
-      const updated = { ...current, ...updates };
-      localStorage.setItem('user', JSON.stringify(updated));
-      return updated;
-    });
+  const updateProfile = async (updates: Partial<Pick<User, 'name' | 'email' | 'phone' | 'avatar'>>) => {
+    const me = await usersApi.updateMyProfile(updates);
+    setUser(mapCurrentUser(me));
   };
 
   return (

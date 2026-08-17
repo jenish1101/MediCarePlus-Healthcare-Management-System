@@ -1,30 +1,16 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Calendar, Search, Clock, Video, MapPin } from 'lucide-react';
+import { Calendar, Search, Clock, Video, MapPin, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockAppointments } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listAppointments, mapAppointment } from '@/api/appointments';
+import { Appointment } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
-interface Row {
-  id: string;
-  patientName: string;
-  doctorName: string;
-  doctorSpecialization: string;
-  date: string;
-  time: string;
-  type: 'in-person' | 'video';
-  status: 'scheduled' | 'completed' | 'cancelled';
-  fees: number;
-}
-
-const extra: Row[] = [
-  { id: 'apt4', patientName: 'Emma Thompson', doctorName: 'Dr. Sarah Wilson', doctorSpecialization: 'Cardiology', date: '2024-02-16', time: '09:00 AM', type: 'video', status: 'scheduled', fees: 500 },
-  { id: 'apt5', patientName: 'Michael Brown', doctorName: 'Dr. James Anderson', doctorSpecialization: 'Orthopedics', date: '2024-02-14', time: '01:00 PM', type: 'in-person', status: 'completed', fees: 550 },
-  { id: 'apt6', patientName: 'Sophia Davis', doctorName: 'Dr. Priya Sharma', doctorSpecialization: 'Dermatology', date: '2024-02-09', time: '04:00 PM', type: 'video', status: 'cancelled', fees: 450 }
-];
+type Row = Appointment;
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -38,8 +24,26 @@ const statusColor = (status: string) => {
 const AdminAppointments: React.FC = () => {
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'completed' | 'cancelled'>('all');
   const [search, setSearch] = useState('');
+  const [all, setAll] = useState<Row[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const all: Row[] = [...(mockAppointments as Row[]), ...extra];
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAppointments();
+      setAll(data.map(mapAppointment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load appointments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
 
   const filtered = all.filter(
     (a) =>
@@ -63,6 +67,12 @@ const AdminAppointments: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Appointments</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">All appointments across the hospital</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
@@ -107,6 +117,11 @@ const AdminAppointments: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading appointments...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -188,6 +203,7 @@ const AdminAppointments: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

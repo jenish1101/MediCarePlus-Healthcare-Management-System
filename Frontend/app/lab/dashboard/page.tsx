@@ -1,21 +1,45 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { TestTube, FileText, Clock, CheckCircle, BookOpen, ScanBarcode, Wrench } from 'lucide-react';
+import { TestTube, FileText, Clock, CheckCircle, BookOpen, ScanBarcode, Wrench, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockLabReports } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listLabReports } from '@/api/lab';
+import { mapLabReport } from '@/lib/mappers';
+import { LabReport } from '@/types';
 
 const LabDashboard: React.FC = () => {
   const router = useRouter();
-  const pending = mockLabReports.filter(r => r.status === 'pending').length;
-  const completed = mockLabReports.filter(r => r.status === 'completed').length;
+  const [reports, setReports] = useState<LabReport[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadReports = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabReports();
+      setReports(data.map((r) => mapLabReport({ ...r, results_summary: r.results_summary ?? undefined, doctor_notes: r.doctor_notes ?? undefined })));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load lab reports.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
+
+  const pending = reports.filter(r => r.status === 'pending').length;
+  const completed = reports.filter(r => r.status === 'completed').length;
 
   const stats = [
-    { icon: TestTube, label: 'Total Tests', value: mockLabReports.length, color: 'blue' },
+    { icon: TestTube, label: 'Total Tests', value: reports.length, color: 'blue' },
     { icon: Clock, label: 'Pending', value: pending, color: 'yellow' },
     { icon: CheckCircle, label: 'Completed', value: completed, color: 'green' },
     { icon: FileText, label: 'Reports Generated', value: completed, color: 'purple' }
@@ -87,8 +111,18 @@ const LabDashboard: React.FC = () => {
                 View all
               </Link>
             </div>
+            {error && (
+              <div className="mb-4 p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+                {error}
+              </div>
+            )}
+            {loading ? (
+              <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+                <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading lab reports...
+              </div>
+            ) : (
             <div className="space-y-6">
-              {mockLabReports.map((report) => (
+              {reports.map((report) => (
                 <div key={report.id} className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 p-4 border border-gray-200 dark:border-gray-700 rounded-lg hover:shadow-md dark:hover:bg-gray-700/30 transition-shadow">
                   <div className="flex items-center gap-4 min-w-0">
                     <div className={`w-12 h-12 rounded-full flex items-center justify-center shrink-0 ${
@@ -131,6 +165,7 @@ const LabDashboard: React.FC = () => {
                 </div>
               ))}
             </div>
+            )}
           </motion.div>
         </div>
       </DashboardLayout>

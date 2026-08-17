@@ -1,73 +1,53 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { FileText, Download, Search, Eye, CheckCircle, Clock, X } from 'lucide-react';
+import { FileText, Download, Search, Eye, CheckCircle, Clock, X, Pencil, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { exportPdfReport } from '@/lib/exportReport';
-
-interface Report {
-  id: string;
-  testName: string;
-  patientName: string;
-  date: string;
-  status: 'ready' | 'processing';
-  summary?: string;
-  results?: { parameter: string; value: string; range: string; flag?: string }[];
-}
-
-const reports: Report[] = [
-  {
-    id: 'rep1',
-    testName: 'Complete Blood Count (CBC)',
-    patientName: 'John Patient',
-    date: '2024-01-25',
-    status: 'ready',
-    summary: 'All values within normal range',
-    results: [
-      { parameter: 'WBC', value: '7.2 K/uL', range: '4.5-11.0' },
-      { parameter: 'RBC', value: '4.8 M/uL', range: '4.5-5.5' },
-      { parameter: 'Hemoglobin', value: '14.2 g/dL', range: '13.5-17.5' },
-      { parameter: 'Platelets', value: '245 K/uL', range: '150-400' }
-    ]
-  },
-  {
-    id: 'rep2',
-    testName: 'Thyroid Panel (T3, T4, TSH)',
-    patientName: 'Sophia Davis',
-    date: '2024-02-13',
-    status: 'ready',
-    summary: 'Normal thyroid function',
-    results: [
-      { parameter: 'TSH', value: '2.1 mIU/L', range: '0.4-4.0' },
-      { parameter: 'Free T4', value: '1.2 ng/dL', range: '0.8-1.8' },
-      { parameter: 'Free T3', value: '3.1 pg/mL', range: '2.3-4.2' }
-    ]
-  },
-  {
-    id: 'rep3',
-    testName: 'Blood Glucose (Fasting)',
-    patientName: 'James Wilson',
-    date: '2024-02-12',
-    status: 'ready',
-    summary: 'Slightly elevated - 110 mg/dL',
-    results: [{ parameter: 'Glucose (Fasting)', value: '110 mg/dL', range: '70-100', flag: 'High' }]
-  },
-  { id: 'rep4', testName: 'Lipid Profile', patientName: 'Emma Thompson', date: '2024-02-15', status: 'processing' },
-  { id: 'rep5', testName: 'Liver Function Test', patientName: 'Michael Brown', date: '2024-02-14', status: 'processing' }
-];
+import { ApiError } from '@/lib/api';
+import {
+  listLabReports,
+  updateLabReport,
+  mapLabReportDetail as mapReport,
+  LabReportDetail as Report,
+  LabReportStatus as BackendReportStatus
+} from '@/api/lab';
 
 const LabReports: React.FC = () => {
+  const [reports, setReports] = useState<Report[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [filter, setFilter] = useState<'all' | 'ready' | 'processing'>('all');
   const [viewReport, setViewReport] = useState<Report | null>(null);
+  const [editReport, setEditReport] = useState<Report | null>(null);
+  const [editForm, setEditForm] = useState({ status: 'pending' as BackendReportStatus, summary: '', doctorNotes: '' });
+  const [saving, setSaving] = useState(false);
+
+  const loadReports = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabReports();
+      setReports(data.map(mapReport));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load reports.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadReports();
+  }, [loadReports]);
 
   const filtered = reports.filter(
     (r) =>
       (filter === 'all' || r.status === filter) &&
       (r.testName.toLowerCase().includes(search.toLowerCase()) ||
-        r.patientName.toLowerCase().includes(search.toLowerCase()))
+        r.patientId.toLowerCase().includes(search.toLowerCase()))
   );
 
   const ready = reports.filter((r) => r.status === 'ready').length;
@@ -75,13 +55,39 @@ const LabReports: React.FC = () => {
 
   const downloadReport = (report: Report) => {
     const lines = [
-      `Patient: ${report.patientName}`,
+      `Patient ID: ${report.patientId}`,
       `Test: ${report.testName}`,
       `Date: ${report.date}`,
       report.summary ?? '',
       ...(report.results?.map((r) => `${r.parameter}: ${r.value} (${r.range})${r.flag ? ` [${r.flag}]` : ''}`) ?? [])
     ].filter(Boolean);
     exportPdfReport(`lab-report-${report.id}.pdf`, report.testName, lines);
+  };
+
+  const openEdit = (report: Report) => {
+    setEditForm({ status: report.backendStatus, summary: report.summary ?? '', doctorNotes: report.doctorNotes ?? '' });
+    setEditReport(report);
+  };
+
+  const submitEdit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    if (!editReport) return;
+    setSaving(true);
+    setError('');
+    try {
+      const updated = await updateLabReport(editReport.id, {
+        status: editForm.status,
+        results_summary: editForm.summary || null,
+        doctor_notes: editForm.doctorNotes || null
+      });
+      const mapped = mapReport(updated);
+      setReports((prev) => prev.map((r) => (r.id === mapped.id ? mapped : r)));
+      setEditReport(null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not save report.');
+    } finally {
+      setSaving(false);
+    }
   };
 
   return (
@@ -92,6 +98,12 @@ const LabReports: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Reports</h1>
             <p className="text-gray-600 dark:text-gray-400">View and download generated lab reports</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 sm:grid-cols-3 gap-3 sm:gap-6 max-w-2xl">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-4 sm:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-3 sm:gap-6">
@@ -142,12 +154,17 @@ const LabReports: React.FC = () => {
               <input
                 value={search}
                 onChange={(e) => setSearch(e.target.value)}
-                placeholder="Search report or patient..."
+                placeholder="Search report or patient ID..."
                 className="w-full pl-10 pr-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
               />
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading reports...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((report, i) => (
               <motion.div
@@ -164,7 +181,7 @@ const LabReports: React.FC = () => {
                     </div>
                     <div>
                       <h4 className="font-semibold text-lg text-gray-900 dark:text-gray-100">{report.testName}</h4>
-                      <p className="text-sm text-gray-600 dark:text-gray-400">Patient: {report.patientName}</p>
+                      <p className="text-sm text-gray-600 dark:text-gray-400">Patient ID: {report.patientId}</p>
                       <p className="text-xs text-gray-500 dark:text-gray-400 mt-1">Date: {report.date}</p>
                       {report.summary && (
                         <p className="text-sm text-gray-700 dark:text-gray-300 mt-2 bg-gray-50 dark:bg-gray-900/40 rounded-lg px-3 py-2">{report.summary}</p>
@@ -173,7 +190,7 @@ const LabReports: React.FC = () => {
                   </div>
                   <div className="flex flex-col items-start sm:items-end gap-3">
                     <span className={`px-3 py-1 rounded-full text-xs font-medium capitalize ${report.status === 'ready' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
-                      {report.status}
+                      {report.backendStatus}
                     </span>
                     {report.status === 'ready' ? (
                       <div className="flex gap-2">
@@ -189,11 +206,20 @@ const LabReports: React.FC = () => {
                         >
                           <Download className="w-4 h-4" /> Download
                         </button>
+                        <button
+                          onClick={() => openEdit(report)}
+                          className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm flex items-center gap-2"
+                        >
+                          <Pencil className="w-4 h-4" /> Edit
+                        </button>
                       </div>
                     ) : (
-                      <span className="flex items-center text-yellow-600 dark:text-yellow-400 text-sm font-medium">
-                        <Clock className="w-4 h-4 mr-1" /> Processing
-                      </span>
+                      <button
+                        onClick={() => openEdit(report)}
+                        className="px-4 py-2 bg-purple-600 text-white rounded-lg hover:bg-purple-700 transition-colors text-sm flex items-center gap-2"
+                      >
+                        <Pencil className="w-4 h-4" /> Enter Results
+                      </button>
                     )}
                   </div>
                 </div>
@@ -208,6 +234,7 @@ const LabReports: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
 
         <AnimatePresence>
@@ -242,7 +269,7 @@ const LabReports: React.FC = () => {
                       <p className="text-gray-600 dark:text-gray-400">Official Test Report</p>
                     </div>
                     <div className="grid grid-cols-2 gap-2 text-gray-700 dark:text-gray-300">
-                      <p><span className="text-gray-500 dark:text-gray-400">Patient:</span> {viewReport.patientName}</p>
+                      <p><span className="text-gray-500 dark:text-gray-400">Patient ID:</span> {viewReport.patientId}</p>
                       <p><span className="text-gray-500 dark:text-gray-400">Report ID:</span> {viewReport.id.toUpperCase()}</p>
                       <p><span className="text-gray-500 dark:text-gray-400">Test:</span> {viewReport.testName}</p>
                       <p><span className="text-gray-500 dark:text-gray-400">Date:</span> {viewReport.date}</p>
@@ -250,7 +277,12 @@ const LabReports: React.FC = () => {
                     {viewReport.summary && (
                       <p className="text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">{viewReport.summary}</p>
                     )}
-                    {viewReport.results && (
+                    {viewReport.doctorNotes && (
+                      <p className="text-gray-800 dark:text-gray-200 bg-white dark:bg-gray-800 rounded-lg p-3 border border-gray-200 dark:border-gray-700">
+                        <span className="text-gray-500 dark:text-gray-400">Doctor Notes: </span>{viewReport.doctorNotes}
+                      </p>
+                    )}
+                    {viewReport.results && viewReport.results.length > 0 && (
                       <table className="w-full text-left border-collapse">
                         <thead>
                           <tr className="border-b border-gray-300 dark:border-gray-700">
@@ -260,8 +292,8 @@ const LabReports: React.FC = () => {
                           </tr>
                         </thead>
                         <tbody>
-                          {viewReport.results.map((row) => (
-                            <tr key={row.parameter} className="border-b border-gray-200 dark:border-gray-700">
+                          {viewReport.results.map((row, idx) => (
+                            <tr key={`${row.parameter}-${idx}`} className="border-b border-gray-200 dark:border-gray-700">
                               <td className="py-2 text-gray-900 dark:text-gray-100">{row.parameter}</td>
                               <td className={`py-2 font-semibold ${row.flag ? 'text-red-600 dark:text-red-400' : 'text-gray-900 dark:text-gray-100'}`}>
                                 {row.value} {row.flag && `(${row.flag})`}
@@ -291,6 +323,77 @@ const LabReports: React.FC = () => {
                     <Download className="w-4 h-4" /> Download PDF
                   </button>
                 </div>
+              </motion.div>
+            </motion.div>
+          )}
+        </AnimatePresence>
+
+        {/* Edit / Enter Results Modal */}
+        <AnimatePresence>
+          {editReport && (
+            <motion.div
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              className="fixed inset-0 z-[60] flex items-center justify-center bg-black/50 p-4"
+              onClick={() => !saving && setEditReport(null)}
+            >
+              <motion.div
+                initial={{ opacity: 0, scale: 0.95, y: 20 }}
+                animate={{ opacity: 1, scale: 1, y: 0 }}
+                exit={{ opacity: 0, scale: 0.95, y: 20 }}
+                onClick={(e) => e.stopPropagation()}
+                className="w-full max-w-lg bg-white dark:bg-gray-800 rounded-xl shadow-2xl p-6"
+              >
+                <div className="flex items-center justify-between mb-2">
+                  <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100">Edit Report</h3>
+                  <button onClick={() => setEditReport(null)} className="p-1 hover:bg-gray-100 dark:hover:bg-gray-700 rounded-lg text-gray-600 dark:text-gray-400">
+                    <X className="w-5 h-5" />
+                  </button>
+                </div>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mb-4">{editReport.testName} · Patient ID: {editReport.patientId}</p>
+                <form onSubmit={submitEdit} className="space-y-6">
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Status</label>
+                    <select
+                      value={editForm.status}
+                      onChange={(e) => setEditForm({ ...editForm, status: e.target.value as BackendReportStatus })}
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 dark:bg-gray-900 dark:text-gray-100"
+                    >
+                      <option value="pending">Pending</option>
+                      <option value="in-progress">In Progress</option>
+                      <option value="completed">Completed</option>
+                    </select>
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Results Summary</label>
+                    <textarea
+                      value={editForm.summary}
+                      onChange={(e) => setEditForm({ ...editForm, summary: e.target.value })}
+                      rows={3}
+                      placeholder="e.g. All values within normal range"
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                    />
+                  </div>
+                  <div>
+                    <label className="block text-sm font-medium text-gray-600 dark:text-gray-300 mb-1">Doctor Notes</label>
+                    <textarea
+                      value={editForm.doctorNotes}
+                      onChange={(e) => setEditForm({ ...editForm, doctorNotes: e.target.value })}
+                      rows={2}
+                      placeholder="Optional notes for the reviewing doctor..."
+                      className="w-full px-4 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg focus:ring-2 focus:ring-purple-500 focus:border-transparent resize-none dark:bg-gray-900 dark:text-gray-100 dark:placeholder-gray-500"
+                    />
+                  </div>
+                  <div className="flex gap-3 pt-1">
+                    <button type="button" onClick={() => setEditReport(null)} disabled={saving} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors disabled:opacity-50">
+                      Cancel
+                    </button>
+                    <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-purple-600 text-white font-medium hover:bg-purple-700 transition-colors disabled:opacity-50">
+                      {saving ? 'Saving...' : 'Save'}
+                    </button>
+                  </div>
+                </form>
               </motion.div>
             </motion.div>
           )}

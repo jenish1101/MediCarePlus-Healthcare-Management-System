@@ -1,43 +1,69 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Search, Plus, Pill, AlertTriangle, X, Package, Building2 } from 'lucide-react';
+import { Search, Plus, Pill, AlertTriangle, X, Package, Building2, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockInventory } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listInventory, addInventoryItem, mapInventory } from '@/api/pharmacy';
 import { Inventory } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
 const LOW_STOCK = 500;
 
 const PharmacyInventory: React.FC = () => {
-  const [items, setItems] = useState<Inventory[]>(mockInventory);
+  const [items, setItems] = useState<Inventory[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ medicineName: '', batchNumber: '', quantity: '', expiryDate: '', supplier: '', price: '' });
+
+  const loadItems = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listInventory();
+      setItems(data.map(mapInventory));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load inventory.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadItems();
+  }, [loadItems]);
 
   const filtered = items.filter((i) =>
     i.medicineName.toLowerCase().includes(search.toLowerCase())
   );
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.medicineName) return;
-    setItems((prev) => [
-      {
-        id: `inv${Date.now()}`,
-        medicineName: form.medicineName,
-        batchNumber: form.batchNumber || 'N/A',
+    setSubmitting(true);
+    setError('');
+    try {
+      const created = await addInventoryItem({
+        medicine_name: form.medicineName,
+        batch_number: form.batchNumber || 'N/A',
         quantity: Number(form.quantity) || 0,
-        expiryDate: form.expiryDate || '2026-01-01',
+        expiry_date: form.expiryDate || '2026-01-01',
         supplier: form.supplier || 'Unknown',
         price: Number(form.price) || 0
-      },
-      ...prev
-    ]);
-    setForm({ medicineName: '', batchNumber: '', quantity: '', expiryDate: '', supplier: '', price: '' });
-    setShowModal(false);
+      });
+      setItems((prev) => [mapInventory(created), ...prev]);
+      setForm({ medicineName: '', batchNumber: '', quantity: '', expiryDate: '', supplier: '', price: '' });
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not add medicine.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const lowStock = items.filter((i) => i.quantity < LOW_STOCK).length;
@@ -68,6 +94,12 @@ const PharmacyInventory: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
               const colors = colorClasses[s.color];
@@ -96,6 +128,11 @@ const PharmacyInventory: React.FC = () => {
             />
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading inventory...
+            </div>
+          ) : (
           <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
@@ -181,6 +218,7 @@ const PharmacyInventory: React.FC = () => {
               </div>
             )}
           </motion.div>
+          )}
         </div>
 
         {/* Add Medicine Modal */}
@@ -235,8 +273,8 @@ const PharmacyInventory: React.FC = () => {
                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors">
-                      Add
+                    <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50">
+                      {submitting ? 'Adding...' : 'Add'}
                     </button>
                   </div>
                 </form>

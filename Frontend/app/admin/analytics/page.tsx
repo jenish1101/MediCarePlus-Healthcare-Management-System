@@ -1,8 +1,8 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Calendar, DollarSign, Activity, Download, FileText } from 'lucide-react';
+import { Users, Calendar, Activity, Building2, Download, FileText, Loader2 } from 'lucide-react';
 import {
   BarChart,
   Bar,
@@ -21,8 +21,15 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { exportCsv, exportPdfReport } from '@/lib/exportReport';
+import { ApiError } from '@/lib/api';
+import { getAnalyticsSummary, AnalyticsSummary } from '@/api/analytics';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
+// Illustrative breakdowns below (patient growth trend, per-department load,
+// appointment-type split) have no equivalent endpoint on the backend yet —
+// /analytics/summary only returns the four aggregate counts above. These
+// stay as sample data for the charts; the KPI cards and exports use the
+// live summary values.
 const patientGrowth = [
   { month: 'Jan', patients: 1850 },
   { month: 'Feb', patients: 2020 },
@@ -50,12 +57,40 @@ const PIE_COLORS = ['#3b82f6', '#8b5cf6', '#22c55e'];
 
 const AdminAnalytics: React.FC = () => {
   const [exportMsg, setExportMsg] = useState('');
+  const [summary, setSummary] = useState<AnalyticsSummary>({});
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadSummary = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getAnalyticsSummary();
+      setSummary(data as AnalyticsSummary);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load analytics summary.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSummary();
+  }, [loadSummary]);
+
+  const occupied = summary.bed_occupancy?.occupied ?? 0;
+  const totalBeds = summary.bed_occupancy?.total ?? 0;
+  const occupancyPct = totalBeds > 0 ? Math.round((occupied / totalBeds) * 100) : 0;
 
   const handleExportCsv = () => {
     exportCsv('analytics-report.csv', ['Category', 'Metric', 'Value'], [
-      ...patientGrowth.map((r) => ['Patient Growth', r.month, r.patients]),
-      ...departmentLoad.map((r) => ['Department Load', r.dept, r.visits]),
-      ...appointmentTypes.map((r) => ['Appointment Type', r.name, r.value])
+      ['Summary', 'Total Users', summary.total_users ?? 0],
+      ['Summary', 'Total Appointments', summary.total_appointments ?? 0],
+      ['Summary', 'Bed Occupancy', `${occupied}/${totalBeds}`],
+      ['Summary', 'Departments', summary.departments ?? 0],
+      ...patientGrowth.map((r) => ['Patient Growth (sample)', r.month, r.patients]),
+      ...departmentLoad.map((r) => ['Department Load (sample)', r.dept, r.visits]),
+      ...appointmentTypes.map((r) => ['Appointment Type (sample)', r.name, r.value])
     ]);
     setExportMsg('CSV report downloaded.');
     setTimeout(() => setExportMsg(''), 3000);
@@ -66,22 +101,22 @@ const AdminAnalytics: React.FC = () => {
       'analytics-report.pdf',
       'Hospital Analytics Report',
       [
-        `Total Patients: 2,543`,
-        `Monthly Appointments: 1,240`,
-        `Revenue: $124.5k`,
-        `Bed Occupancy: 78%`,
-        ...departmentLoad.map((d) => `${d.dept}: ${d.visits} visits`)
+        `Total Users: ${summary.total_users ?? 0}`,
+        `Total Appointments: ${summary.total_appointments ?? 0}`,
+        `Bed Occupancy: ${occupied}/${totalBeds} (${occupancyPct}%)`,
+        `Departments: ${summary.departments ?? 0}`,
+        ...departmentLoad.map((d) => `${d.dept}: ${d.visits} visits (sample)`)
       ]
     );
     setExportMsg('PDF report downloaded.');
     setTimeout(() => setExportMsg(''), 3000);
   };
 
-  const stats: Array<{ icon: typeof Users; label: string; value: string; change: string; color: ThemeColor }> = [
-    { icon: Users, label: 'Total Patients', value: '2,543', change: '+12%', color: 'blue' },
-    { icon: Calendar, label: 'Appointments (mo)', value: '1,240', change: '+8%', color: 'green' },
-    { icon: DollarSign, label: 'Revenue (mo)', value: '$124.5k', change: '+15%', color: 'purple' },
-    { icon: Activity, label: 'Bed Occupancy', value: '78%', change: '+3%', color: 'orange' }
+  const stats: Array<{ icon: typeof Users; label: string; value: string; color: ThemeColor }> = [
+    { icon: Users, label: 'Total Users', value: String(summary.total_users ?? '—'), color: 'blue' },
+    { icon: Calendar, label: 'Total Appointments', value: String(summary.total_appointments ?? '—'), color: 'green' },
+    { icon: Activity, label: 'Bed Occupancy', value: totalBeds > 0 ? `${occupied}/${totalBeds} (${occupancyPct}%)` : '—', color: 'orange' },
+    { icon: Building2, label: 'Departments', value: String(summary.departments ?? '—'), color: 'purple' }
   ];
 
   return (
@@ -115,6 +150,17 @@ const AdminAnalytics: React.FC = () => {
             </motion.p>
           )}
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading analytics...
+            </div>
+          ) : (
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
               const colors = colorClasses[s.color];
@@ -130,7 +176,6 @@ const AdminAnalytics: React.FC = () => {
                   <div className={`p-2 sm:p-3 rounded-lg ${colors.bg100} shrink-0`}>
                     <s.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text600}`} />
                   </div>
-                  <span className="text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium shrink-0">{s.change}</span>
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1 leading-snug">{s.label}</p>
                 <p className="text-lg sm:text-xl font-bold text-gray-900 dark:text-gray-100">{s.value}</p>
@@ -138,6 +183,7 @@ const AdminAnalytics: React.FC = () => {
               );
             })}
           </div>
+          )}
 
           <div className="grid lg:grid-cols-2 gap-4 sm:gap-6">
             <motion.div
@@ -145,7 +191,8 @@ const AdminAnalytics: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
             >
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">Patient Growth</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">Patient Growth</h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 sm:mb-4">Sample trend — no historical time-series endpoint yet</p>
               <div className="h-56 sm:h-64 md:h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <AreaChart data={patientGrowth} margin={{ top: 4, right: 4, left: -16, bottom: 0 }}>
@@ -170,7 +217,8 @@ const AdminAnalytics: React.FC = () => {
               animate={{ opacity: 1, x: 0 }}
               className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
             >
-              <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">Department Load</h3>
+              <h3 className="text-lg sm:text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">Department Load</h3>
+              <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 sm:mb-4">Sample data — backend only reports a department count</p>
               <div className="h-56 sm:h-64 md:h-72 w-full">
               <ResponsiveContainer width="100%" height="100%">
                 <BarChart data={departmentLoad} layout="vertical" margin={{ top: 4, right: 8, left: 0, bottom: 0 }}>
@@ -190,7 +238,8 @@ const AdminAnalytics: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-4 sm:p-6"
           >
-            <h3 className="text-lg sm:text-xl font-semibold mb-3 sm:mb-4 text-gray-900 dark:text-gray-100">Appointment Distribution</h3>
+            <h3 className="text-lg sm:text-xl font-semibold mb-1 text-gray-900 dark:text-gray-100">Appointment Distribution</h3>
+            <p className="text-xs text-gray-400 dark:text-gray-500 mb-3 sm:mb-4">Sample breakdown — backend only reports a total appointment count</p>
             <div className="h-64 sm:h-72 md:h-80 w-full">
             <ResponsiveContainer width="100%" height="100%">
               <PieChart>

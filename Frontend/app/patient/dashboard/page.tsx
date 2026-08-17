@@ -1,6 +1,6 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -13,26 +13,63 @@ import {
   Activity,
   Download,
   Video,
-  Heart
+  Heart,
+  Loader2
 } from 'lucide-react';
-import { mockAppointments, mockPrescriptions, mockLabReports, mockOrders } from '@/data/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
+import { api, ApiError } from '@/lib/api';
+import { listAppointments, mapAppointment } from '@/api/appointments';
+import { listPrescriptions, mapPrescription } from '@/api/prescriptions';
+import { listOrders, mapOrder } from '@/api/pharmacy';
+import { mapLabReport, BackendLabReport } from '@/lib/mappers';
+import { Appointment, Prescription, LabReport, Order } from '@/types';
 
 const PatientDashboard: React.FC = () => {
   const router = useRouter();
   const [activeTab, setActiveTab] = useState('overview');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [labReports, setLabReports] = useState<LabReport[]>([]);
+  const [orders, setOrders] = useState<Order[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
 
-  const upcomingAppointments = mockAppointments.filter(apt => apt.status === 'scheduled');
-  const completedAppointments = mockAppointments.filter(apt => apt.status === 'completed');
-  const videoAppointment = mockAppointments.find(apt => apt.type === 'video' && apt.status === 'scheduled');
+  const loadDashboard = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const [apts, rxs, labs, ords] = await Promise.all([
+        listAppointments(),
+        listPrescriptions(),
+        api.get<BackendLabReport[]>('/lab/reports'),
+        listOrders()
+      ]);
+      setAppointments(apts.map(mapAppointment));
+      setPrescriptions(rxs.map(mapPrescription));
+      setLabReports(labs.map(mapLabReport));
+      setOrders(ords.map(mapOrder));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load dashboard data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDashboard();
+  }, [loadDashboard]);
+
+  const upcomingAppointments = appointments.filter(apt => apt.status === 'scheduled');
+  const completedAppointments = appointments.filter(apt => apt.status === 'completed');
+  const videoAppointment = appointments.find(apt => apt.type === 'video' && apt.status === 'scheduled');
 
   const stats: Array<{ icon: typeof Calendar; label: string; value: number; color: ThemeColor }> = [
     { icon: Calendar, label: 'Upcoming Appointments', value: upcomingAppointments.length, color: 'blue' },
-    { icon: FileText, label: 'Prescriptions', value: mockPrescriptions.length, color: 'purple' },
-    { icon: TestTube, label: 'Lab Reports', value: mockLabReports.length, color: 'green' },
-    { icon: Pill, label: 'Active Orders', value: mockOrders.filter(o => o.status !== 'delivered').length, color: 'orange' }
+    { icon: FileText, label: 'Prescriptions', value: prescriptions.length, color: 'purple' },
+    { icon: TestTube, label: 'Lab Reports', value: labReports.length, color: 'green' },
+    { icon: Pill, label: 'Active Orders', value: orders.filter(o => o.status !== 'delivered').length, color: 'orange' }
   ];
 
   const getStatusColor = (status: string) => {
@@ -51,6 +88,18 @@ const PatientDashboard: React.FC = () => {
     <ProtectedRoute allowedRoles={['patient']}>
       <DashboardLayout role="patient">
         <div className="space-y-4 sm:space-y-6">
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading dashboard...
+            </div>
+          ) : (
+          <>
           {/* Stats */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((stat, i) => {
@@ -164,7 +213,7 @@ const PatientDashboard: React.FC = () => {
                   <div>
                     <h4 className="font-semibold text-gray-900 dark:text-gray-100 mb-3 sm:mb-4">Recent Activity</h4>
                     <div className="space-y-2 sm:space-y-3">
-                      {mockAppointments.slice(0, 3).map((apt) => (
+                      {appointments.slice(0, 3).map((apt) => (
                         <div key={apt.id} className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between p-3 sm:p-4 bg-gray-50 dark:bg-gray-900/40 rounded-lg">
                           <div className="flex items-center space-x-3 sm:space-x-4 min-w-0">
                             <Calendar className="w-5 h-5 text-blue-600 dark:text-blue-400 shrink-0" />
@@ -283,7 +332,7 @@ const PatientDashboard: React.FC = () => {
               {activeTab === 'prescriptions' && (
                 <div className="space-y-4 sm:space-y-6">
                   <h3 className="text-lg sm:text-xl font-semibold text-gray-900 dark:text-gray-100">My Prescriptions</h3>
-                  {mockPrescriptions.map((prescription) => (
+                  {prescriptions.map((prescription) => (
                     <motion.div
                       key={prescription.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -347,7 +396,7 @@ const PatientDashboard: React.FC = () => {
                       Book Lab Test
                     </button>
                   </div>
-                  {mockLabReports.map((report) => (
+                  {labReports.map((report) => (
                     <motion.div
                       key={report.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -397,7 +446,7 @@ const PatientDashboard: React.FC = () => {
                       New Order
                     </button>
                   </div>
-                  {mockOrders.map((order) => (
+                  {orders.map((order) => (
                     <motion.div
                       key={order.id}
                       initial={{ opacity: 0, y: 20 }}
@@ -447,6 +496,8 @@ const PatientDashboard: React.FC = () => {
               )}
             </div>
           </div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

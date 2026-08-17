@@ -1,29 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { Package, Search, Plus } from 'lucide-react';
+import { Package, Search, Plus, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface Product {
-  id: string;
-  name: string;
-  category: string;
-  sku: string;
-  stock: number;
-  unitPrice: number;
-  status: 'in-stock' | 'low-stock' | 'out-of-stock';
-}
-
-const initialProducts: Product[] = [
-  { id: 'p1', name: 'Ibuprofen 400mg', category: 'Pain Relief', sku: 'IBU-400', stock: 2500, unitPrice: 2.5, status: 'in-stock' },
-  { id: 'p2', name: 'Amoxicillin 500mg', category: 'Antibiotics', sku: 'AMX-500', stock: 180, unitPrice: 4.2, status: 'low-stock' },
-  { id: 'p3', name: 'Paracetamol 500mg', category: 'Pain Relief', sku: 'PAR-500', stock: 4200, unitPrice: 1.8, status: 'in-stock' },
-  { id: 'p4', name: 'Insulin Pens', category: 'Diabetes', sku: 'INS-PEN', stock: 0, unitPrice: 62, status: 'out-of-stock' },
-  { id: 'p5', name: 'Vitamin B Complex', category: 'Supplements', sku: 'VIT-B', stock: 890, unitPrice: 3.1, status: 'in-stock' },
-  { id: 'p6', name: 'Surgical Gloves (box)', category: 'Supplies', sku: 'GLV-100', stock: 320, unitPrice: 12, status: 'in-stock' }
-];
+import { ApiError } from '@/lib/api';
+import { listSupplierProducts, mapProduct, Product } from '@/api/supplier';
 
 const statusStyle: Record<Product['status'], string> = {
   'in-stock': 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400',
@@ -32,9 +15,28 @@ const statusStyle: Record<Product['status'], string> = {
 };
 
 const SupplierProducts: React.FC = () => {
-  const [products] = useState<Product[]>(initialProducts);
+  const [products, setProducts] = useState<Product[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [category, setCategory] = useState('all');
+
+  const loadProducts = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listSupplierProducts();
+      setProducts(data.map(mapProduct));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load products.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadProducts();
+  }, [loadProducts]);
 
   const categories = ['all', ...Array.from(new Set(products.map((p) => p.category)))];
   const filtered = products.filter(
@@ -56,6 +58,12 @@ const SupplierProducts: React.FC = () => {
               <Plus className="w-5 h-5" /> Add Product
             </button>
           </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-col sm:flex-row gap-3 sm:items-center sm:justify-between">
             <div className="flex flex-wrap gap-2">
@@ -82,6 +90,11 @@ const SupplierProducts: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading products...
+            </div>
+          ) : (
           <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-left">
@@ -120,7 +133,16 @@ const SupplierProducts: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {filtered.length === 0 && (
+              <div className="p-8 text-center">
+                <Package className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No products found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search or category.</p>
+              </div>
+            )}
           </motion.div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

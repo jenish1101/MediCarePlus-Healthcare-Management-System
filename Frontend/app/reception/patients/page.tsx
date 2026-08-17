@@ -1,46 +1,68 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Users, Plus, Search, Phone, Mail, X } from 'lucide-react';
+import { Users, Plus, Search, Phone, Mail, X, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ApiError } from '@/lib/api';
+import { listPatients, mapPatientSummary } from '@/api/users';
 
-interface WalkInPatient {
+interface PatientRow {
   id: string;
   name: string;
-  phone: string;
   email: string;
-  reason: string;
-  registeredAt: string;
-  status: 'waiting' | 'assigned';
+  phone?: string;
+  bloodGroup?: string;
+  lastVisit?: string;
+  // Fields below only apply to walk-ins registered locally in this session —
+  // there is no backend endpoint to persist a new walk-in registration or an
+  // "assigned" status, so they stay client-side only (see report).
+  reason?: string;
+  registeredAt?: string;
+  status?: 'waiting' | 'assigned';
 }
 
-const initialPatients: WalkInPatient[] = [
-  { id: 'wp1', name: 'Tom Walker', phone: '+1 555-0101', email: 'tom.w@email.com', reason: 'Fever & cough', registeredAt: '10:05 AM', status: 'waiting' },
-  { id: 'wp2', name: 'Susan Reed', phone: '+1 555-0102', email: 'susan.r@email.com', reason: 'Minor injury', registeredAt: '10:22 AM', status: 'assigned' },
-  { id: 'wp3', name: 'David Nguyen', phone: '+1 555-0103', email: 'david.n@email.com', reason: 'Follow-up visit', registeredAt: '11:00 AM', status: 'waiting' }
-];
-
 const ReceptionPatients: React.FC = () => {
-  const [patients, setPatients] = useState<WalkInPatient[]>(initialPatients);
+  const [patients, setPatients] = useState<PatientRow[]>([]);
+  const [localWalkIns, setLocalWalkIns] = useState<PatientRow[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
+  const [debouncedSearch, setDebouncedSearch] = useState('');
   const [showRegister, setShowRegister] = useState(false);
   const [form, setForm] = useState({ name: '', phone: '', email: '', reason: '' });
 
-  const filtered = patients.filter(
-    (p) =>
-      p.name.toLowerCase().includes(search.toLowerCase()) ||
-      p.phone.includes(search) ||
-      p.email.toLowerCase().includes(search.toLowerCase())
-  );
+  useEffect(() => {
+    const t = setTimeout(() => setDebouncedSearch(search.trim()), 300);
+    return () => clearTimeout(t);
+  }, [search]);
+
+  const loadPatients = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listPatients(debouncedSearch);
+      setPatients(data.map(mapPatientSummary));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load patients.');
+    } finally {
+      setLoading(false);
+    }
+  }, [debouncedSearch]);
+
+  useEffect(() => {
+    loadPatients();
+  }, [loadPatients]);
+
+  const combined = [...localWalkIns, ...patients];
 
   const handleRegister = (e: React.FormEvent) => {
     e.preventDefault();
     const now = new Date();
     const time = now.toLocaleTimeString('en-US', { hour: 'numeric', minute: '2-digit' });
-    setPatients((prev) => [
-      { id: `wp-${Date.now()}`, ...form, registeredAt: time, status: 'waiting' },
+    setLocalWalkIns((prev) => [
+      { id: `wp-${Date.now()}`, name: form.name, email: form.email, phone: form.phone, reason: form.reason, registeredAt: time, status: 'waiting' },
       ...prev
     ]);
     setForm({ name: '', phone: '', email: '', reason: '' });
@@ -48,7 +70,7 @@ const ReceptionPatients: React.FC = () => {
   };
 
   const assignDoctor = (id: string) => {
-    setPatients((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'assigned' } : p)));
+    setLocalWalkIns((prev) => prev.map((p) => (p.id === id ? { ...p, status: 'assigned' } : p)));
   };
 
   return (
@@ -57,8 +79,8 @@ const ReceptionPatients: React.FC = () => {
         <div className="space-y-6">
           <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-6">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }}>
-              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Walk-in Patients</h1>
-              <p className="text-gray-600 dark:text-gray-400">Register and manage walk-in patient records</p>
+              <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Patients</h1>
+              <p className="text-gray-600 dark:text-gray-400">Search patient records and register walk-ins</p>
             </motion.div>
             <button
               onClick={() => setShowRegister(true)}
@@ -67,6 +89,12 @@ const ReceptionPatients: React.FC = () => {
               <Plus className="w-5 h-5" /> Register Walk-in
             </button>
           </div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="relative max-w-md">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-gray-400 dark:text-gray-500" />
@@ -78,8 +106,13 @@ const ReceptionPatients: React.FC = () => {
             />
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading patients...
+            </div>
+          ) : (
           <div className="grid gap-6">
-            {filtered.map((patient, i) => (
+            {combined.map((patient, i) => (
               <motion.div
                 key={patient.id}
                 initial={{ opacity: 0, y: 20 }}
@@ -94,16 +127,20 @@ const ReceptionPatients: React.FC = () => {
                   <div>
                     <div className="flex items-center gap-2">
                       <h3 className="font-semibold text-gray-900 dark:text-gray-100">{patient.name}</h3>
-                      <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${patient.status === 'assigned' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
-                        {patient.status}
-                      </span>
+                      {patient.status && (
+                        <span className={`text-xs font-medium px-2 py-0.5 rounded-full ${patient.status === 'assigned' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-yellow-100 dark:bg-yellow-900/30 text-yellow-700 dark:text-yellow-400'}`}>
+                          {patient.status}
+                        </span>
+                      )}
                     </div>
-                    <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{patient.reason}</p>
+                    {patient.reason && <p className="text-sm text-gray-600 dark:text-gray-400 mt-1">{patient.reason}</p>}
                     <div className="flex flex-wrap gap-6 mt-2 text-sm text-gray-500 dark:text-gray-400">
-                      <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {patient.phone}</span>
+                      {patient.phone && <span className="flex items-center gap-1"><Phone className="w-3.5 h-3.5" /> {patient.phone}</span>}
                       <span className="flex items-center gap-1"><Mail className="w-3.5 h-3.5" /> {patient.email}</span>
+                      {patient.bloodGroup && <span>Blood Group: {patient.bloodGroup}</span>}
                     </div>
-                    <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Registered at {patient.registeredAt}</p>
+                    {patient.registeredAt && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Registered at {patient.registeredAt}</p>}
+                    {patient.lastVisit && !patient.registeredAt && <p className="text-xs text-gray-400 dark:text-gray-500 mt-1">Last visit: {patient.lastVisit}</p>}
                   </div>
                 </div>
                 {patient.status === 'waiting' && (
@@ -113,7 +150,15 @@ const ReceptionPatients: React.FC = () => {
                 )}
               </motion.div>
             ))}
+            {combined.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <Users className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No patients found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different search.</p>
+              </div>
+            )}
           </div>
+          )}
         </div>
 
         {showRegister && (

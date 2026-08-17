@@ -1,36 +1,45 @@
 'use client';
 
-import React from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, TrendingUp, ShoppingBag, Package, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, ShoppingBag, Package, Download, Loader2 } from 'lucide-react';
 import { ResponsiveContainer, BarChart, Bar, XAxis, YAxis, CartesianGrid, Tooltip } from 'recharts';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
+import { ApiError } from '@/lib/api';
+import { getSalesSummary, SalesSummary } from '@/api/pharmacy';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
-const monthlySales = [
-  { month: 'Sep', sales: 32000 },
-  { month: 'Oct', sales: 38500 },
-  { month: 'Nov', sales: 41200 },
-  { month: 'Dec', sales: 47800 },
-  { month: 'Jan', sales: 43000 },
-  { month: 'Feb', sales: 45230 }
-];
-
-const topSellers = [
-  { name: 'Paracetamol 500mg', units: 1240, revenue: 620 },
-  { name: 'Ibuprofen 400mg', units: 980, revenue: 784 },
-  { name: 'Vitamin B Complex', units: 760, revenue: 456 },
-  { name: 'Aspirin 75mg', units: 640, revenue: 192 },
-  { name: 'Amoxicillin 500mg', units: 410, revenue: 492 }
-];
-
 const PharmacySales: React.FC = () => {
+  const [summary, setSummary] = useState<SalesSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadSales = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getSalesSummary();
+      setSummary(data);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load sales data.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadSales();
+  }, [loadSales]);
+
+  const monthlySales = summary?.monthly ?? [];
+  const topSellers = summary?.top_sellers ?? [];
+
   const stats: Array<{ icon: typeof DollarSign; label: string; value: string; color: ThemeColor }> = [
-    { icon: DollarSign, label: 'Monthly Sales', value: '$45,230', color: 'green' },
-    { icon: TrendingUp, label: 'Growth', value: '+12%', color: 'blue' },
-    { icon: ShoppingBag, label: 'Orders', value: '328', color: 'purple' },
-    { icon: Package, label: 'Units Sold', value: '4,030', color: 'orange' }
+    { icon: DollarSign, label: 'Monthly Sales', value: `$${(summary?.monthly_sales ?? 0).toLocaleString()}`, color: 'green' },
+    { icon: TrendingUp, label: 'Growth', value: `${(summary?.growth_percent ?? 0) > 0 ? '+' : ''}${summary?.growth_percent ?? 0}%`, color: 'blue' },
+    { icon: ShoppingBag, label: 'Orders', value: `${summary?.total_orders ?? 0}`, color: 'purple' },
+    { icon: Package, label: 'Units Sold', value: (summary?.units_sold ?? 0).toLocaleString(), color: 'orange' }
   ];
 
   return (
@@ -51,6 +60,18 @@ const PharmacySales: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading sales data...
+            </div>
+          ) : (
+          <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
               const colors = colorClasses[s.color];
@@ -134,7 +155,13 @@ const PharmacySales: React.FC = () => {
                 </tbody>
               </table>
             </div>
+
+            {topSellers.length === 0 && (
+              <p className="text-center text-sm text-gray-500 dark:text-gray-400 py-6">No sales data yet.</p>
+            )}
           </motion.div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

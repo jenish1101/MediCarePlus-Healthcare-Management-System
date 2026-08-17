@@ -1,29 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
-import { Stethoscope, CheckCircle, XCircle, Clock, Search } from 'lucide-react';
+import React, { useState, useEffect, useCallback } from 'react';
+import { motion } from 'framer-motion';
+import { Stethoscope, CheckCircle, XCircle, Clock, Search, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface PendingDoctor {
-  id: string;
-  name: string;
-  email: string;
-  specialization: string;
-  experience: number;
-  qualifications: string[];
-  submittedAt: string;
-  status: 'pending' | 'approved' | 'rejected';
-}
-
-const initialPending: PendingDoctor[] = [
-  { id: 'pd1', name: 'Dr. Anita Kapoor', email: 'anita.kapoor@email.com', specialization: 'Cardiology', experience: 8, qualifications: ['MBBS', 'MD Cardiology'], submittedAt: '2024-02-14', status: 'pending' },
-  { id: 'pd2', name: 'Dr. David Lee', email: 'david.lee@email.com', specialization: 'Neurology', experience: 12, qualifications: ['MBBS', 'DNB Neurology'], submittedAt: '2024-02-13', status: 'pending' },
-  { id: 'pd3', name: 'Dr. Maria Santos', email: 'maria.santos@email.com', specialization: 'Pediatrics', experience: 6, qualifications: ['MBBS', 'MD Pediatrics'], submittedAt: '2024-02-12', status: 'pending' },
-  { id: 'pd4', name: 'Dr. Kevin O\'Brien', email: 'kevin.obrien@email.com', specialization: 'Orthopedics', experience: 15, qualifications: ['MBBS', 'MS Orthopedics'], submittedAt: '2024-02-10', status: 'approved' },
-  { id: 'pd5', name: 'Dr. Lisa Park', email: 'lisa.park@email.com', specialization: 'Dermatology', experience: 4, qualifications: ['MBBS'], submittedAt: '2024-02-08', status: 'rejected' }
-];
+import { ApiError } from '@/lib/api';
+import { listDoctorOnboarding, approveDoctorOnboarding, mapPendingDoctor, PendingDoctor } from '@/api/doctorOnboarding';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -35,12 +18,46 @@ const statusColor = (status: string) => {
 };
 
 const AdminDoctorOnboarding: React.FC = () => {
-  const [doctors, setDoctors] = useState<PendingDoctor[]>(initialPending);
+  const [doctors, setDoctors] = useState<PendingDoctor[]>([]);
   const [filter, setFilter] = useState<'all' | 'pending' | 'approved' | 'rejected'>('pending');
   const [search, setSearch] = useState('');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [actingId, setActingId] = useState<string | null>(null);
 
-  const handleAction = (id: string, action: 'approved' | 'rejected') => {
-    setDoctors((prev) => prev.map((d) => (d.id === id ? { ...d, status: action } : d)));
+  const loadDoctors = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listDoctorOnboarding();
+      setDoctors(data.map(mapPendingDoctor));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load doctor registrations.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDoctors();
+  }, [loadDoctors]);
+
+  const handleAction = async (id: string, action: 'approved' | 'rejected') => {
+    if (action === 'rejected') {
+      // No reject endpoint is exposed by the backend — reflect it locally only.
+      setDoctors((prev) => prev.map((d) => (d.id === id ? { ...d, status: action } : d)));
+      return;
+    }
+    setActingId(id);
+    setError('');
+    try {
+      await approveDoctorOnboarding(id);
+      setDoctors((prev) => prev.map((d) => (d.id === id ? { ...d, status: 'approved' } : d)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not approve doctor.');
+    } finally {
+      setActingId(null);
+    }
   };
 
   const filtered = doctors.filter(
@@ -60,6 +77,12 @@ const AdminDoctorOnboarding: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Doctor Onboarding</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Review and approve pending doctor registrations</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 max-w-2xl">
             <motion.div initial={{ opacity: 0, y: 20 }} animate={{ opacity: 1, y: 0 }} className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-5 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-2 sm:gap-4 min-w-0">
@@ -116,6 +139,11 @@ const AdminDoctorOnboarding: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading registrations...
+            </div>
+          ) : (
           <div className="space-y-4 sm:space-y-6">
             {filtered.map((doc, i) => (
               <motion.div
@@ -155,13 +183,15 @@ const AdminDoctorOnboarding: React.FC = () => {
                     <div className="flex flex-col sm:flex-row gap-2 sm:justify-end">
                       <button
                         onClick={() => handleAction(doc.id, 'approved')}
-                        className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2"
+                        disabled={actingId === doc.id}
+                        className="flex-1 sm:flex-none px-4 py-2 bg-green-600 text-white rounded-lg hover:bg-green-700 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                       >
-                        <CheckCircle className="w-4 h-4" /> Approve
+                        <CheckCircle className="w-4 h-4" /> {actingId === doc.id ? 'Approving...' : 'Approve'}
                       </button>
                       <button
                         onClick={() => handleAction(doc.id, 'rejected')}
-                        className="flex-1 sm:flex-none px-4 py-2 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm flex items-center justify-center gap-2"
+                        disabled={actingId === doc.id}
+                        className="flex-1 sm:flex-none px-4 py-2 border border-red-300 dark:border-red-800 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm flex items-center justify-center gap-2 disabled:opacity-50"
                       >
                         <XCircle className="w-4 h-4" /> Reject
                       </button>
@@ -179,6 +209,7 @@ const AdminDoctorOnboarding: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

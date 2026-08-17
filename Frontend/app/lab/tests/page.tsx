@@ -1,29 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { TestTube, Search, Clock, CheckCircle, Upload, X, FlaskConical } from 'lucide-react';
+import { TestTube, Search, Clock, CheckCircle, Upload, X, FlaskConical, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface LabTest {
-  id: string;
-  testName: string;
-  patientName: string;
-  requestedBy: string;
-  date: string;
-  priority: 'routine' | 'urgent';
-  status: 'pending' | 'in-progress' | 'completed';
-  results?: string;
-}
-
-const initialTests: LabTest[] = [
-  { id: 'lt1', testName: 'Complete Blood Count (CBC)', patientName: 'John Patient', requestedBy: 'Dr. Sarah Wilson', date: '2024-02-15', priority: 'routine', status: 'pending' },
-  { id: 'lt2', testName: 'Lipid Profile', patientName: 'Emma Thompson', requestedBy: 'Dr. Sarah Wilson', date: '2024-02-15', priority: 'urgent', status: 'in-progress' },
-  { id: 'lt3', testName: 'Liver Function Test', patientName: 'Michael Brown', requestedBy: 'Dr. Robert Taylor', date: '2024-02-14', priority: 'routine', status: 'pending' },
-  { id: 'lt4', testName: 'Thyroid Panel (T3, T4, TSH)', patientName: 'Sophia Davis', requestedBy: 'Dr. Priya Sharma', date: '2024-02-13', priority: 'routine', status: 'completed', results: 'All values within normal range' },
-  { id: 'lt5', testName: 'Blood Glucose (Fasting)', patientName: 'James Wilson', requestedBy: 'Dr. Robert Taylor', date: '2024-02-12', priority: 'urgent', status: 'completed', results: 'Slightly elevated - 110 mg/dL' }
-];
+import { ApiError } from '@/lib/api';
+import { listLabTests, mapLabTest, LabTest } from '@/api/lab';
 
 const statusBadge = (status: string) => {
   const colors: Record<string, string> = {
@@ -35,12 +18,33 @@ const statusBadge = (status: string) => {
 };
 
 const LabTests: React.FC = () => {
-  const [tests, setTests] = useState<LabTest[]>(initialTests);
+  const [tests, setTests] = useState<LabTest[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [filter, setFilter] = useState<string>('all');
   const [search, setSearch] = useState('');
   const [active, setActive] = useState<LabTest | null>(null);
   const [resultText, setResultText] = useState('');
 
+  const loadTests = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listLabTests(filter);
+      setTests(data.map(mapLabTest));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load lab tests.');
+    } finally {
+      setLoading(false);
+    }
+  }, [filter]);
+
+  useEffect(() => {
+    loadTests();
+  }, [loadTests]);
+
+  // No backend endpoint exists yet to persist test status/results changes, so
+  // these actions only update local state (see report for details).
   const startTest = (id: string) =>
     setTests((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'in-progress' } : t)));
 
@@ -83,6 +87,12 @@ const LabTests: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400">Manage test requests and upload results</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-6 sm:gap-6">
             {stats.map((s, i) => (
               <motion.div
@@ -123,6 +133,11 @@ const LabTests: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading tests...
+            </div>
+          ) : (
           <div className="space-y-6">
             {filtered.map((test, i) => (
               <motion.div
@@ -189,6 +204,7 @@ const LabTests: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
 
         {/* Upload Results Modal */}

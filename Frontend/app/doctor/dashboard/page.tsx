@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
 import {
@@ -11,24 +11,59 @@ import {
   TrendingUp,
   Video,
   FileText,
-  Activity
+  Activity,
+  Loader2
 } from 'lucide-react';
-import { mockAppointments } from '@/data/mockData';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
+import { ApiError } from '@/lib/api';
+import { listAppointments, mapAppointment } from '@/api/appointments';
+import { Appointment } from '@/types';
+import { useAuth } from '@/contexts/AuthContext';
 
 const DoctorDashboard: React.FC = () => {
   const router = useRouter();
-  const todayAppointments = mockAppointments.filter(apt => apt.status === 'scheduled').slice(0, 3);
-  const videoAppointment = todayAppointments.find(apt => apt.type === 'video') ||
-    mockAppointments.find(apt => apt.type === 'video' && apt.status === 'scheduled');
+  const { user } = useAuth();
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAppointments();
+      setAppointments(data.map(mapAppointment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load appointments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  const today = new Date().toISOString().slice(0, 10);
+  const todaysAppointments = appointments.filter((apt) => apt.date === today);
+  const upcomingToday = todaysAppointments.filter((apt) => apt.status === 'scheduled').slice(0, 3);
+  const videoAppointment =
+    upcomingToday.find((apt) => apt.type === 'video') ||
+    appointments.find((apt) => apt.type === 'video' && apt.status === 'scheduled');
+
+  const totalPatients = new Set(appointments.map((apt) => apt.patientId)).size;
+  const completedCount = appointments.filter((apt) => apt.status === 'completed').length;
+  const monthlyEarnings = appointments
+    .filter((apt) => apt.status === 'completed' && apt.date.slice(0, 7) === today.slice(0, 7))
+    .reduce((sum, apt) => sum + apt.fees, 0);
 
   const stats: Array<{ icon: typeof Calendar; label: string; value: string; change: string; color: ThemeColor }> = [
-    { icon: Calendar, label: "Today's Appointments", value: '12', change: '+3', color: 'blue' },
-    { icon: Users, label: 'Total Patients', value: '234', change: '+12', color: 'green' },
-    { icon: DollarSign, label: 'Monthly Earnings', value: '$12,450', change: '+8%', color: 'purple' },
-    { icon: Clock, label: 'Avg. Consultation', value: '25 min', change: '-2 min', color: 'orange' }
+    { icon: Calendar, label: "Today's Appointments", value: String(todaysAppointments.length), change: '', color: 'blue' },
+    { icon: Users, label: 'Total Patients', value: String(totalPatients), change: '', color: 'green' },
+    { icon: DollarSign, label: 'Monthly Earnings', value: `$${monthlyEarnings.toLocaleString()}`, change: '', color: 'purple' },
+    { icon: Clock, label: 'Completed Visits', value: String(completedCount), change: '', color: 'orange' }
   ];
 
   return (
@@ -41,10 +76,27 @@ const DoctorDashboard: React.FC = () => {
             animate={{ opacity: 1, y: 0 }}
             className="bg-gradient-to-r from-blue-600 to-purple-600 rounded-xl p-4 sm:p-5 text-white"
           >
-            <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Good Morning, Dr. Wilson! 👋</h1>
-            <p className="text-white/90 text-sm sm:text-base">You have 12 appointments today. 3 are video consultations.</p>
+            <h1 className="text-lg sm:text-xl font-bold mb-1 sm:mb-2">Good Morning, {user?.name || 'Doctor'}! 👋</h1>
+            <p className="text-white/90 text-sm sm:text-base">
+              You have {todaysAppointments.length} appointment{todaysAppointments.length === 1 ? '' : 's'} today.{' '}
+              {todaysAppointments.filter((a) => a.type === 'video').length} are video consultations.
+            </p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading dashboard...
+            </div>
+          )}
+
+          {!loading && (
+          <>
           {/* Stats Grid */}
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((stat, i) => {
@@ -61,10 +113,12 @@ const DoctorDashboard: React.FC = () => {
                   <div className={`p-2 sm:p-3 rounded-lg ${colors.bg100} shrink-0`}>
                     <stat.icon className={`w-5 h-5 sm:w-6 sm:h-6 ${colors.text600}`} />
                   </div>
-                  <span className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium shrink-0">
-                    <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
-                    {stat.change}
-                  </span>
+                  {stat.change && (
+                    <span className="flex items-center text-xs sm:text-sm text-green-600 dark:text-green-400 font-medium shrink-0">
+                      <TrendingUp className="w-3.5 h-3.5 sm:w-4 sm:h-4 mr-0.5 sm:mr-1" />
+                      {stat.change}
+                    </span>
+                  )}
                 </div>
                 <p className="text-gray-600 dark:text-gray-400 text-xs sm:text-sm mb-1 leading-snug">{stat.label}</p>
                 <p className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100">{stat.value}</p>
@@ -92,7 +146,7 @@ const DoctorDashboard: React.FC = () => {
                 </div>
 
                 <div className="space-y-3 sm:space-y-4">
-                  {todayAppointments.map((apt, i) => (
+                  {upcomingToday.map((apt, i) => (
                     <motion.div
                       key={apt.id}
                       initial={{ opacity: 0, y: 10 }}
@@ -137,7 +191,7 @@ const DoctorDashboard: React.FC = () => {
                   ))}
                 </div>
 
-                {todayAppointments.length === 0 && (
+                {upcomingToday.length === 0 && (
                   <div className="text-center py-12 text-gray-500 dark:text-gray-400">
                     <Calendar className="w-12 h-12 mx-auto mb-4 opacity-50" />
                     <p>No appointments scheduled for today</p>
@@ -266,6 +320,8 @@ const DoctorDashboard: React.FC = () => {
               </div>
             </div>
           </motion.div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

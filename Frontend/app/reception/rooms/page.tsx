@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Bed as BedIcon, UserPlus } from 'lucide-react';
+import { Bed as BedIcon, UserPlus, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockBeds } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listBeds, updateBed, mapBed } from '@/api/beds';
 import { Bed } from '@/types';
 
 const statusStyle: Record<string, { bg: string; text: string; dot: string; label: string }> = {
@@ -14,17 +15,32 @@ const statusStyle: Record<string, { bg: string; text: string; dot: string; label
   maintenance: { bg: 'bg-yellow-50 dark:bg-yellow-900/20 border-yellow-200 dark:border-yellow-800', text: 'text-yellow-700 dark:text-yellow-400', dot: 'bg-yellow-500', label: 'Maintenance' }
 };
 
-const patientNames = ['John Patient', 'Maria Garcia', 'James Lee', '', 'Anna Patel', '', 'Robert Kim', ''];
+type RoomBed = Bed & { patientName?: string };
 
 const ReceptionRooms: React.FC = () => {
-  const [beds, setBeds] = useState<(Bed & { patientName?: string })[]>(
-    mockBeds.map((b, i) => ({
-      ...b,
-      patientName: b.status === 'occupied' ? patientNames[i] || 'Assigned Patient' : undefined
-    }))
-  );
+  const [beds, setBeds] = useState<RoomBed[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [savingId, setSavingId] = useState<string | null>(null);
   const [assignId, setAssignId] = useState<string | null>(null);
   const [patientName, setPatientName] = useState('');
+
+  const loadBeds = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listBeds();
+      setBeds(data.map((b) => ({ ...mapBed(b), patientName: b.patient_name })));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load rooms.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBeds();
+  }, [loadBeds]);
 
   const summary = [
     { label: 'Total Rooms', value: beds.length, color: 'blue' },
@@ -32,22 +48,34 @@ const ReceptionRooms: React.FC = () => {
     { label: 'Occupied', value: beds.filter((b) => b.status === 'occupied').length, color: 'red' }
   ];
 
-  const assignPatient = (e: React.FormEvent) => {
+  const assignPatient = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!assignId || !patientName.trim()) return;
-    setBeds((prev) =>
-      prev.map((b) =>
-        b.id === assignId ? { ...b, status: 'occupied' as const, patientName: patientName.trim() } : b
-      )
-    );
-    setAssignId(null);
-    setPatientName('');
+    setSavingId(assignId);
+    setError('');
+    try {
+      const updated = await updateBed(assignId, { status: 'occupied', patient_name: patientName.trim() });
+      setBeds((prev) => prev.map((b) => (b.id === assignId ? { ...mapBed(updated), patientName: updated.patient_name } : b)));
+      setAssignId(null);
+      setPatientName('');
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not assign patient.');
+    } finally {
+      setSavingId(null);
+    }
   };
 
-  const releaseRoom = (id: string) => {
-    setBeds((prev) =>
-      prev.map((b) => (b.id === id ? { ...b, status: 'available' as const, patientName: undefined } : b))
-    );
+  const releaseRoom = async (id: string) => {
+    setSavingId(id);
+    setError('');
+    try {
+      const updated = await updateBed(id, { status: 'available', patient_id: null, patient_name: null });
+      setBeds((prev) => prev.map((b) => (b.id === id ? { ...mapBed(updated), patientName: updated.patient_name } : b)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not release room.');
+    } finally {
+      setSavingId(null);
+    }
   };
 
   return (
@@ -58,6 +86,12 @@ const ReceptionRooms: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Room Assignment</h1>
             <p className="text-gray-600 dark:text-gray-400">Assign beds and rooms to admitted patients</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-6 sm:gap-6">
             {summary.map((s, i) => (
@@ -74,6 +108,11 @@ const ReceptionRooms: React.FC = () => {
             ))}
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading rooms...
+            </div>
+          ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-6">
             {beds.map((bed, i) => {
               const style = statusStyle[bed.status];
@@ -99,7 +138,8 @@ const ReceptionRooms: React.FC = () => {
                     {bed.status === 'available' && (
                       <button
                         onClick={() => setAssignId(bed.id)}
-                        className="flex-1 text-xs font-medium py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 inline-flex items-center justify-center gap-1"
+                        disabled={savingId === bed.id}
+                        className="flex-1 text-xs font-medium py-1.5 bg-teal-600 text-white rounded-lg hover:bg-teal-700 inline-flex items-center justify-center gap-1 disabled:opacity-50"
                       >
                         <UserPlus className="w-3.5 h-3.5" /> Assign
                       </button>
@@ -107,9 +147,10 @@ const ReceptionRooms: React.FC = () => {
                     {bed.status === 'occupied' && (
                       <button
                         onClick={() => releaseRoom(bed.id)}
-                        className="flex-1 text-xs font-medium py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700"
+                        disabled={savingId === bed.id}
+                        className="flex-1 text-xs font-medium py-1.5 bg-white dark:bg-gray-800 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 disabled:opacity-50"
                       >
-                        Release
+                        {savingId === bed.id ? 'Releasing...' : 'Release'}
                       </button>
                     )}
                   </div>
@@ -117,6 +158,7 @@ const ReceptionRooms: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
 
         {assignId && (
@@ -138,8 +180,8 @@ const ReceptionRooms: React.FC = () => {
                   <button type="button" onClick={() => setAssignId(null)} className="flex-1 py-2.5 border border-gray-300 dark:border-gray-600 rounded-lg font-medium text-gray-700 dark:text-gray-300 hover:bg-gray-50 dark:hover:bg-gray-700">
                     Cancel
                   </button>
-                  <button type="submit" className="flex-1 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700">
-                    Assign
+                  <button type="submit" disabled={savingId === assignId} className="flex-1 py-2.5 bg-teal-600 text-white rounded-lg font-medium hover:bg-teal-700 disabled:opacity-50">
+                    {savingId === assignId ? 'Assigning...' : 'Assign'}
                   </button>
                 </div>
               </form>

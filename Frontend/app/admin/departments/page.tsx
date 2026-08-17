@@ -1,35 +1,39 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Building2, Plus, X, Users, Pencil, Trash2 } from 'lucide-react';
+import { Building2, Plus, X, Users, Pencil, Trash2, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface Department {
-  id: string;
-  name: string;
-  head: string;
-  staffCount: number;
-  beds: number;
-  status: 'active' | 'inactive';
-}
-
-const initialDepartments: Department[] = [
-  { id: 'dept1', name: 'Cardiology', head: 'Dr. Sarah Wilson', staffCount: 24, beds: 30, status: 'active' },
-  { id: 'dept2', name: 'Neurology', head: 'Dr. Michael Chen', staffCount: 18, beds: 20, status: 'active' },
-  { id: 'dept3', name: 'Pediatrics', head: 'Dr. Emily Rodriguez', staffCount: 22, beds: 25, status: 'active' },
-  { id: 'dept4', name: 'Orthopedics', head: 'Dr. James Anderson', staffCount: 20, beds: 22, status: 'active' },
-  { id: 'dept5', name: 'Dermatology', head: 'Dr. Priya Sharma', staffCount: 12, beds: 8, status: 'active' },
-  { id: 'dept6', name: 'General Medicine', head: 'Dr. Robert Taylor', staffCount: 30, beds: 40, status: 'active' },
-  { id: 'dept7', name: 'Radiology', head: 'Dr. Helen Wright', staffCount: 15, beds: 0, status: 'inactive' }
-];
+import { ApiError } from '@/lib/api';
+import { listDepartments, createDepartment, deleteDepartment, mapDepartment, Department } from '@/api/departments';
 
 const AdminDepartments: React.FC = () => {
-  const [departments, setDepartments] = useState<Department[]>(initialDepartments);
+  const [departments, setDepartments] = useState<Department[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [editingId, setEditingId] = useState<string | null>(null);
   const [form, setForm] = useState({ name: '', head: '', staffCount: '', beds: '', status: 'active' as 'active' | 'inactive' });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [deletingId, setDeletingId] = useState<string | null>(null);
+
+  const loadDepartments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listDepartments();
+      setDepartments(data.map(mapDepartment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load departments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadDepartments();
+  }, [loadDepartments]);
 
   const openCreate = () => {
     setEditingId(null);
@@ -49,7 +53,7 @@ const AdminDepartments: React.FC = () => {
     setShowModal(true);
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name) return;
     const data = {
@@ -60,15 +64,40 @@ const AdminDepartments: React.FC = () => {
       status: form.status
     };
     if (editingId) {
+      // No PATCH endpoint is exposed for departments — apply the edit locally only.
       setDepartments((prev) => prev.map((d) => (d.id === editingId ? { ...d, ...data } : d)));
-    } else {
-      setDepartments((prev) => [{ id: `dept${Date.now()}`, ...data }, ...prev]);
+      setShowModal(false);
+      return;
     }
-    setShowModal(false);
+    setSaving(true);
+    setError('');
+    try {
+      const created = await createDepartment({
+        name: data.name,
+        head: data.head,
+        staff_count: data.staffCount,
+        beds: data.beds,
+        status: data.status
+      });
+      setDepartments((prev) => [mapDepartment(created), ...prev]);
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create department.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const remove = (id: string) => {
-    setDepartments((prev) => prev.filter((d) => d.id !== id));
+  const remove = async (id: string) => {
+    setDeletingId(id);
+    try {
+      await deleteDepartment(id);
+      setDepartments((prev) => prev.filter((d) => d.id !== id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not delete department.');
+    } finally {
+      setDeletingId(null);
+    }
   };
 
   const totalStaff = departments.reduce((s, d) => s + d.staffCount, 0);
@@ -95,6 +124,12 @@ const AdminDepartments: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-3 gap-6 sm:gap-6 max-w-2xl">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 text-center">
               <p className="text-lg font-bold text-blue-600 dark:text-blue-400">{departments.length}</p>
@@ -110,6 +145,11 @@ const AdminDepartments: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading departments...
+            </div>
+          ) : (
           <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
             {departments.map((dept, i) => (
               <motion.div
@@ -145,7 +185,8 @@ const AdminDepartments: React.FC = () => {
                   </button>
                   <button
                     onClick={() => remove(dept.id)}
-                    className="p-2 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors"
+                    disabled={deletingId === dept.id}
+                    className="p-2 rounded-lg border border-red-200 dark:border-red-800 text-red-600 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors disabled:opacity-50"
                     title="Delete"
                   >
                     <Trash2 className="w-4 h-4" />
@@ -154,6 +195,7 @@ const AdminDepartments: React.FC = () => {
               </motion.div>
             ))}
           </div>
+          )}
         </div>
 
         <AnimatePresence>
@@ -208,8 +250,8 @@ const AdminDepartments: React.FC = () => {
                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors">
-                      {editingId ? 'Save' : 'Add'}
+                    <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors disabled:opacity-50">
+                      {saving ? 'Saving...' : editingId ? 'Save' : 'Add'}
                     </button>
                   </div>
                 </form>

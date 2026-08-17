@@ -1,13 +1,36 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Pill, Download, FileText, Stethoscope, ShoppingCart } from 'lucide-react';
+import { Pill, Download, FileText, Stethoscope, ShoppingCart, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockPrescriptions } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listPrescriptions, mapPrescription } from '@/api/prescriptions';
+import { Prescription } from '@/types';
 
 const PatientPrescriptions: React.FC = () => {
+  const [prescriptions, setPrescriptions] = useState<Prescription[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadPrescriptions = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listPrescriptions();
+      setPrescriptions(data.map(mapPrescription));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load prescriptions.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadPrescriptions();
+  }, [loadPrescriptions]);
+
   return (
     <ProtectedRoute allowedRoles={['patient']}>
       <DashboardLayout role="patient">
@@ -17,7 +40,19 @@ const PatientPrescriptions: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400">View and download your prescriptions</p>
           </motion.div>
 
-          {mockPrescriptions.map((prescription, idx) => (
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading && (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading prescriptions...
+            </div>
+          )}
+
+          {!loading && prescriptions.map((prescription, idx) => (
             <motion.div
               key={prescription.id}
               initial={{ opacity: 0, y: 20 }}
@@ -80,7 +115,7 @@ const PatientPrescriptions: React.FC = () => {
             </motion.div>
           ))}
 
-          {mockPrescriptions.length === 0 && (
+          {!loading && prescriptions.length === 0 && (
             <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
               <FileText className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
               <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No prescriptions yet</h3>

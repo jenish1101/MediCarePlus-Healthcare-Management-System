@@ -1,33 +1,15 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { useRouter } from 'next/navigation';
 import { motion } from 'framer-motion';
-import { Calendar, Clock, Video, CheckCircle, Search, User } from 'lucide-react';
+import { Calendar, Clock, Video, CheckCircle, Search, User, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
-
-interface DoctorAppointment {
-  id: string;
-  patientId: string;
-  patientName: string;
-  reason: string;
-  date: string;
-  time: string;
-  type: 'in-person' | 'video';
-  status: 'scheduled' | 'completed' | 'cancelled';
-}
-
-const appointments: DoctorAppointment[] = [
-  { id: 'a1', patientId: 'p1', patientName: 'John Patient', reason: 'Regular checkup', date: '2024-02-15', time: '10:00 AM', type: 'in-person', status: 'scheduled' },
-  { id: 'a2', patientId: 'p2', patientName: 'Emma Thompson', reason: 'Follow-up consultation', date: '2024-02-15', time: '11:30 AM', type: 'video', status: 'scheduled' },
-  { id: 'a3', patientId: 'p3', patientName: 'Michael Brown', reason: 'Chest pain evaluation', date: '2024-02-15', time: '02:00 PM', type: 'in-person', status: 'scheduled' },
-  { id: 'a4', patientId: 'p4', patientName: 'Sophia Davis', reason: 'Blood pressure review', date: '2024-02-16', time: '09:00 AM', type: 'video', status: 'scheduled' },
-  { id: 'a5', patientId: 'p5', patientName: 'James Wilson', reason: 'Post-surgery follow-up', date: '2024-02-12', time: '03:30 PM', type: 'in-person', status: 'completed' },
-  { id: 'a6', patientId: 'p6', patientName: 'Olivia Martin', reason: 'ECG consultation', date: '2024-02-10', time: '01:00 PM', type: 'in-person', status: 'completed' },
-  { id: 'a7', patientId: 'p1', patientName: 'Liam Garcia', reason: 'Cancelled by patient', date: '2024-02-09', time: '04:00 PM', type: 'video', status: 'cancelled' }
-];
+import { ApiError } from '@/lib/api';
+import { listAppointments, updateAppointment, mapAppointment } from '@/api/appointments';
+import { Appointment } from '@/types';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -42,6 +24,40 @@ const DoctorAppointments: React.FC = () => {
   const router = useRouter();
   const [filter, setFilter] = useState<'all' | 'scheduled' | 'completed' | 'cancelled'>('all');
   const [search, setSearch] = useState('');
+  const [appointments, setAppointments] = useState<Appointment[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
+
+  const loadAppointments = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAppointments();
+      setAppointments(data.map(mapAppointment));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load appointments.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAppointments();
+  }, [loadAppointments]);
+
+  const updateStatus = async (id: string, status: 'completed' | 'cancelled') => {
+    setUpdatingId(id);
+    try {
+      const updated = await updateAppointment(id, { status });
+      const mapped = mapAppointment(updated);
+      setAppointments((prev) => prev.map((a) => (a.id === id ? mapped : a)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update appointment.');
+    } finally {
+      setUpdatingId(null);
+    }
+  };
 
   const filtered = appointments.filter(
     (a) =>
@@ -63,6 +79,12 @@ const DoctorAppointments: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Appointments</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Manage your patient appointments and consultations</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
@@ -107,6 +129,11 @@ const DoctorAppointments: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading appointments...
+            </div>
+          ) : (
           <div className="space-y-4 sm:space-y-6">
             {filtered.map((apt, i) => (
               <motion.div
@@ -163,6 +190,20 @@ const DoctorAppointments: React.FC = () => {
                       >
                         Notes
                       </button>
+                      <button
+                        onClick={() => updateStatus(apt.id, 'completed')}
+                        disabled={updatingId === apt.id}
+                        className="flex-1 px-4 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition-colors text-sm disabled:opacity-50"
+                      >
+                        {updatingId === apt.id ? 'Updating...' : 'Mark Completed'}
+                      </button>
+                      <button
+                        onClick={() => updateStatus(apt.id, 'cancelled')}
+                        disabled={updatingId === apt.id}
+                        className="flex-1 px-4 py-2 border border-red-600 text-red-600 dark:text-red-400 rounded-lg hover:bg-red-50 dark:hover:bg-red-900/20 transition-colors text-sm disabled:opacity-50"
+                      >
+                        Cancel
+                      </button>
                     </div>
                   ) : apt.status === 'completed' ? (
                     <span className="flex items-center text-green-600 dark:text-green-400 text-sm font-medium">
@@ -181,6 +222,7 @@ const DoctorAppointments: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

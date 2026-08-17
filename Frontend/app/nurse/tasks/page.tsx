@@ -1,32 +1,36 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Pill, ClipboardList, CheckCircle2, Clock } from 'lucide-react';
+import { Pill, ClipboardList, CheckCircle2, Clock, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface CareTask {
-  id: string;
-  patient: string;
-  room: string;
-  type: 'medication' | 'care';
-  description: string;
-  scheduled: string;
-  status: 'pending' | 'completed';
-}
-
-const initialTasks: CareTask[] = [
-  { id: 't1', patient: 'Maria Garcia', room: '204', type: 'medication', description: 'Ibuprofen 400mg — after meals', scheduled: '11:30 AM', status: 'pending' },
-  { id: 't2', patient: 'James Lee', room: '108', type: 'medication', description: 'Amoxicillin 500mg — with water', scheduled: '12:00 PM', status: 'pending' },
-  { id: 't3', patient: 'Anna Patel', room: '312', type: 'care', description: 'Wound dressing change', scheduled: '11:00 AM', status: 'completed' },
-  { id: 't4', patient: 'Robert Kim', room: '115', type: 'medication', description: 'Insulin — before lunch', scheduled: '12:30 PM', status: 'pending' },
-  { id: 't5', patient: 'Maria Garcia', room: '204', type: 'care', description: 'Mobility assistance — walk 10 min', scheduled: '2:00 PM', status: 'pending' }
-];
+import { ApiError } from '@/lib/api';
+import { listNurseTasks, completeNurseTask, mapNurseTask as mapTask, CareTask } from '@/api/nurseTasks';
 
 const NurseTasks: React.FC = () => {
-  const [tasks, setTasks] = useState<CareTask[]>(initialTasks);
+  const [tasks, setTasks] = useState<CareTask[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [completingId, setCompletingId] = useState<string | null>(null);
   const [filter, setFilter] = useState<'all' | 'medication' | 'care' | 'pending' | 'completed'>('all');
+
+  const loadTasks = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listNurseTasks();
+      setTasks(data.map(mapTask));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load tasks.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadTasks();
+  }, [loadTasks]);
 
   const filtered = tasks.filter((t) => {
     if (filter === 'all') return true;
@@ -34,8 +38,17 @@ const NurseTasks: React.FC = () => {
     return t.type === filter;
   });
 
-  const completeTask = (id: string) => {
-    setTasks((prev) => prev.map((t) => (t.id === id ? { ...t, status: 'completed' as const } : t)));
+  const completeTask = async (id: string) => {
+    setCompletingId(id);
+    setError('');
+    try {
+      const updated = await completeNurseTask(id);
+      setTasks((prev) => prev.map((t) => (t.id === id ? mapTask(updated) : t)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not complete task.');
+    } finally {
+      setCompletingId(null);
+    }
   };
 
   const pending = tasks.filter((t) => t.status === 'pending').length;
@@ -48,6 +61,12 @@ const NurseTasks: React.FC = () => {
             <h1 className="text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Care Tasks</h1>
             <p className="text-gray-600 dark:text-gray-400">Medication rounds and daily care tasks · {pending} pending</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="flex flex-wrap gap-2">
             {(['all', 'medication', 'care', 'pending', 'completed'] as const).map((f) => (
@@ -63,6 +82,11 @@ const NurseTasks: React.FC = () => {
             ))}
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading tasks...
+            </div>
+          ) : (
           <div className="space-y-3">
             {filtered.map((task, i) => (
               <motion.div
@@ -95,9 +119,10 @@ const NurseTasks: React.FC = () => {
                 {task.status === 'pending' ? (
                   <button
                     onClick={() => completeTask(task.id)}
-                    className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 shrink-0"
+                    disabled={completingId === task.id}
+                    className="inline-flex items-center gap-2 px-4 py-2 bg-rose-600 text-white rounded-lg text-sm font-medium hover:bg-rose-700 shrink-0 disabled:opacity-50"
                   >
-                    <CheckCircle2 className="w-4 h-4" /> Mark Done
+                    <CheckCircle2 className="w-4 h-4" /> {completingId === task.id ? 'Saving...' : 'Mark Done'}
                   </button>
                 ) : (
                   <span className="inline-flex items-center gap-1 text-sm font-medium text-green-600 dark:text-green-400 shrink-0">
@@ -106,7 +131,16 @@ const NurseTasks: React.FC = () => {
                 )}
               </motion.div>
             ))}
+
+            {filtered.length === 0 && (
+              <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+                <ClipboardList className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+                <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No tasks found</h3>
+                <p className="text-gray-600 dark:text-gray-400">Try a different filter.</p>
+              </div>
+            )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

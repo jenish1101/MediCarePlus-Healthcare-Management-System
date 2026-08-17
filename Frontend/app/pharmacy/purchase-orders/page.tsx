@@ -1,26 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { ShoppingCart, Plus, X, Search, Truck, CheckCircle, Clock } from 'lucide-react';
+import { ShoppingCart, Plus, X, Search, Truck, CheckCircle, Clock, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface PurchaseOrder {
-  id: string;
-  supplier: string;
-  items: { name: string; quantity: number; unitPrice: number }[];
-  total: number;
-  orderDate: string;
-  expectedDelivery: string;
-  status: 'draft' | 'ordered' | 'shipped' | 'received';
-}
-
-const initialOrders: PurchaseOrder[] = [
-  { id: 'PO-1001', supplier: 'PharmaCorp', items: [{ name: 'Amoxicillin 500mg', quantity: 500, unitPrice: 1.2 }], total: 600, orderDate: '2024-02-14', expectedDelivery: '2024-02-20', status: 'ordered' },
-  { id: 'PO-1002', supplier: 'MedSupply Inc', items: [{ name: 'Ibuprofen 400mg', quantity: 1000, unitPrice: 0.8 }, { name: 'Aspirin 75mg', quantity: 2000, unitPrice: 0.3 }], total: 1400, orderDate: '2024-02-12', expectedDelivery: '2024-02-18', status: 'shipped' },
-  { id: 'PO-1003', supplier: 'HealthPlus', items: [{ name: 'Vitamin B Complex', quantity: 800, unitPrice: 0.6 }], total: 480, orderDate: '2024-02-10', expectedDelivery: '2024-02-16', status: 'received' }
-];
+import { ApiError } from '@/lib/api';
+import { listPurchaseOrders, createPurchaseOrder, mapPurchaseOrder, PurchaseOrder } from '@/api/pharmacy';
 
 const statusColor = (status: string) => {
   const colors: Record<string, string> = {
@@ -39,11 +25,33 @@ const nextStatus: Record<string, PurchaseOrder['status']> = {
 };
 
 const PharmacyPurchaseOrders: React.FC = () => {
-  const [orders, setOrders] = useState<PurchaseOrder[]>(initialOrders);
+  const [orders, setOrders] = useState<PurchaseOrder[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
   const [search, setSearch] = useState('');
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ supplier: '', medicine: '', quantity: '', unitPrice: '' });
 
+  const loadOrders = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listPurchaseOrders();
+      setOrders(data.map(mapPurchaseOrder));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load purchase orders.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadOrders();
+  }, [loadOrders]);
+
+  // NOTE: the backend has no status-update endpoint for purchase orders, so this
+  // advance is a local-only visual change (not persisted).
   const advance = (id: string) => {
     setOrders((prev) =>
       prev.map((o) => {
@@ -54,25 +62,28 @@ const PharmacyPurchaseOrders: React.FC = () => {
     );
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.supplier || !form.medicine) return;
     const qty = Number(form.quantity) || 0;
     const price = Number(form.unitPrice) || 0;
-    setOrders((prev) => [
-      {
-        id: `PO-${Date.now()}`,
+    setSubmitting(true);
+    setError('');
+    try {
+      const created = await createPurchaseOrder({
         supplier: form.supplier,
-        items: [{ name: form.medicine, quantity: qty, unitPrice: price }],
-        total: qty * price,
-        orderDate: new Date().toISOString().split('T')[0],
-        expectedDelivery: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0],
-        status: 'draft'
-      },
-      ...prev
-    ]);
-    setForm({ supplier: '', medicine: '', quantity: '', unitPrice: '' });
-    setShowModal(false);
+        items: [{ name: form.medicine, quantity: qty, unit_price: price }],
+        order_date: new Date().toISOString().split('T')[0],
+        expected_delivery: new Date(Date.now() + 7 * 86400000).toISOString().split('T')[0]
+      });
+      setOrders((prev) => [mapPurchaseOrder(created), ...prev]);
+      setForm({ supplier: '', medicine: '', quantity: '', unitPrice: '' });
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create purchase order.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const filtered = orders.filter(
@@ -102,6 +113,12 @@ const PharmacyPurchaseOrders: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="relative w-full sm:max-w-xs">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-4 h-4 sm:w-5 sm:h-5 text-gray-400 dark:text-gray-500" />
             <input
@@ -112,6 +129,11 @@ const PharmacyPurchaseOrders: React.FC = () => {
             />
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading purchase orders...
+            </div>
+          ) : (
           <div className="space-y-3 sm:space-y-4">
             {filtered.map((order, i) => (
               <motion.div
@@ -169,6 +191,7 @@ const PharmacyPurchaseOrders: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
 
         <AnimatePresence>
@@ -221,8 +244,8 @@ const PharmacyPurchaseOrders: React.FC = () => {
                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 text-sm font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors">
-                      Create Order
+                    <button type="submit" disabled={submitting} className="flex-1 py-2.5 rounded-lg bg-green-600 text-white text-sm font-medium hover:bg-green-700 transition-colors disabled:opacity-50">
+                      {submitting ? 'Creating...' : 'Create Order'}
                     </button>
                   </div>
                 </form>

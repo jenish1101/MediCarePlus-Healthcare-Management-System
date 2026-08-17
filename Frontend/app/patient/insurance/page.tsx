@@ -1,6 +1,6 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
 import {
   Shield,
@@ -9,37 +9,47 @@ import {
   AlertCircle,
   Building2,
   CreditCard,
-  Phone
+  Phone,
+  Loader2
 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface CoverageItem {
-  category: string;
-  covered: string;
-  copay: string;
-  limit: string;
-  status: 'active' | 'limited';
-}
-
-const coverageItems: CoverageItem[] = [
-  { category: 'Primary Care Visits', covered: '100%', copay: '$25', limit: 'Unlimited', status: 'active' },
-  { category: 'Specialist Consultations', covered: '80%', copay: '$50', limit: '12/year', status: 'active' },
-  { category: 'Emergency Room', covered: '90%', copay: '$150', limit: 'Unlimited', status: 'active' },
-  { category: 'Lab Tests & Diagnostics', covered: '100%', copay: '$0', limit: 'Unlimited', status: 'active' },
-  { category: 'Prescription Medications', covered: '70%', copay: '$15', limit: '$2,000/year', status: 'active' },
-  { category: 'Mental Health Services', covered: '80%', copay: '$30', limit: '20 sessions/year', status: 'active' },
-  { category: 'Physical Therapy', covered: '70%', copay: '$40', limit: '30 sessions/year', status: 'limited' },
-  { category: 'Dental Care', covered: '50%', copay: '$50', limit: '$1,500/year', status: 'limited' }
-];
+import { ApiError } from '@/lib/api';
+import { getMyInsurance, mapInsurance, InsurancePlan } from '@/api/insurance';
 
 const PatientInsurance: React.FC = () => {
-  const stats = [
-    { label: 'Annual Deductible', value: '$500', sub: '$320 met', color: 'blue' },
-    { label: 'Out-of-Pocket Max', value: '$3,000', sub: '$890 used', color: 'green' },
-    { label: 'Coverage Categories', value: coverageItems.length, sub: 'Active plan', color: 'purple' },
-    { label: 'Plan Status', value: 'Active', sub: 'Valid through Dec 2024', color: 'indigo' }
-  ];
+  const [plan, setPlan] = useState<InsurancePlan | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadInsurance = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getMyInsurance();
+      setPlan(data ? mapInsurance(data) : null);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load insurance details.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadInsurance();
+  }, [loadInsurance]);
+
+  const coverageItems = plan?.coverageItems ?? [];
+  const deductiblePct = plan && plan.deductible > 0 ? Math.min(100, Math.round((plan.deductibleMet / plan.deductible) * 100)) : 0;
+
+  const stats = plan
+    ? [
+        { label: 'Annual Deductible', value: `$${plan.deductible.toLocaleString()}`, sub: `$${plan.deductibleMet.toLocaleString()} met`, color: 'blue' },
+        { label: 'Out-of-Pocket Max', value: `$${plan.outOfPocketMax.toLocaleString()}`, sub: `$${plan.outOfPocketUsed.toLocaleString()} used`, color: 'green' },
+        { label: 'Coverage Categories', value: coverageItems.length, sub: 'Active plan', color: 'purple' },
+        { label: 'Plan Status', value: 'Active', sub: `Effective ${plan.effectiveDate}`, color: 'indigo' }
+      ]
+    : [];
 
   return (
     <ProtectedRoute allowedRoles={['patient']}>
@@ -53,6 +63,24 @@ const PatientInsurance: React.FC = () => {
             <p className="text-gray-600 dark:text-gray-400">View your health insurance plan details</p>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading insurance details...
+            </div>
+          ) : !plan ? (
+            <div className="bg-white dark:bg-gray-800 rounded-xl shadow-lg dark:shadow-none dark:border dark:border-gray-700 p-8 text-center">
+              <Shield className="w-12 h-12 mx-auto mb-4 text-gray-300 dark:text-gray-600" />
+              <h3 className="text-xl font-semibold text-gray-900 dark:text-gray-100 mb-2">No insurance policy on file</h3>
+              <p className="text-gray-600 dark:text-gray-400">Contact your provider to add insurance coverage to your account.</p>
+            </div>
+          ) : (
+          <>
           {/* Policy Card */}
           <motion.div
             initial={{ opacity: 0, y: 20 }}
@@ -66,21 +94,21 @@ const PatientInsurance: React.FC = () => {
                   <Shield className="w-8 h-8" />
                   <span className="text-sm font-medium text-white/80">Health Insurance Plan</span>
                 </div>
-                <h2 className="text-lg sm:text-xl font-bold mb-1">BlueCross Premier PPO</h2>
+                <h2 className="text-lg sm:text-xl font-bold mb-1">{plan.planName}</h2>
                 <p className="text-white/80">Comprehensive health coverage for you and your family</p>
               </div>
               <div className="bg-white/10 backdrop-blur rounded-xl p-4 sm:p-5 space-y-3 min-w-[220px]">
                 <div>
                   <p className="text-xs text-white/70 uppercase tracking-wide">Policy Number</p>
-                  <p className="font-mono font-bold text-lg">BCX-2024-7894561</p>
+                  <p className="font-mono font-bold text-lg">{plan.policyNumber}</p>
                 </div>
                 <div>
                   <p className="text-xs text-white/70 uppercase tracking-wide">Group ID</p>
-                  <p className="font-mono font-semibold">GRP-HMS-1024</p>
+                  <p className="font-mono font-semibold">{plan.groupNumber}</p>
                 </div>
                 <div>
                   <p className="text-xs text-white/70 uppercase tracking-wide">Member ID</p>
-                  <p className="font-mono font-semibold">MEM-JP-001234</p>
+                  <p className="font-mono font-semibold">{plan.memberId}</p>
                 </div>
               </div>
             </div>
@@ -90,21 +118,21 @@ const PatientInsurance: React.FC = () => {
                 <Building2 className="w-5 h-5 text-white/80" />
                 <div>
                   <p className="text-xs text-white/70">Provider</p>
-                  <p className="font-semibold">BlueCross Health Insurance</p>
+                  <p className="font-semibold">{plan.provider}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <CreditCard className="w-5 h-5 text-white/80" />
                 <div>
                   <p className="text-xs text-white/70">Effective Date</p>
-                  <p className="font-semibold">Jan 1, 2024</p>
+                  <p className="font-semibold">{plan.effectiveDate}</p>
                 </div>
               </div>
               <div className="flex items-center gap-3">
                 <Phone className="w-5 h-5 text-white/80" />
                 <div>
                   <p className="text-xs text-white/70">Member Services</p>
-                  <p className="font-semibold">1-800-555-0199</p>
+                  <p className="font-semibold">{plan.memberServicesPhone}</p>
                 </div>
               </div>
             </div>
@@ -137,11 +165,11 @@ const PatientInsurance: React.FC = () => {
             <h3 className="font-semibold text-lg text-gray-900 dark:text-gray-100 mb-4">Deductible Progress</h3>
             <div className="space-y-2">
               <div className="flex justify-between text-sm">
-                <span className="text-gray-600 dark:text-gray-400">$320 of $500 met</span>
-                <span className="font-medium text-blue-600 dark:text-blue-400">64%</span>
+                <span className="text-gray-600 dark:text-gray-400">${plan.deductibleMet.toLocaleString()} of ${plan.deductible.toLocaleString()} met</span>
+                <span className="font-medium text-blue-600 dark:text-blue-400">{deductiblePct}%</span>
               </div>
               <div className="w-full bg-gray-200 dark:bg-gray-700 rounded-full h-3">
-                <div className="bg-blue-600 h-3 rounded-full transition-all" style={{ width: '64%' }} />
+                <div className="bg-blue-600 h-3 rounded-full transition-all" style={{ width: `${deductiblePct}%` }} />
               </div>
             </div>
           </motion.div>
@@ -197,6 +225,8 @@ const PatientInsurance: React.FC = () => {
               </table>
             </div>
           </motion.div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

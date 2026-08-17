@@ -3,7 +3,7 @@ from typing import List
 from beanie import PydanticObjectId
 from fastapi import APIRouter, Query, status
 
-from app.core.dependencies import CurrentUser, PatientUser, PharmacistOrAdminUser, PharmacistUser
+from app.core.dependencies import CurrentUser, InventoryViewerUser, PatientUser, PharmacistOrAdminUser, PharmacistUser
 from app.core.enums import OrderStatus, ReturnStatus
 from app.schemas.pharmacy import (
     ExpiryAlertOut,
@@ -25,7 +25,7 @@ router = APIRouter(prefix="/pharmacy", tags=["Pharmacy"])
 
 @router.get("/inventory", response_model=List[InventoryOut])
 async def list_inventory(
-    _: PharmacistOrAdminUser,
+    _: InventoryViewerUser,
     low_stock: bool = Query(False),
 ) -> List[InventoryOut]:
     return await pharmacy_service.list_inventory(low_stock)

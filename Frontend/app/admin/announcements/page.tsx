@@ -1,32 +1,40 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Megaphone, Plus, X, Users, Send } from 'lucide-react';
+import { Megaphone, Plus, X, Users, Send, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface Announcement {
-  id: string;
-  title: string;
-  message: string;
-  targetRoles: string[];
-  createdAt: string;
-  status: 'active' | 'archived';
-}
+import { ApiError } from '@/lib/api';
+import { listAnnouncements, createAnnouncement, archiveAnnouncement, mapAnnouncement, Announcement } from '@/api/announcements';
 
 const roleOptions = ['all', 'patient', 'doctor', 'pharmacist', 'lab_tech', 'nurse', 'receptionist', 'supplier'];
 
-const initialAnnouncements: Announcement[] = [
-  { id: 'ann1', title: 'System Maintenance', message: 'Scheduled maintenance on Feb 20, 2024 from 2:00 AM to 4:00 AM EST. The portal may be temporarily unavailable.', targetRoles: ['all'], createdAt: '2024-02-13', status: 'active' },
-  { id: 'ann2', title: 'New Lab Equipment', message: 'Our pathology lab has upgraded to automated analyzers. Turnaround times for CBC and lipid panels are now reduced by 30%.', targetRoles: ['doctor', 'lab_tech'], createdAt: '2024-02-10', status: 'active' },
-  { id: 'ann3', title: 'Pharmacy Holiday Hours', message: 'The hospital pharmacy will close early at 4 PM on Feb 18. Please plan prescriptions accordingly.', targetRoles: ['patient', 'doctor', 'pharmacist'], createdAt: '2024-02-08', status: 'archived' }
-];
-
 const AdminAnnouncements: React.FC = () => {
-  const [announcements, setAnnouncements] = useState<Announcement[]>(initialAnnouncements);
+  const [announcements, setAnnouncements] = useState<Announcement[]>([]);
   const [showModal, setShowModal] = useState(false);
   const [form, setForm] = useState({ title: '', message: '', targetRoles: ['all'] as string[] });
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [saving, setSaving] = useState(false);
+  const [archivingId, setArchivingId] = useState<string | null>(null);
+
+  const loadAnnouncements = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listAnnouncements();
+      setAnnouncements(data.map(mapAnnouncement));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load announcements.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadAnnouncements();
+  }, [loadAnnouncements]);
 
   const toggleRole = (role: string) => {
     setForm((prev) => {
@@ -39,26 +47,37 @@ const AdminAnnouncements: React.FC = () => {
     });
   };
 
-  const handleCreate = (e: React.FormEvent) => {
+  const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.title || !form.message) return;
-    setAnnouncements((prev) => [
-      {
-        id: `ann${Date.now()}`,
+    setSaving(true);
+    setError('');
+    try {
+      const created = await createAnnouncement({
         title: form.title,
         message: form.message,
-        targetRoles: form.targetRoles,
-        createdAt: new Date().toISOString().split('T')[0],
-        status: 'active'
-      },
-      ...prev
-    ]);
-    setForm({ title: '', message: '', targetRoles: ['all'] });
-    setShowModal(false);
+        target_roles: form.targetRoles
+      });
+      setAnnouncements((prev) => [mapAnnouncement(created), ...prev]);
+      setForm({ title: '', message: '', targetRoles: ['all'] });
+      setShowModal(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not create announcement.');
+    } finally {
+      setSaving(false);
+    }
   };
 
-  const archive = (id: string) => {
-    setAnnouncements((prev) => prev.map((a) => (a.id === id ? { ...a, status: 'archived' as const } : a)));
+  const archive = async (id: string) => {
+    setArchivingId(id);
+    try {
+      const updated = await archiveAnnouncement(id);
+      setAnnouncements((prev) => prev.map((a) => (a.id === id ? mapAnnouncement(updated) : a)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not archive announcement.');
+    } finally {
+      setArchivingId(null);
+    }
   };
 
   const active = announcements.filter((a) => a.status === 'active');
@@ -84,6 +103,12 @@ const AdminAnnouncements: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
           <div className="grid grid-cols-2 gap-6 max-w-md">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-6">
               <div className="w-11 h-11 rounded-lg bg-blue-100 dark:bg-blue-900/30 flex items-center justify-center">
@@ -105,6 +130,11 @@ const AdminAnnouncements: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading announcements...
+            </div>
+          ) : (
           <div className="space-y-6">
             {announcements.map((ann, i) => (
               <motion.div
@@ -140,15 +170,17 @@ const AdminAnnouncements: React.FC = () => {
                   {ann.status === 'active' && (
                     <button
                       onClick={() => archive(ann.id)}
-                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm shrink-0"
+                      disabled={archivingId === ann.id}
+                      className="px-4 py-2 border border-gray-300 dark:border-gray-600 text-gray-600 dark:text-gray-400 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors text-sm shrink-0 disabled:opacity-50"
                     >
-                      Archive
+                      {archivingId === ann.id ? 'Archiving...' : 'Archive'}
                     </button>
                   )}
                 </div>
               </motion.div>
             ))}
           </div>
+          )}
         </div>
 
         <AnimatePresence>
@@ -216,8 +248,8 @@ const AdminAnnouncements: React.FC = () => {
                     <button type="button" onClick={() => setShowModal(false)} className="flex-1 py-2.5 rounded-lg border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 font-medium hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors">
                       Cancel
                     </button>
-                    <button type="submit" className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2">
-                      <Send className="w-4 h-4" /> Broadcast
+                    <button type="submit" disabled={saving} className="flex-1 py-2.5 rounded-lg bg-blue-600 text-white font-medium hover:bg-blue-700 transition-colors flex items-center justify-center gap-2 disabled:opacity-50">
+                      <Send className="w-4 h-4" /> {saving ? 'Broadcasting...' : 'Broadcast'}
                     </button>
                   </div>
                 </form>

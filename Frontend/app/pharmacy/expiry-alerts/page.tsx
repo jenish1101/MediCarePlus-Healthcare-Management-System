@@ -1,29 +1,36 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { motion } from 'framer-motion';
-import { AlertTriangle, Search, Pill, Calendar, Package } from 'lucide-react';
+import { AlertTriangle, Search, Pill, Calendar, Package, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockInventory } from '@/data/mockData';
-
-const LOW_STOCK = 500;
+import { ApiError } from '@/lib/api';
+import { listExpiryAlerts, mapExpiryAlert, ExpiryAlert } from '@/api/pharmacy';
 
 const PharmacyExpiryAlerts: React.FC = () => {
+  const [alerts, setAlerts] = useState<ExpiryAlert[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [search, setSearch] = useState('');
   const [view, setView] = useState<'all' | 'low_stock' | 'expiring'>('all');
 
-  const today = new Date();
-  const sixMonths = new Date();
-  sixMonths.setMonth(sixMonths.getMonth() + 6);
+  const loadAlerts = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listExpiryAlerts();
+      setAlerts(data.map(mapExpiryAlert));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load expiry alerts.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
 
-  const alerts = mockInventory.map((item) => {
-    const expiry = new Date(item.expiryDate);
-    const isLowStock = item.quantity < LOW_STOCK;
-    const isExpiring = expiry <= sixMonths;
-    const isExpired = expiry < today;
-    return { ...item, isLowStock, isExpiring, isExpired };
-  });
+  useEffect(() => {
+    loadAlerts();
+  }, [loadAlerts]);
 
   const filtered = alerts.filter((item) => {
     const matchesSearch = item.medicineName.toLowerCase().includes(search.toLowerCase());
@@ -44,6 +51,12 @@ const PharmacyExpiryAlerts: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Expiry & Stock Alerts</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Low stock and expiry warnings for pharmacy inventory</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-2 sm:gap-4 lg:gap-6">
             <div className="bg-white dark:bg-gray-800 rounded-xl p-3 sm:p-4 lg:p-6 shadow-lg dark:shadow-none dark:border dark:border-gray-700 flex items-center gap-2 sm:gap-3 lg:gap-4 min-w-0">
@@ -100,6 +113,11 @@ const PharmacyExpiryAlerts: React.FC = () => {
             </div>
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading alerts...
+            </div>
+          ) : (
           <div className="space-y-3 sm:space-y-4">
             {filtered.map((item, i) => (
               <motion.div
@@ -118,7 +136,7 @@ const PharmacyExpiryAlerts: React.FC = () => {
                     </div>
                     <div className="min-w-0">
                       <h4 className="font-semibold text-gray-900 dark:text-gray-100 text-sm sm:text-base truncate">{item.medicineName}</h4>
-                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">Batch: {item.batchNumber} · Supplier: {item.supplier}</p>
+                      <p className="text-xs sm:text-sm text-gray-500 dark:text-gray-400 truncate">Batch: {item.batchNumber}</p>
                     </div>
                   </div>
                   <div className="flex flex-wrap gap-1.5 sm:gap-2 pl-13 sm:pl-0">
@@ -152,6 +170,7 @@ const PharmacyExpiryAlerts: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

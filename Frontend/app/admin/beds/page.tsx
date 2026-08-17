@@ -1,11 +1,12 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { Bed as BedIcon } from 'lucide-react';
+import { Bed as BedIcon, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-import { mockBeds } from '@/data/mockData';
+import { ApiError } from '@/lib/api';
+import { listBeds, updateBed, mapBed } from '@/api/beds';
 import { Bed } from '@/types';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
 
@@ -16,16 +17,44 @@ const statusStyle: Record<string, { bg: string; text: string; dot: string; label
 };
 
 const AdminBeds: React.FC = () => {
-  const [beds, setBeds] = useState<Bed[]>(mockBeds);
+  const [beds, setBeds] = useState<Bed[]>([]);
   const [typeFilter, setTypeFilter] = useState<string>('all');
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+  const [updatingId, setUpdatingId] = useState<string | null>(null);
 
-  const cycleStatus = (id: string) => {
+  const loadBeds = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listBeds();
+      setBeds(data.map(mapBed));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load beds.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadBeds();
+  }, [loadBeds]);
+
+  const cycleStatus = async (id: string) => {
     const order: Bed['status'][] = ['available', 'occupied', 'maintenance'];
-    setBeds((prev) =>
-      prev.map((b) =>
-        b.id === id ? { ...b, status: order[(order.indexOf(b.status) + 1) % order.length] } : b
-      )
-    );
+    const current = beds.find((b) => b.id === id);
+    if (!current) return;
+    const nextStatus = order[(order.indexOf(current.status) + 1) % order.length];
+    setUpdatingId(id);
+    try {
+      const updated = await updateBed(id, { status: nextStatus });
+      const mapped = mapBed(updated);
+      setBeds((prev) => prev.map((b) => (b.id === id ? mapped : b)));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not update bed status.');
+    } finally {
+      setUpdatingId(null);
+    }
   };
 
   const types = ['all', 'ICU', 'Private', 'General'];
@@ -46,6 +75,12 @@ const AdminBeds: React.FC = () => {
             <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-gray-100 mb-1">Bed Management</h1>
             <p className="text-gray-600 dark:text-gray-400 text-sm sm:text-base">Monitor and update bed availability. Tap a bed to change its status.</p>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {summary.map((s, i) => {
@@ -79,6 +114,11 @@ const AdminBeds: React.FC = () => {
             ))}
           </div>
 
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading beds...
+            </div>
+          ) : (
           <div className="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-5 gap-3 sm:gap-4 lg:gap-6">
             {filtered.map((bed, i) => {
               const style = statusStyle[bed.status];
@@ -89,7 +129,8 @@ const AdminBeds: React.FC = () => {
                   animate={{ opacity: 1, scale: 1 }}
                   transition={{ delay: i * 0.03 }}
                   onClick={() => cycleStatus(bed.id)}
-                  className={`text-left border-2 rounded-xl p-5 transition-colors ${style.bg} hover:shadow-md`}
+                  disabled={updatingId === bed.id}
+                  className={`text-left border-2 rounded-xl p-5 transition-colors ${style.bg} hover:shadow-md disabled:opacity-50`}
                 >
                   <div className="flex items-center justify-between mb-3">
                     <BedIcon className={`w-6 h-6 ${style.text}`} />
@@ -102,6 +143,7 @@ const AdminBeds: React.FC = () => {
               );
             })}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

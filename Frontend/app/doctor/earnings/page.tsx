@@ -1,8 +1,8 @@
 'use client';
 
-import React from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion } from 'framer-motion';
-import { DollarSign, TrendingUp, Wallet, Clock, Download } from 'lucide-react';
+import { DollarSign, TrendingUp, Wallet, Clock, Download, Loader2 } from 'lucide-react';
 import {
   ResponsiveContainer,
   BarChart,
@@ -15,30 +15,39 @@ import {
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
 import { colorClasses, ThemeColor } from '@/lib/colorClasses';
-
-const monthly = [
-  { month: 'Sep', earnings: 9800 },
-  { month: 'Oct', earnings: 11200 },
-  { month: 'Nov', earnings: 10500 },
-  { month: 'Dec', earnings: 13400 },
-  { month: 'Jan', earnings: 12100 },
-  { month: 'Feb', earnings: 12450 }
-];
-
-const transactions = [
-  { id: 't1', patient: 'John Patient', date: '2024-02-14', type: 'In-person', amount: 500 },
-  { id: 't2', patient: 'Emma Thompson', date: '2024-02-13', type: 'Video', amount: 400 },
-  { id: 't3', patient: 'Michael Brown', date: '2024-02-12', type: 'In-person', amount: 500 },
-  { id: 't4', patient: 'Sophia Davis', date: '2024-02-10', type: 'Video', amount: 400 },
-  { id: 't5', patient: 'James Wilson', date: '2024-02-08', type: 'In-person', amount: 550 }
-];
+import { ApiError } from '@/lib/api';
+import { getMyEarnings, EarningsSummary } from '@/api/doctors';
 
 const DoctorEarnings: React.FC = () => {
+  const [summary, setSummary] = useState<EarningsSummary | null>(null);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
+
+  const loadEarnings = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await getMyEarnings();
+      setSummary(data);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load earnings.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadEarnings();
+  }, [loadEarnings]);
+
+  const monthly = summary?.monthly || [];
+  const transactions = summary?.transactions || [];
+
   const stats: Array<{ icon: typeof DollarSign; label: string; value: string; color: ThemeColor }> = [
-    { icon: DollarSign, label: 'Total Earnings', value: '$78,450', color: 'blue' },
-    { icon: TrendingUp, label: 'This Month', value: '$12,450', color: 'green' },
-    { icon: Wallet, label: 'Pending Payout', value: '$3,200', color: 'purple' },
-    { icon: Clock, label: 'Avg / Consult', value: '$480', color: 'orange' }
+    { icon: DollarSign, label: 'Total Earnings', value: `$${(summary?.total_earnings ?? 0).toLocaleString()}`, color: 'blue' },
+    { icon: TrendingUp, label: 'This Month', value: `$${(summary?.this_month ?? 0).toLocaleString()}`, color: 'green' },
+    { icon: Wallet, label: 'Pending Payout', value: `$${(summary?.pending_payout ?? 0).toLocaleString()}`, color: 'purple' },
+    { icon: Clock, label: 'Avg / Consult', value: `$${(summary?.avg_per_consult ?? 0).toLocaleString()}`, color: 'orange' }
   ];
 
   return (
@@ -59,6 +68,18 @@ const DoctorEarnings: React.FC = () => {
             </button>
           </motion.div>
 
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
+
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading earnings...
+            </div>
+          ) : (
+          <>
           <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 lg:gap-6">
             {stats.map((s, i) => {
               const colors = colorClasses[s.color];
@@ -113,13 +134,13 @@ const DoctorEarnings: React.FC = () => {
               {transactions.map((t) => (
                 <div key={t.id} className="border border-gray-100 dark:border-gray-700 rounded-lg p-3 space-y-2">
                   <div className="flex items-center justify-between gap-2">
-                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{t.patient}</p>
+                    <p className="font-medium text-gray-900 dark:text-gray-100 text-sm truncate">{t.patient_name}</p>
                     <p className="font-semibold text-green-600 dark:text-green-400 text-sm shrink-0">+${t.amount}</p>
                   </div>
                   <div className="flex items-center justify-between gap-2 text-xs text-gray-500 dark:text-gray-400">
                     <span>{t.date}</span>
-                    <span className={`px-2 py-0.5 rounded ${t.type === 'Video' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                      {t.type}
+                    <span className={`capitalize px-2 py-0.5 rounded ${t.appointment_type === 'video' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
+                      {t.appointment_type}
                     </span>
                   </div>
                 </div>
@@ -140,11 +161,11 @@ const DoctorEarnings: React.FC = () => {
                 <tbody>
                   {transactions.map((t) => (
                     <tr key={t.id} className="border-b border-gray-200 dark:border-gray-700 last:border-0 text-sm hover:bg-gray-50 dark:hover:bg-gray-700/50">
-                      <td className="py-3 pr-4 font-medium text-gray-900 dark:text-gray-100">{t.patient}</td>
+                      <td className="py-3 pr-4 font-medium text-gray-900 dark:text-gray-100">{t.patient_name}</td>
                       <td className="py-3 pr-4 text-gray-600 dark:text-gray-400">{t.date}</td>
                       <td className="py-3 pr-4">
-                        <span className={`px-2 py-0.5 rounded text-xs ${t.type === 'Video' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
-                          {t.type}
+                        <span className={`capitalize px-2 py-0.5 rounded text-xs ${t.appointment_type === 'video' ? 'bg-green-100 dark:bg-green-900/30 text-green-700 dark:text-green-400' : 'bg-blue-100 dark:bg-blue-900/30 text-blue-700 dark:text-blue-400'}`}>
+                          {t.appointment_type}
                         </span>
                       </td>
                       <td className="py-3 pr-4 text-right font-semibold text-green-600 dark:text-green-400">+${t.amount}</td>
@@ -154,6 +175,8 @@ const DoctorEarnings: React.FC = () => {
               </table>
             </div>
           </motion.div>
+          </>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>

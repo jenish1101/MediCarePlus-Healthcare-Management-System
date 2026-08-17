@@ -1,44 +1,22 @@
 'use client';
 
-import React, { useState } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Users, UserPlus, Trash2, X, Heart, Calendar, Phone } from 'lucide-react';
+import { Users, UserPlus, Trash2, X, Heart, Calendar, Phone, Loader2 } from 'lucide-react';
 import DashboardLayout from '@/components/DashboardLayout';
 import ProtectedRoute from '@/components/ProtectedRoute';
-
-interface FamilyMember {
-  id: string;
-  name: string;
-  relationship: string;
-  dateOfBirth: string;
-  phone: string;
-  bloodGroup: string;
-}
-
-const initialMembers: FamilyMember[] = [
-  {
-    id: 'fm1',
-    name: 'Jane Patient',
-    relationship: 'Spouse',
-    dateOfBirth: '1990-05-15',
-    phone: '+1 (555) 234-5678',
-    bloodGroup: 'A+'
-  },
-  {
-    id: 'fm2',
-    name: 'Tommy Patient',
-    relationship: 'Son',
-    dateOfBirth: '2015-08-22',
-    phone: '+1 (555) 234-5679',
-    bloodGroup: 'O+'
-  }
-];
+import { ApiError } from '@/lib/api';
+import { listFamilyMembers, addFamilyMember, removeFamilyMember, mapFamilyMember, FamilyMember } from '@/api/familyMembers';
 
 const relationshipOptions = ['Spouse', 'Son', 'Daughter', 'Parent', 'Sibling', 'Other'];
 
 const FamilyMembers: React.FC = () => {
-  const [members, setMembers] = useState<FamilyMember[]>(initialMembers);
+  const [members, setMembers] = useState<FamilyMember[]>([]);
+  const [loading, setLoading] = useState(true);
+  const [error, setError] = useState('');
   const [showForm, setShowForm] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [removingId, setRemovingId] = useState<string | null>(null);
   const [form, setForm] = useState({
     name: '',
     relationship: '',
@@ -47,29 +25,64 @@ const FamilyMembers: React.FC = () => {
     bloodGroup: ''
   });
 
+  const loadMembers = useCallback(async () => {
+    setLoading(true);
+    setError('');
+    try {
+      const data = await listFamilyMembers();
+      setMembers(data.map(mapFamilyMember));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not load family members.');
+    } finally {
+      setLoading(false);
+    }
+  }, []);
+
+  useEffect(() => {
+    loadMembers();
+  }, [loadMembers]);
+
   const stats = [
     { label: 'Total Members', value: members.length + 1, color: 'blue' },
     { label: 'Dependents', value: members.length, color: 'purple' },
     { label: 'Active Profiles', value: members.length + 1, color: 'green' }
   ];
 
-  const handleAdd = (e: React.FormEvent) => {
+  const handleAdd = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!form.name || !form.relationship) return;
 
-    setMembers((prev) => [
-      ...prev,
-      {
-        id: `fm${Date.now()}`,
-        ...form
-      }
-    ]);
-    setForm({ name: '', relationship: '', dateOfBirth: '', phone: '', bloodGroup: '' });
-    setShowForm(false);
+    setSubmitting(true);
+    setError('');
+    try {
+      const created = await addFamilyMember({
+        name: form.name,
+        relationship: form.relationship,
+        date_of_birth: form.dateOfBirth,
+        phone: form.phone,
+        blood_group: form.bloodGroup
+      });
+      setMembers((prev) => [...prev, mapFamilyMember(created)]);
+      setForm({ name: '', relationship: '', dateOfBirth: '', phone: '', bloodGroup: '' });
+      setShowForm(false);
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not add family member.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const handleRemove = (id: string) => {
-    setMembers((prev) => prev.filter((m) => m.id !== id));
+  const handleRemove = async (id: string) => {
+    setRemovingId(id);
+    setError('');
+    try {
+      await removeFamilyMember(id);
+      setMembers((prev) => prev.filter((m) => m.id !== id));
+    } catch (err) {
+      setError(err instanceof ApiError ? err.message : 'Could not remove family member.');
+    } finally {
+      setRemovingId(null);
+    }
   };
 
   return (
@@ -93,6 +106,12 @@ const FamilyMembers: React.FC = () => {
               Add Member
             </button>
           </motion.div>
+
+          {error && (
+            <div className="p-4 bg-red-50 dark:bg-red-900/20 border border-red-200 dark:border-red-800 rounded-xl text-red-700 dark:text-red-400 text-sm">
+              {error}
+            </div>
+          )}
 
           <div className="grid grid-cols-3 gap-6 sm:gap-6">
             {stats.map((s, i) => (
@@ -216,9 +235,10 @@ const FamilyMembers: React.FC = () => {
                   <div className="flex gap-3 pt-2">
                     <button
                       type="submit"
-                      className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors"
+                      disabled={submitting}
+                      className="px-6 py-2.5 bg-blue-600 text-white rounded-lg font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
                     >
-                      Add Member
+                      {submitting ? 'Adding...' : 'Add Member'}
                     </button>
                     <button
                       type="button"
@@ -234,6 +254,11 @@ const FamilyMembers: React.FC = () => {
           </AnimatePresence>
 
           {/* Members List */}
+          {loading ? (
+            <div className="flex items-center justify-center py-16 text-gray-500 dark:text-gray-400">
+              <Loader2 className="w-6 h-6 animate-spin mr-2" /> Loading family members...
+            </div>
+          ) : (
           <div className="space-y-6">
             {members.map((member, i) => (
               <motion.div
@@ -277,7 +302,8 @@ const FamilyMembers: React.FC = () => {
                   </div>
                   <button
                     onClick={() => handleRemove(member.id)}
-                    className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors"
+                    disabled={removingId === member.id}
+                    className="p-2 text-red-500 dark:text-red-400 hover:bg-red-50 dark:hover:bg-red-900/20 rounded-lg transition-colors disabled:opacity-50"
                     aria-label={`Remove ${member.name}`}
                   >
                     <Trash2 className="w-5 h-5" />
@@ -301,6 +327,7 @@ const FamilyMembers: React.FC = () => {
               </div>
             )}
           </div>
+          )}
         </div>
       </DashboardLayout>
     </ProtectedRoute>
