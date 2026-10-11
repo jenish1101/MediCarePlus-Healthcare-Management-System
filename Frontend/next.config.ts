@@ -17,6 +17,18 @@ const nextConfig: NextConfig = {
     root: projectRoot,
   },
   outputFileTracingRoot: projectRoot,
+  async redirects() {
+    return [
+      { source: '/admin', destination: '/admin/dashboard', permanent: false },
+      { source: '/doctor', destination: '/doctor/dashboard', permanent: false },
+      { source: '/lab', destination: '/lab/dashboard', permanent: false },
+      { source: '/nurse', destination: '/nurse/dashboard', permanent: false },
+      { source: '/patient', destination: '/patient/dashboard', permanent: false },
+      { source: '/pharmacy', destination: '/pharmacy/dashboard', permanent: false },
+      { source: '/reception', destination: '/reception/dashboard', permanent: false },
+      { source: '/supplier', destination: '/supplier/dashboard', permanent: false },
+    ];
+  },
 };
 
 export default nextConfig;

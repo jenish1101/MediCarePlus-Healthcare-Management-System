@@ -84,7 +84,36 @@ def create_app() -> FastAPI:
 
     @app.get("/health", tags=["Health"])
     async def health() -> dict:
-        return {"status": "ok", "service": settings.app_name}
+        import time
+        from datetime import datetime, timezone
+
+        client = get_motor_client()
+        db_status = "disconnected"
+        db_latency_ms = None
+
+        if client is not None:
+            try:
+                start = time.perf_counter()
+                await client.admin.command("ping")
+                db_latency_ms = round((time.perf_counter() - start) * 1000, 2)
+                db_status = "connected"
+            except Exception as exc:
+                db_status = f"error: {str(exc)}"
+
+        return {
+            "status": "ok",
+            "service": settings.app_name,
+            "version": "1.0.0",
+            "environment": settings.app_env,
+            "timestamp": datetime.now(timezone.utc).isoformat(),
+            "database": {
+                "status": db_status,
+                "name": settings.mongodb_db,
+                "latency_ms": db_latency_ms,
+            },
+            "api_prefix": settings.api_v1_prefix,
+            "docs_url": "/docs",
+        }
 
     @app.get("/ready", tags=["Health"])
     async def ready() -> dict:
